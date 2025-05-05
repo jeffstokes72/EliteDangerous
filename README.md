@@ -4,7 +4,7 @@
 Displays commodities required, provided and needed when you land at a construction site and tracks cargo in your fleet carrier and starship.
 The focus is to create a simple to use and hands free tracker for system colonisation. I will be adding features often so check back here often. This was created using ChatGPT. It probably took me as long to create as a human could have programmed manually but I have no experience programming in Python or for the EDMC so it is kind of impressive.
 
-![Screenshot 2025-04-30 194008](https://github.com/user-attachments/assets/e8f00f28-3114-4bdf-8c3a-4e076434c3e6)
+![Screenshot](https://github.com/kol19pl/EliteDangerous-ArchictectTracker/blob/main/Zrzut%20ekranu%202025-05-01%20131935.png?raw=true)
 
 ### Install Instructions
 1. Create a directory called "Architect Tracker" in the the ED: Marketplace Connector plugins folder.
@@ -22,6 +22,8 @@ The focus is to create a simple to use and hands free tracker for system colonis
 1. VR programs like Desktop+ can display this window inside the game for you.
 
 ### Notable Changes
++ 2025/05/03 : Adaptation for new naming conwention for colonisation ship
++ 2025/05/01 : Deleted unworking style , ad setings for beter use
 + 2025/04/12 : Added support for multiple construction sites. Sites are removed automaticly when they are completed.
 + 2025/04/19 : Added feature - commodities required for construction are highlighted when a commodity market is opened.
 + 2025/04/25 : Added fleet carrier cargo information - open the carrier management tool in-game to populate\refresh this list. NOTE: Tracks cargo transfers to/from FC but not market sales.
