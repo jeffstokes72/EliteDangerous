@@ -12,7 +12,8 @@ Dark mode
 
 Light Mode
 
-
+### Discussion
+https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
 1. Create a directory called "Architect Tracker" in the the ED: Marketplace Connector plugins folder.
