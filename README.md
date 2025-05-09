@@ -4,11 +4,11 @@
 Displays commodities required, provided and needed when you land at a construction site and tracks cargo in your fleet carrier and starship.
 The focus is to create a simple to use and hands free tracker for system colonisation. I will be adding features often so check back here often. This was created using ChatGPT. It probably took me as long to create as a human could have programmed manually but I have no experience programming in Python or for the EDMC so it is kind of impressive.
 
-![Screenshot 2025-05-06 170518](https://github.com/user-attachments/assets/3dfaae84-b1f0-4b0b-9e3d-ae5901fca04e)
+![Screenshot 2025-05-09 143629](https://github.com/user-attachments/assets/a49c3540-b37e-4068-8c13-294e51b9e92e)
 
 Dark mode
 
-![Screenshot 2025-05-06 170543](https://github.com/user-attachments/assets/7fb0ffca-8a03-4d21-95e8-4675f736e41a)
+![Screenshot 2025-05-09 143708](https://github.com/user-attachments/assets/324723b0-209a-4956-a0d4-4b5a21179c05)
 
 Light Mode
 
@@ -39,3 +39,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2025/05/01 : Deleted unworking style , ad setings for beter use
 + 2025/05/03 : Adaptation for new naming conwention for colonisation ship
 + 2025/05/06 : Added dark\light mode, moved setting to EDMC setting tab, setting saved to EDMC settings and window auto resized to fit content.
++ 2025/05/09 : Added delete station button to remove unwanted stations, added next station button to change list to next station in list (using Desktop+ in VR doesn't show the dropdown menu also button has a hot key assigned to it ">" so it can be used by voice attack), added alternating row colours back in.
