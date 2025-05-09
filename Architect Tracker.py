@@ -89,6 +89,13 @@ def decode_vanity_name(hex_string):
     except Exception as e:
         logger.error(f"Failed to decode vanity name: {e}")
         return hex_string
+        
+def get_next_entry(dictionary, key):
+    keys_iterator = iter(dictionary)
+    for current_key in keys_iterator:
+        if current_key == key:
+            return next(keys_iterator, None)
+    return None
 
 # --- Fleet Carrier Cargo Tracker ---
 class FleetCarrierCargoTracker:
@@ -190,7 +197,6 @@ def save_facility_requirements(resources, station_name):
     except Exception as e:
         logger.error("Error saving data: %s", e)
 
-
 def load_facility_requirements():
     if not os.path.exists(SAVE_FILE):
         return {}
@@ -209,7 +215,6 @@ def load_facility_requirements():
             logger.error("Error writing cleaned data: %s", e)
     return cleaned
 
-
 def load_market_data():
     if not os.path.exists(MARKET_JSON):
         return [], None
@@ -220,7 +225,6 @@ def load_market_data():
     except Exception as e:
         logger.error("Error loading market data: %s", e)
         return [], None
-
 
 def load_cargo_data():
     if not os.path.exists(CARGO_JSON):
@@ -294,6 +298,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.style.configure("ArchTrack.Treeview.Heading", 
                                     background=ArchitectTrackerGUI.bgBlack, 
                                     foreground=ArchitectTrackerGUI.edOrange)
+            self.style.configure("ArchTrack.TButton", 
+                                    background=ArchitectTrackerGUI.bgBlack, 
+                                    foreground=ArchitectTrackerGUI.edOrange, 
+                                    padding=(6, 2))
             self.style.configure("ArchTrack.Vertical.TScrollbar",
                                     gripcount=0,
                                     background=ArchitectTrackerGUI.bgBlack,  # Dark background for the scrollbar
@@ -345,20 +353,29 @@ class ArchitectTrackerGUI(tk.Toplevel):
         frame.pack(fill=tk.BOTH, expand=True)
 
         # Top controls (row 0)
+        dropframe = ttk.Frame(frame, padding=8, style="ArchTrack.TFrame")
+        dropframe.grid(row=0, column=0, sticky="nsew", padx=(0, 2))
+        
+        self.deleteStation = ttk.Button(dropframe, text="X", style="ArchTrack.TButton", width=1, command=self.on_delete_station)
+        self.deleteStation.grid(row=0, column=0, sticky="w")
+        
         self.station_var = tk.StringVar()
-        self.dropdown = ttk.Combobox(frame, textvariable=self.station_var, state="readonly", style="ArchTrack.TCombobox")
-        self.dropdown.grid(row=0, column=0, sticky="w", padx=(0, 50))
+        self.dropdown = ttk.Combobox(dropframe, textvariable=self.station_var, state="readonly", style="ArchTrack.TCombobox")
+        self.dropdown.grid(row=0, column=1, sticky="w", padx=(0, 2))
         self.dropdown.bind("<<ComboboxSelected>>", lambda e: self.display_station())
+        
+        self.changeStation = ttk.Button(dropframe, text=">", style="ArchTrack.TButton", width=1, command=self.on_change_station)
+        self.changeStation.grid(row=0, column=2, sticky="w")
 
-        ttk.Label(frame, text="Last Market:", style="ArchTrack.TLabel").grid(row=0, column=1, sticky="e", padx=(0, 5))
+        ttk.Label(frame, text="Last Market:", style="ArchTrack.TLabel").grid(row=0, column=3, sticky="e", padx=(0, 5))
         self.market_name_label = ttk.Label(frame, text="", style="ArchTrack.TLabel")
-        self.market_name_label.grid(row=0, column=2, sticky="w")
+        self.market_name_label.grid(row=0, column=4, sticky="w")
 
-        ttk.Label(frame, text="Carrier:", style="ArchTrack.TLabel").grid(row=0, column=3, sticky="e", padx=(10, 5))
+        ttk.Label(frame, text="Carrier:", style="ArchTrack.TLabel").grid(row=0, column=5, sticky="e", padx=(10, 5))
         self.carrier_label = ttk.Label(frame, text="", style="ArchTrack.TLabel")
-        self.carrier_label.grid(row=0, column=4, sticky="w")
+        self.carrier_label.grid(row=0, column=6, sticky="w")
 
-        # Treeview setup (row 2)
+        # Treeview setup (row 1)
         cols = list(DEFAULT_COLUMNS.keys())
         self.tree = ttk.Treeview(frame, columns=cols, show="headings", style="ArchTrack.Treeview")
         for c in cols:
@@ -367,20 +384,49 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.tree.yview, style="ArchTrack.Vertical.TScrollbar")
         self.tree.configure(yscrollcommand=scrollbar.set)
-        self.tree.grid(row=1, column=0, columnspan=5, sticky="nsew")
-        scrollbar.grid(row=1, column=5, sticky="ns")
+        self.tree.grid(row=1, column=0, columnspan=7, sticky="nsew")
+        scrollbar.grid(row=1, column=7, sticky="ns")
 
         # Make row 1 expandable
         frame.rowconfigure(1, weight=1)
-        for i in range(5):
-            frame.columnconfigure(i, weight=1)
+        for i in range(8):
+            frame.columnconfigure(i, weight=1 if i < 7 else 0)
             
         self.refresh_columns()  # Ensure columns initial visibility
+        
+    def on_change_station(self):
+        values = self.dropdown['values']
+        if not values:
+            logger.info("No stations to switch to.")
+            return
+
+        next_ndx = self.dropdown.current() + 1
+        if next_ndx >= len(values):
+            next_ndx = 0
+
+        self.dropdown.current(next_ndx)
+        logger.info("Changing to station: %s", self.dropdown.get())
+        self.refresh()
+
+    def on_delete_station(self):
+        sel = self.station_var.get()
+        station_name = self.station_map.get(sel)
+        if self.data.pop(station_name, None):
+            logger.info("Deleted station: %s", station_name)
+        else:
+            logger.info("Could not delete station: %s", station_name)
+  
+        try:
+            with open(SAVE_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.data, f, indent=4)
+        except Exception as e:
+            logger.error("Error saving data: %s", e)
+            
+        self.refresh()
         
     def reset_Style(self, new_theme):
         self.theme = new_theme
         logger.info("reset_Style theme is: %s", self.theme)
-        save_gui_settings()
         self.setStyle()
         self.refresh()
 
@@ -454,6 +500,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
         market_lookup = {i.get('Name'): i for i in market_items}
         cargo_lookup = {i.get('Name'): i for i in cargo_items}
+            
+        self.tree.tag_configure('evenrow', background='#2a2a2a', foreground='#ff8500')
+        self.tree.tag_configure('oddrow', background='#1a1a1a', foreground='#ff8500')
 
         self.market_name_label['text'] = market_name or 'N/A'
         self.carrier_label['text'] = carrier_tracker.carrier_name or 'N/A'
@@ -487,22 +536,27 @@ def plugin_start3(plugin_dir):
     logger.info("Starting Architect Tracker plugin")
     show_gui()
     return "ArchitectTracker"
-
+    
+def on_key_press(event):
+    if event.char == '>':
+        ARCHITECT_GUI.on_change_station()
 
 def plugin_app(parent: tk.Frame) -> tk.Frame:
     global frame
+    parent.bind_all('<KeyPress>', on_key_press)
+    return parent
+    
     frame = tk.Frame(parent)
     tk.Button(frame, text="Show Architect Tracker", command=show_gui).pack(fill=tk.X, padx=5, pady=5)
     theme.update(frame)
     return frame
-
 
 def plugin_stop():
     global ARCHITECT_GUI
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.destroy()
 
-
+# --- Data Hooks ---
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     event = entry.get("event")
     logger.info("Event detected: %s", event)
@@ -532,7 +586,8 @@ def capi_fleetcarrier(data: CAPIData):
     carrier_tracker.update(data)
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.refresh()
-        
+
+# --- Settings Hooks ---
 def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
     pref_frame = nb.Frame(parent)
     col_frame = nb.Frame(pref_frame, border=2, relief="groove")
