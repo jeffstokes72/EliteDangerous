@@ -35,9 +35,10 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
   + Markets - market is selling the item and you have shortfall.
   + Fleeet Carrier - site needs it and fleet carrier has some.
   + Construction site - site needs it and starship has some.
++ Closing the Architect Tracker window will stop the sites, commodities and markets from being tracked. This is handy if you're landing at markets but don't want the information to override your current closest\cheapest information.
 
 ### Notes
-1. VR programs like Desktop+ can display this window inside the game for you. The ">" and "$\Ly" buttons are bound to the keys ">" and "p" respectively for Voice Attack users.
+1. VR programs like Desktop+ can display this window inside the game for you. The ">" and "$\Ly" buttons are bound to the keys ">" and "p" respectively for Voice Attack users. Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
 
 ### Notable Changes
 + 2025/04/12 : Added support for multiple construction sites. Sites are removed automaticly when they are completed.
@@ -49,3 +50,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2025/05/06 : Added dark\light mode, moved setting to EDMC setting tab, setting saved to EDMC settings and window auto resized to fit content.
 + 2025/05/09 : Added delete station button to remove unwanted stations, added next station button to change list to next station in list (using Desktop+ in VR doesn't show the dropdown menu also button has a hot key assigned to it ">" so it can be used by voice attack), added alternating row colours back in.
 + 2025/05/15 : Added preferred market tracking, added row highlighting, added information to settings tab and added column header renaming.
++ 2025/05/29 : Added pause to tracking. Closing the Architect Tracker window will stop the commodities from being tracked.
