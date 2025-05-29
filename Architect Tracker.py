@@ -21,6 +21,7 @@ from typing import Union
 # Global vars
 ARCHITECT_GUI = None
 EDMCframe: Optional[tk.Frame] = None
+AT_BUTTON: Optional[tk.StringVar] = tk.StringVar(value="Show Architect Tracker (tracking disabled)")
 DEFAULT_COLUMNS = {"Material": True, "Required": True, "Provided": True, "Needed": True,
                     "Pref Market": True, "Carrier Qty": True, "Ship Qty": True, "Shortfall": True
                     }
@@ -118,14 +119,14 @@ def save_gui_settings():
 # --- Helpers ---
 def calculate_distance(x1: Union[int, float], y1: Union[int, float], z1: Union[int, float], x2: Union[int, float], y2: Union[int, float], z2: Union[int, float]):
         return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2)
-        
+
 def decode_vanity_name(hex_string):
     try:
         return binascii.unhexlify(hex_string).decode('utf-8')
     except Exception as e:
         logger.error(f"Failed to decode vanity name: {e}")
         return hex_string
-        
+
 def get_next_entry(dictionary, key):
     keys_iterator = iter(dictionary)
     for current_key in keys_iterator:
@@ -200,7 +201,7 @@ class FleetCarrierCargoTracker:
                 self.commodities = data.get("commodities", {})
         except Exception as e:
             logger.error("Error loading fleet carrier cargo: %s", e)
-            
+
 CARRIER_TRACKER = FleetCarrierCargoTracker()
 
 def is_station_complete(materials):
@@ -270,7 +271,8 @@ def load_cargo_data():
     except Exception as e:
         logger.error("Error loading cargo data: %s", e)
         return []
-        
+
+# do any construction sites require the item AND is the item buy price cheaper than the sell price
 def isItemInDemand(item) -> bool:
     item_name = item.get("Name")
     item_price = item.get("SellPrice")
@@ -295,7 +297,8 @@ def isItemInDemand(item) -> bool:
     else:
         logger.debug("Item '%s' is NOT in demand (price: %s vs site prices: %s)", item_name, item_price, prices)
     return in_demand
-        
+
+#a list of the cheapest and closest markets that are selling an item
 def update_market_library() -> None:
     if not os.path.exists(MARKET_JSON):
         logger.warning("Market data file does not exist: %s", MARKET_JSON)
@@ -418,6 +421,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.title("Architect Tracker")
         self.geometry("800x600")
         self.configure(bg=self.bgBlack)
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.column_visibility, self.hide_provided, self.theme, self.column_names = load_gui_settings()
 
         self.setStyle()
@@ -543,9 +547,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.market_name_label.grid(row=0, column=2, sticky="w")        
         cheap = config.get_bool('ArchTrack_prefCheap')
         if cheap:
-            self.market_name_label['text'] = 'cheapest'
+            self.market_name_label['text'] = 'cheapest ($)'
         else:
-            self.market_name_label['text'] = 'closest'
+            self.market_name_label['text'] = 'closest (Ly)'
 
         ttk.Label(frame, text="Carrier:", style="ArchTrack.TLabel").grid(row=0, column=5, sticky="e", padx=(10, 5))
         self.carrier_label = ttk.Label(frame, text="", style="ArchTrack.TLabel")
@@ -571,14 +575,14 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh_columns()  # Ensure columns initial visibility
 
     def refresh(self):
-        # Zapamiętaj aktualnie wybraną nazwę stacji
+        # Remember the currently selected station name
         current_selection = self.station_var.get()
 
-        # Wczytaj nowe dane
+        # Load new data
         data = load_facility_requirements()
         self.data = data
 
-        # Przygotuj dane do wyświetlenia
+        # Prepare data for display
         display = [
             (
               (full.split(':', 1)[-1].strip() if ':' in full else 
@@ -590,21 +594,21 @@ class ArchitectTrackerGUI(tk.Toplevel):
         display.sort(key=lambda x: x[0])  # Sortuj alfabetycznie
         self.station_map = {name: full for name, full in display}
 
-        # Zaktualizuj dropdown
+        # Update dropdown
         values = [name for name, _ in display]
         self.dropdown['values'] = values
 
-        # Przywróć wybór lub wybierz domyślnie pierwszą stację
+        # Restore selection or default to first station
         if values:
             if current_selection in values:
                 self.station_var.set(current_selection)
             else:
                 self.station_var.set(values[0])
 
-            # Odśwież dane dla wybranej stacji
+            # Refresh data for selected station
             self.display_station()
         else:
-            # Brak danych – wyczyść drzewo
+            # No data - clear tree
             self.tree.delete(*self.tree.get_children())
             
         # Set the market and carrier labels
@@ -661,7 +665,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             # Determine row color based on even or odd index
             row_tag = 'evenrow' if idx % 2 == 0 else 'oddrow'
             tags = [row_tag]
-            
+
             if SHIP_STATE == SHIP_MODE.DockedAtMarket:
                 for_sale = is_market_selling(mat)
                 if for_sale and short > 0:
@@ -676,6 +680,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
             # Insert row into the tree view
             self.tree.insert("", "end", values=(locName, req, prov, need, pref_market,
                                                fc_qty, ship_qty, short), tags=(tags))
+
+    def on_close(self):
+        AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
+        self.destroy()  # Close the window
         
     def on_next_station(self):
         values = self.dropdown['values']
@@ -754,9 +762,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         old = config.get_bool('ArchTrack_prefCheap')
         config.set('ArchTrack_prefCheap', bool(not old))
         if not old:
-            self.market_name_label['text'] = 'cheapest'
+            self.market_name_label['text'] = 'cheapest ($)'
         else:
-            self.market_name_label['text'] = 'closest'
+            self.market_name_label['text'] = 'closest (Ly)'
         self.refresh()
         
     def rename_column(self, c, v):
@@ -768,14 +776,29 @@ class ArchitectTrackerGUI(tk.Toplevel):
 # --- Plugin Hooks ---
 def show_gui():
     global ARCHITECT_GUI
+    global AT_BUTTON
+    
     if not ARCHITECT_GUI or not ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI = ArchitectTrackerGUI(None)
     else:
         ARCHITECT_GUI.lift()
         ARCHITECT_GUI.refresh()
+    AT_BUTTON.set("Hide Architect Tracker (tracking)")
+        
+def toggle_gui():
+    global ARCHITECT_GUI
+    global AT_BUTTON
+    
+    if not ARCHITECT_GUI or not ARCHITECT_GUI.winfo_exists():
+        AT_BUTTON.set("Hide Architect Tracker (tracking)")
+        ARCHITECT_GUI = ArchitectTrackerGUI(None)
+    else:
+        AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
+        ARCHITECT_GUI.destroy()
 
 def plugin_start3(plugin_dir):
     global SHOW_UI_AT_START
+    
     logger.info("Starting Architect Tracker plugin")
     SHOW_UI_AT_START = config.get_bool('ArchTrack_showUI')
     if SHOW_UI_AT_START:
@@ -787,20 +810,26 @@ def on_key_press(event):
         ARCHITECT_GUI.on_next_station()
     elif event.char == 'p':
         ARCHITECT_GUI.on_toggle_prefMarket()
+    elif event.char == 't':
+       toggle_gui()
 
 def plugin_app(parent: tk.Frame) -> tk.Frame:
     global EDMCframe
+    global AT_BUTTON
 
     parent.bind_all('<KeyPress>', on_key_press)
 
     EDMCframe = tk.Frame(parent)
-    tk.Button(EDMCframe, text="Show Architect Tracker", command=show_gui).pack(fill=tk.X, padx=5, pady=5)
+    tk.Button(EDMCframe, textvariable=AT_BUTTON, command=toggle_gui).pack(fill=tk.X, padx=5, pady=5)
+    
     theme.update(EDMCframe)
     return EDMCframe
 
 def plugin_stop():
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
+        AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         ARCHITECT_GUI.destroy()
+    logger.info("Shutting down.")
 
 # --- Data Hooks ---
 def journal_entry(cmdr, is_beta, system, station, entry, state):
@@ -864,6 +893,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             CURRENT_LOCATION = tuple(entry["StarPos"])
             logger.debug("Set current location to: %s)", CURRENT_LOCATION)
         if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
+            logger.debug("Carrier: %s Station: %s", CARRIER_TRACKER.callsign, station)
             SHIP_STATE = SHIP_MODE.DockedAtFC
             logger.debug("Ship state: Docked at FC")
             if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
@@ -970,6 +1000,9 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
         variable=show_var,
         command=lambda v=show_var: toggle_showUIatStart(v.get())
     ).grid(row=6, sticky="nw", padx=5, pady=5)
+        
+    #delete market data
+    nb.Button(but_frame, text="Open Log Directory", command=on_log_open).grid(row=7, sticky="nsew", padx=5, pady=5)
     
     note_frame = nb.Frame(pref_frame, border=2, relief="groove")
     note_frame.grid(row=2, column=2, columnspan=2, sticky="nsew")
@@ -982,7 +1015,7 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     """Button Descriptions
     X - deletes the current construction site. Handy if someone else completes it.
     > - shows the next site in the list. (This is bound the the '>' key for Voice Attack users.)
-    $\Ly - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites . (This is bound the the 'p' key for Voice Attack users.)
+    $\Ly - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (This is bound the the 'p' key for Voice Attack users.)
     
     Row highlighting
     Depending on where you are docked, rows are highlighted to indicate:
@@ -1014,6 +1047,17 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     
     pref_frame.grid_columnconfigure(0, minsize=5)
     return pref_frame
+    
+def on_log_open():
+    import subprocess
+    import sys
+
+    if sys.platform == 'darwin':
+        subprocess.check_call(['open', '--', USER_DIR])
+    elif sys.platform == 'linux2':
+        subprocess.check_call(['xdg-open', '--', USER_DIR])
+    elif sys.platform == 'win32':
+        subprocess.check_call(['explorer', USER_DIR])
     
 def on_column_rename(c, v):
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
