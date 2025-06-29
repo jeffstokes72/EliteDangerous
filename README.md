@@ -51,3 +51,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2025/05/09 : Added delete station button to remove unwanted stations, added next station button to change list to next station in list (using Desktop+ in VR doesn't show the dropdown menu also button has a hot key assigned to it ">" so it can be used by voice attack), added alternating row colours back in.
 + 2025/05/15 : Added preferred market tracking, added row highlighting, added information to settings tab and added column header renaming.
 + 2025/05/29 : Added pause to tracking. Closing the Architect Tracker window will stop the commodities from being tracked.
++ 2025/06/29 : [version 1.0] Added features - can now adjust transparent background, window opacity and stay on top of the main gui in the settings menu. Also added a verion number for bug reporting.
