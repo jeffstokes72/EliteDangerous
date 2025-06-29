@@ -12,7 +12,7 @@ Dark mode
 
 Light Mode
 
-![Screenshot 2025-05-15 183805](https://github.com/user-attachments/assets/17a1b392-6c6b-43a6-9c07-ba6fb5deeeca)
+![Screenshot 2025-06-29 160607](https://github.com/user-attachments/assets/bcb2fbb5-bb2e-4736-af27-35c64b02d018)
 
 Settings Window
 
