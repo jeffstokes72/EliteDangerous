@@ -19,6 +19,7 @@ import math
 from typing import Union
 
 # Global vars
+ARCHITECT_TRACKER_VER = "1.0"
 ARCHITECT_GUI = None
 EDMCframe: Optional[tk.Frame] = None
 AT_BUTTON: Optional[tk.StringVar] = tk.StringVar(value="Show Architect Tracker (tracking disabled)")
@@ -96,14 +97,29 @@ def load_gui_settings():
             col_display = cols
             logger.info(f"Column names not found using default settings.")
             
-        return vis, hid, theme, col_display
+        trans_bg = config.get_bool('ArchTrack_tbg')
+        if trans_bg == None:
+            trans_bg = False
+            logger.info(f"trans_bg not found using default settings.")
+            
+        win_top = config.get_bool('ArchTrack_wintop')
+        if win_top == None:
+            win_top = False
+            logger.info(f"win_top not found using default settings.")
+            
+        opac_amt = config.get_int('ArchTrack_opcamt')
+        if opac_amt == None:
+            opac_amt = 100
+            logger.info(f"opac_amt not found using default settings.")
+            
+        return vis, hid, theme, col_display, trans_bg, win_top, opac_amt
     except Exception as e:
         logger.error(f"Error loading GUI settings: {e}")
         return DEFAULT_COLUMNS, False, "Dark Mode", cols
 
 def save_gui_settings():
     logger.info(f"Saving settings.")
-    if not ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
+    if not ARCHITECT_GUI or not ARCHITECT_GUI.winfo_exists():
         return
     try:
         for col, vis in ARCHITECT_GUI.column_visibility.items():
@@ -113,6 +129,9 @@ def save_gui_settings():
         config.set('ArchTrack_theme', str(ARCHITECT_GUI.theme))
         config.set('ArchTrack_showUI', bool(SHOW_UI_AT_START))
         config.set('ArchTrack_cols', list(ARCHITECT_GUI.column_names))
+        config.set('ArchTrack_tbg', bool(ARCHITECT_GUI.trans_bg))
+        config.set('ArchTrack_wintop', bool(ARCHITECT_GUI.win_top))
+        config.set('ArchTrack_opcamt', int(ARCHITECT_GUI.opac_amount))
     except Exception as e:                                                  
         logger.error(f"Error saving GUI settings: {e}")
 
@@ -413,17 +432,20 @@ class ArchitectTrackerGUI(tk.Toplevel):
     edBlue = "#1fbeff"
     edOrange = "#ff8500"
     bgBlack = "#1a1a1a"
-        
     column_visibility = {}
 
     def __init__(self, parent):
+        global ARCHITECT_TRACKER_VER
         super().__init__(parent)
-        self.title("Architect Tracker")
+        self.title("Architect Tracker - " + ARCHITECT_TRACKER_VER)
         self.geometry("800x600")
         self.configure(bg=self.bgBlack)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
-        self.column_visibility, self.hide_provided, self.theme, self.column_names = load_gui_settings()
-
+        self.column_visibility, self.hide_provided, self.theme, self.column_names, self.trans_bg, self.win_top, self.opac_amount = load_gui_settings()
+        
+        self.setAlpha(self.opac_amount)
+        self.setStayOnTop(self.win_top)
+        self.setTransparentBg(self.trans_bg)
         self.setStyle()
         load_facility_requirements()
         if not SITE_LOCATION:
@@ -432,6 +454,61 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self._build_widgets()
             self.refresh()
             
+    def setStayOnTop(self, val):
+        self.win_top = val        
+        if platform.system() == "Darwin":
+            self.wm_attributes("-topmost", self.win_top)
+        elif platform.system() == "Windows":
+            self.wm_attributes("-topmost", self.win_top)
+        else:
+            self.attributes('-topmost', self.win_top)
+
+    def setAlpha(self, percentage):
+        self.opac_amount = percentage
+        if platform.system() == "Darwin":
+            self.attributes("-alpha", self.opac_amount / 100)
+        elif platform.system() == "Windows":
+            self.attributes("-alpha", self.opac_amount / 100)
+        else:
+            self.wm_attributes("-alpha", self.opac_amount / 100)
+            
+    def setTransparentBg(self, val):
+        self.trans_bg = val
+        if self.theme == "Dark Mode":
+            if self.trans_bg:
+                if platform.system() == "Darwin":
+                    self.wm_attributes("-transparent", self.trans_bg)
+                    self.config(bg='systemTransparent')
+                elif platform.system() == "Windows":
+                    self.attributes('-transparentcolor', ArchitectTrackerGUI.bgBlack)
+                else:
+                    self.wm_attributes("-transparent", self.trans_bg)
+            else:
+                if platform.system() == "Darwin":
+                    self.wm_attributes("-transparent", self.trans_bg)
+                    self.config(bg='white')
+                elif platform.system() == "Windows":
+                    self.attributes('-transparentcolor', "red")
+                else:
+                    self.wm_attributes("-transparent", "red")
+        elif self.theme == "Light Mode":
+            if self.trans_bg:
+                if platform.system() == "Darwin":
+                    self.wm_attributes("-transparent", self.trans_bg)
+                    self.config(bg='systemTransparent')
+                elif platform.system() == "Windows":
+                    self.attributes('-transparentcolor', '#d9d9d9')
+                else:
+                    self.wm_attributes("-transparent", '#d9d9d9')
+            else:
+                if platform.system() == "Darwin":
+                    self.wm_attributes("-transparent", self.trans_bg)
+                    self.config(bg='white')
+                elif platform.system() == "Windows":
+                    self.attributes('-transparentcolor', "red")
+                else:
+                    self.wm_attributes("-transparent", "red")
+
     def auto_size_tree(self):
         """Adjust column widths to fit content."""
         style_font = self.style.lookup("ArchTrack.Treeview", "font")
@@ -461,6 +538,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
     def setStyle(self):
         logger.info("setStyle theme is: %s", self.theme)
+
         self.style = ttk.Style()
         if self.theme == "Dark Mode":
             self.style.theme_use("clam")
@@ -591,7 +669,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             )
             for full in data
         ]
-        display.sort(key=lambda x: x[0])  # Sortuj alfabetycznie
+        display.sort(key=lambda x: x[0])  # Sort alphabetically
         self.station_map = {name: full for name, full in display}
 
         # Update dropdown
@@ -633,13 +711,19 @@ class ArchitectTrackerGUI(tk.Toplevel):
         cargo_lookup = {i.get('Name'): i for i in cargo_items}
 
         # Set the alternating row and highlight colours
-        if self.theme == "Dark Mode":            
-            self.tree.tag_configure('evenrow', background='#2a2a2a')
+        if self.theme == "Dark Mode":
+            if self.trans_bg:
+                self.tree.tag_configure('evenrow', background=self.bgBlack)
+            else:
+                self.tree.tag_configure('evenrow', background='#2a2a2a')
             self.tree.tag_configure('oddrow', background=self.bgBlack)
             self.tree.tag_configure('highlightedrow', foreground=self.edBlue)
-        else:      
+        else:
+            if self.trans_bg:
+                self.tree.tag_configure('oddrow', background='#d9d9d9')
+            else:                
+                self.tree.tag_configure('oddrow', background='#ffffff')
             self.tree.tag_configure('evenrow', background='#d9d9d9')
-            self.tree.tag_configure('oddrow', background='#ffffff')
             self.tree.tag_configure('highlightedrow', foreground='#ff6347')
 
         # Insert the materials into the tree
@@ -909,15 +993,17 @@ def capi_fleetcarrier(data: CAPIData):
     CARRIER_TRACKER.update(data)
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.refresh()
+        
+def cmdr_data(data: CAPIData, is_beta):
+    logger.debug("cmdr_data: %s", data.get('lastStarport'))
 
 # --- Settings Hooks ---
 def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
-    from ttkHyperlinkLabel import HyperlinkLabel
-    
     global SHOW_UI_AT_START
+    global ARCHITECT_TRACKER_VER
     column_display_vars = {}
     
-    column_visibility, hide_provided, theme, column_display = load_gui_settings()
+    column_visibility, hide_provided, theme, column_display, trans_bg, win_top, opac_amount = load_gui_settings() #SHOW_UI_AT_START is set in plugin_start3()
     
     column_description = {}
     column_description["Material"] = "The commodities the construction site requires."
@@ -929,9 +1015,11 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     column_description["Ship Qty"] = "The total amount your starship has."
     column_description["Shortfall"] = "Needed minus Carrier Qty minus Ship Qty (or 0 if negative)"
     
+    # PREFS FRAME ************************************************
     pref_frame = nb.Frame(parent)
-    nb.Label(pref_frame, text="Architect Tracker plugin by kfpopeye. Found here: https://github.com/kfpopeye/EliteDangerous").grid(row=0, column=1, columnspan=2, sticky="nsew")
+    nb.Label(pref_frame, text="Architect Tracker (" + ARCHITECT_TRACKER_VER + ") plugin by kfpopeye. Found here: https://github.com/kfpopeye/EliteDangerous").grid(row=0, column=1, columnspan=2, sticky="nsew")
     
+    # COLUMNS FRAME ************************************************
     col_frame = nb.Frame(pref_frame, border=2, relief="groove")
     col_frame.grid(row=1, column=1, columnspan=2)
     
@@ -967,8 +1055,10 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
         nb.Label(col_frame, text=column_description[col]).grid(row=g_row, column=2, sticky="w", padx=5)
         g_row = g_row +1
 
+    # BUTTONS FRAME ************************************************
     but_frame = nb.Frame(pref_frame, border=2, relief="groove")
     but_frame.grid(row=2, column=1, sticky="nw")
+    g_row = 0
     
     #remove fully provided materials
     hide_var = tk.BooleanVar(value=hide_provided)
@@ -977,20 +1067,54 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
         text="Remove delivered from lists",
         variable=hide_var,
         command=lambda val=hide_var: toggle_hide_provided(val.get())
-    ).grid(row=0, sticky="nw", padx=5, pady=5)
-    
+    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+     
     #select UI colours
-    nb.Label(but_frame, text="Select colours to use:").grid(row=2, sticky="nw")
+    nb.Label(but_frame, text="Select colours to use:").grid(row=g_row, sticky="nw")
+    g_row = g_row +1
     theme_var = tk.StringVar(value=theme)
     color_opt = ttk.Combobox(but_frame, textvariable=theme_var, state="readonly")
     color_opt['values'] = ("Light Mode", "Dark Mode")
-    color_opt.grid(row=3, sticky="nw", padx=5, pady=5)
+    color_opt.grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
     color_opt.bind("<<ComboboxSelected>>", lambda event: reset_Style(theme_var.get()))
     
+    # Opacity Settings
+    trans_var = tk.BooleanVar(value=trans_bg)
+    nb.Checkbutton(
+        but_frame,
+        text="Use Transparent Background",
+        variable=trans_var,
+        command=lambda val=trans_var: toggle_trans_bg(val.get())
+    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+    wintop_var = tk.BooleanVar(value=win_top)
+    nb.Checkbutton(
+        but_frame,
+        text="Keep window on top",
+        variable=wintop_var,
+        command=lambda val=wintop_var: toggle_win_top(val.get())
+    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+    s = "Window Opacity - " + str(opac_amount) + "%"
+    sldr_label = nb.Label(but_frame, text=s)
+    sldr_label.grid(row=g_row, sticky="nw")
+    g_row = g_row +1
+    onum_var = tk.IntVar(value=opac_amount)
+    ttk.Scale(
+        but_frame, 
+        from_=10, to=100, variable=onum_var,
+        command=lambda val: slider_changed(sldr_label, val)
+    ).grid(row=g_row, sticky="news")
+    g_row = g_row +1
+    
     #delete market data
-    nb.Button(but_frame, text="Delete Market Data", command=on_delete_markets).grid(row=4, sticky="nsew", padx=5, pady=5)
+    nb.Button(but_frame, text="Delete Market Data", command=on_delete_markets).grid(row=g_row, sticky="nsew", padx=5, pady=5)
+    g_row = g_row +1
     italic_font = tkFont.Font(family="Helvetica", size=8, slant="italic")
-    nb.Label(but_frame, text="Delete cannot be undone.", font=italic_font).grid(row=5, sticky="nw", padx=10, pady=1)
+    nb.Label(but_frame, text="Delete cannot be undone.", font=italic_font).grid(row=g_row, sticky="nw", padx=10, pady=1)
+    g_row = g_row +1
     
     #show at startup
     show_var = tk.BooleanVar(value=SHOW_UI_AT_START)
@@ -999,11 +1123,14 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
         text="Show UI at EDMC startup",
         variable=show_var,
         command=lambda v=show_var: toggle_showUIatStart(v.get())
-    ).grid(row=6, sticky="nw", padx=5, pady=5)
+    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
         
-    #delete market data
-    nb.Button(but_frame, text="Open Log Directory", command=on_log_open).grid(row=7, sticky="nsew", padx=5, pady=5)
+    #Open Log Directory
+    nb.Button(but_frame, text="Open Log Directory", command=on_log_open).grid(row=g_row, sticky="nsew", padx=5, pady=5)
+    g_row = g_row +1
     
+    # NOTES FRAME ************************************************
     note_frame = nb.Frame(pref_frame, border=2, relief="groove")
     note_frame.grid(row=2, column=2, columnspan=2, sticky="nsew")
     
@@ -1048,6 +1175,26 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     pref_frame.grid_columnconfigure(0, minsize=5)
     return pref_frame
     
+def slider_changed(lbl, val):
+    val = int(float(val))
+    s = "Window Opacity = " + str(val) + "%"
+    lbl.config(text=s)
+    config.set('ArchTrack_opcamt', val)
+    if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
+        ARCHITECT_GUI.setAlpha(val)
+    
+def toggle_win_top(val):
+    config.set('ArchTrack_wintop', bool(val))
+    if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
+        ARCHITECT_GUI.setStayOnTop(bool(val))
+
+def toggle_trans_bg(val):
+    config.set('ArchTrack_tbg', bool(val))
+    if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
+        ARCHITECT_GUI.setTransparentBg(bool(val))
+        ARCHITECT_GUI.setStyle()
+        ARCHITECT_GUI.refresh()
+
 def on_log_open():
     import subprocess
     import sys
