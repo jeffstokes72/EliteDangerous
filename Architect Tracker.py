@@ -19,7 +19,7 @@ import math
 from typing import Union
 
 # Global vars
-ARCHITECT_TRACKER_VER = "1.0"
+ARCHITECT_TRACKER_VER = "1.1"
 ARCHITECT_GUI = None
 EDMCframe: Optional[tk.Frame] = None
 AT_BUTTON: Optional[tk.StringVar] = tk.StringVar(value="Show Architect Tracker (tracking disabled)")
@@ -671,9 +671,11 @@ class ArchitectTrackerGUI(tk.Toplevel):
         ]
         display.sort(key=lambda x: x[0])  # Sort alphabetically
         self.station_map = {name: full for name, full in display}
+        self.station_map['-All-'] = None
 
         # Update dropdown
         values = [name for name, _ in display]
+        values.insert(0, '-All-')
         self.dropdown['values'] = values
 
         # Restore selection or default to first station
@@ -701,10 +703,24 @@ class ArchitectTrackerGUI(tk.Toplevel):
     def display_station(self):
         self.tree.delete(*self.tree.get_children())
         sel = self.station_var.get()
-        full = self.station_map.get(sel)
-        if not full:
-            return
-        materials = self.data[full]['materials']
+        
+        if sel == '-All-':
+            materials = {}
+            for site in self.data.values():
+                for material_key, info in site['materials'].items():
+                    if material_key not in materials:
+                        materials[material_key] = {
+                            'Name_Localised': info['Name_Localised'],
+                            'RequiredAmount': 0,
+                            'ProvidedAmount': 0
+                        }
+                    materials[material_key]['RequiredAmount'] += info['RequiredAmount']
+                    materials[material_key]['ProvidedAmount'] += info['ProvidedAmount']
+        else:
+            full = self.station_map.get(sel)
+            if not full:
+                return
+            materials = self.data[full]['materials']
         
         cargo_items = load_cargo_data()
         # Create lookup for cargo items
@@ -1135,20 +1151,23 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     note_frame.grid(row=2, column=2, columnspan=2, sticky="nsew")
     
     #display button and highlighting notes
-    text_widget = tk.Text(note_frame, height=15, width=70, wrap='word', font=('Verdana', 9), border=0)
+    text_widget = tk.Text(note_frame, height=20, width=70, wrap='word', font=('Verdana', 9), border=0)
     text_widget.tag_configure('big', font=('Verdana', 9, 'bold'))
     text_widget.tag_configure('underline', font=('Verdana', 9, 'underline'))
     
     """Button Descriptions
     X - deletes the current construction site. Handy if someone else completes it.
     > - shows the next site in the list. (This is bound the the '>' key for Voice Attack users.)
-    $\Ly - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (This is bound the the 'p' key for Voice Attack users.)
+    $\\Ly - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (This is bound the the 'p' key for Voice Attack users.)
     
     Row highlighting
     Depending on where you are docked, rows are highlighted to indicate:
     Markets - market is selling the item and you have shortfall.
     Fleeet Carrier - site needs it and fleet carrier has some.
     Construction site - site needs it and starship has some.
+    
+    Other
+    Selecting -All- in the station dropdown list will display materials from all construction sites.
     """
     
     text_widget.insert(tk.END, "Button Descriptions\n", 'underline')
@@ -1167,7 +1186,9 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     text_widget.insert(tk.END, "Construction site", 'big')
     text_widget.insert(tk.END, " - site needs it and starship has some.\n")
     text_widget.insert(tk.END, "Undocked", 'big')
-    text_widget.insert(tk.END, " - no highlighting is done.\n")
+    text_widget.insert(tk.END, " - no highlighting is done.\n\n")
+    text_widget.insert(tk.END, "Other\n", 'underline')
+    text_widget.insert(tk.END, "Selecting -All- in the station dropdown list will display materials from all construction sites.")
     
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
