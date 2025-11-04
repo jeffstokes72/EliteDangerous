@@ -19,7 +19,7 @@ import math
 from typing import Union
 
 # Global vars
-ARCHITECT_TRACKER_VER = "1.1"
+ARCHITECT_TRACKER_VER = "1.2"
 ARCHITECT_GUI = None
 EDMCframe: Optional[tk.Frame] = None
 AT_BUTTON: Optional[tk.StringVar] = tk.StringVar(value="Show Architect Tracker (tracking disabled)")
@@ -28,11 +28,12 @@ DEFAULT_COLUMNS = {"Material": True, "Required": True, "Provided": True, "Needed
                     }
 SHOW_UI_AT_START = True
 class SHIP_MODE(Enum):
+    Unknown = 0
     DockedAtMarket = 1
     DockedAtSite = 2
     DockedAtFC = 3
     Undocked = 4
-SHIP_STATE = SHIP_MODE.Undocked
+SHIP_STATE = SHIP_MODE.Unknown
 
 CURRENT_LOCATION = None
 SITE_LOCATION = None
@@ -194,6 +195,13 @@ class FleetCarrierCargoTracker:
             else:
                 self.commodities[name] = max(0, current - qty)
         self.save()
+        
+    def apply_market_purchase(self, eventData):
+        name = eventData.get("Type").capitalize()
+        qty = eventData.get("Count", 0)
+        current = self.commodities.get(name, 0)
+        self.commodities[name] = max(0, current - qty)
+        self.save()
 
     def get_quantity(self, commodity_name):
         return self.commodities.get(commodity_name.capitalize(), 0)
@@ -279,8 +287,23 @@ def load_facility_requirements():
             SITE_LOCATION = None
         
     return cleaned
+    
+def is_facility(station):
+    # Load new data
+    data = load_facility_requirements()
+    # Prepare data for display
+    cleaned = [
+        (
+          (full.split(':', 1)[-1].strip() if ':' in full else 
+           full.split(';', 1)[-1].strip() if ';' in full else full)
+        )
+        for full in data
+    ]
 
-def load_cargo_data():
+    return station in cleaned
+
+# load cargo for currently piloted ship
+def load_ships_cargo_data():
     if not os.path.exists(CARGO_JSON):
         return []
     try:
@@ -335,7 +358,7 @@ def update_market_library() -> None:
         with open(MARKET_JSON, "r", encoding="utf-8") as f:
             market = json.load(f)
         
-        station_name = market.get("StationName")
+        station_name = market.get("StationName")        
         items = market.get("Items", [])
 
         for item in items:
@@ -398,11 +421,9 @@ def get_prefMarket_name(material):
         pref_cheap_market = config.get_bool('ArchTrack_prefCheap')
         
         if pref_cheap_market:
-            logger.debug(f"Returning cheap market")
             market = resource.get("CheapMarket")
             return market.get("StationName", "")
         else:
-            logger.debug(f"Returning closest market")
             market = resource.get("ClosestMarket")
             return market.get("StationName", "")
 
@@ -437,7 +458,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
     def __init__(self, parent):
         global ARCHITECT_TRACKER_VER
         super().__init__(parent)
-        self.title("Architect Tracker - " + ARCHITECT_TRACKER_VER)
+        self.title("Architect Tracker")
         self.geometry("800x600")
         self.configure(bg=self.bgBlack)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -609,10 +630,13 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.station_var = tk.StringVar()
         self.dropdown = ttk.Combobox(dropframe, textvariable=self.station_var, state="readonly", style="ArchTrack.TCombobox")
         self.dropdown.grid(row=0, column=1, sticky="w", padx=(0, 2))
-        self.dropdown.bind("<<ComboboxSelected>>", lambda e: self.display_station())
+        self.dropdown.bind("<<ComboboxSelected>>", lambda e: self.refresh())
+        
+        self.changeToPrevStation = ttk.Button(dropframe, text="<", style="ArchTrack.TButton", width=1, command=self.on_prev_station)
+        self.changeToPrevStation.grid(row=0, column=2, sticky="w")
         
         self.changeStation = ttk.Button(dropframe, text=">", style="ArchTrack.TButton", width=1, command=self.on_next_station)
-        self.changeStation.grid(row=0, column=2, sticky="w")
+        self.changeStation.grid(row=0, column=3, sticky="w")
         
         marketframe = ttk.Frame(frame, padding=8, style="ArchTrack.TFrame")
         marketframe.grid(row=0, column=3, sticky="nsew", padx=(0, 2))
@@ -722,7 +746,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
                 return
             materials = self.data[full]['materials']
         
-        cargo_items = load_cargo_data()
+        cargo_items = load_ships_cargo_data()
         # Create lookup for cargo items
         cargo_lookup = {i.get('Name'): i for i in cargo_items}
 
@@ -796,6 +820,20 @@ class ArchitectTrackerGUI(tk.Toplevel):
             next_ndx = 0
 
         self.dropdown.current(next_ndx)
+        logger.info("Changing to station: %s", self.dropdown.get())
+        self.refresh()
+        
+    def on_prev_station(self):
+        values = self.dropdown['values']
+        if not values:
+            logger.info("No stations to switch to.")
+            return
+
+        prev_ndx = self.dropdown.current() - 1
+        if prev_ndx <= -1:
+            prev_ndx = len(values) - 1
+
+        self.dropdown.current(prev_ndx)
         logger.info("Changing to station: %s", self.dropdown.get())
         self.refresh()
         
@@ -908,6 +946,8 @@ def plugin_start3(plugin_dir):
 def on_key_press(event):
     if event.char == '>':
         ARCHITECT_GUI.on_next_station()
+    elif event.char == '<':
+        ARCHITECT_GUI.on_prev_station()
     elif event.char == 'p':
         ARCHITECT_GUI.on_toggle_prefMarket()
     elif event.char == 't':
@@ -939,32 +979,48 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     
     if not ARCHITECT_GUI and not ARCHITECT_GUI.winfo_exists():
         return
+        
+    #logger.debug("STATION: %s", station)
+    #logger.debug("ENTRY: %s", entry)
+    #logger.debug("STATE: %s", state)
+    #logger.debug("CMDR: %s", cmdr)
     
     event = entry.get("event")
 
     if event == "ColonisationConstructionDepot":
         SHIP_STATE = SHIP_MODE.DockedAtSite
-        logger.debug("Ship state: Docked at site")
+        logger.info("Ship state: Docked at site")
         resources = entry.get("ResourcesRequired", [])
         save_facility_requirements(resources, station)
         if not SITE_LOCATION: #reinitialize if no construction sites existed
             if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
                 ARCHITECT_GUI.destroy()
             SITE_LOCATION = CURRENT_LOCATION
-            logger.debug("Set site location to current location: %s)", SITE_LOCATION)
+            logger.debug("Set site location to current location: %s", SITE_LOCATION)
             show_gui()
         elif ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
             ARCHITECT_GUI.change_station(station)
             ARCHITECT_GUI.refresh()
 
     elif event in ("Cargo", "CargoDepot"):
+        logger.debug("Received cargo event.")
         if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
             ARCHITECT_GUI.refresh()
 
-    elif event in ("Market"):
+    elif event == "Market":
+        # do not register my fleet carrier as a market
+        if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
+            return;
         SHIP_STATE = SHIP_MODE.DockedAtMarket        
-        logger.debug("Ship state: Docked at market")
+        logger.info("Ship state: Docked at market")
         update_market_library()
+        if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
+            ARCHITECT_GUI.refresh()
+            
+    elif event == "MarketBuy":
+        if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
+            logger.info("Purchased from my fleet carrier.");
+            CARRIER_TRACKER.apply_market_purchase(entry)
         if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
             ARCHITECT_GUI.refresh()
 
@@ -978,34 +1034,40 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     elif event == "Docked":
         if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
             SHIP_STATE = SHIP_MODE.DockedAtFC
-            logger.debug("Ship state: Docked at FC")
+            logger.info("Ship state: Docked at FC")
             if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
                 ARCHITECT_GUI.refresh()
                 
     elif event == "Undocked":
         SHIP_STATE = SHIP_MODE.Undocked
-        logger.debug("Ship state: Undocked")
+        logger.info("Ship state: Undocked")
         if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
             ARCHITECT_GUI.refresh()
-            
-    elif event == "StartUp":
-        if "StarPos" in entry:
-            CURRENT_LOCATION = tuple(entry["StarPos"])
-            logger.debug("Set current location to: %s)", CURRENT_LOCATION)
-        if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
-            logger.debug("Carrier: %s Station: %s", CARRIER_TRACKER.callsign, station)
-            SHIP_STATE = SHIP_MODE.DockedAtFC
-            logger.debug("Ship state: Docked at FC")
-            if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-                ARCHITECT_GUI.refresh()
                 
     elif event in ["FSDJump", "Location"]: #location happened after loadgame
         if "StarPos" in entry:
             CURRENT_LOCATION = tuple(entry["StarPos"])
-            logger.debug("Set current location to: %s)", CURRENT_LOCATION)
+            logger.info("Set current location to: %s", CURRENT_LOCATION)
+        
+        if (SHIP_STATE == SHIP_MODE.Unknown):
+            if state.get("IsDocked") is True:
+                if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
+                    SHIP_STATE = SHIP_MODE.DockedAtFC
+                    logger.info("Ship state: Docked at FC")
+                elif is_facility(station):
+                    SHIP_STATE = SHIP_MODE.DockedAtSite
+                    logger.info("Ship state: Docked at site")
+                else:
+                    SHIP_STATE = SHIP_MODE.DockedAtMarket
+                    logger.info("Ship state: Docked at market")
+            else:
+                SHIP_STATE = SHIP_MODE.Undocked
+                logger.info("Ship state: Undocked")
+            if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
+                ARCHITECT_GUI.refresh()
 
 def capi_fleetcarrier(data: CAPIData):
-    logger.info("Received fleet carrier CAPI data")
+    logger.info("Received fleet carrier CAPI data") #only OUR carrier, others are treated as markets
     CARRIER_TRACKER.update(data)
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.refresh()
@@ -1157,7 +1219,7 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     
     """Button Descriptions
     X - deletes the current construction site. Handy if someone else completes it.
-    > - shows the next site in the list. (This is bound the the '>' key for Voice Attack users.)
+    < and > - shows the previous or next site in the list. (Bound the '<' and '>' keys for Voice Attack users.)
     $\\Ly - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (This is bound the the 'p' key for Voice Attack users.)
     
     Row highlighting
@@ -1167,14 +1229,14 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     Construction site - site needs it and starship has some.
     
     Other
-    Selecting -All- in the station dropdown list will display materials from all construction sites.
+    Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.
     """
     
     text_widget.insert(tk.END, "Button Descriptions\n", 'underline')
     text_widget.insert(tk.END, "X", 'big')
     text_widget.insert(tk.END, " - deletes the current construction site. Handy if someone else completes it.\n")
-    text_widget.insert(tk.END, ">", 'big')
-    text_widget.insert(tk.END, " - shows the next site in the list. (Bound the the '>' key for Voice Attack users.)\n")
+    text_widget.insert(tk.END, "< and >", 'big')
+    text_widget.insert(tk.END, " - shows the previous or next site in the list. (Bound the '<' and '>' keys for Voice Attack users.)\n")
     text_widget.insert(tk.END, "$\\Ly", 'big')
     text_widget.insert(tk.END, " - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (Bound the the 'p' key for Voice Attack users.)\n\n")
     text_widget.insert(tk.END, "Row highlighting\n", 'underline')
@@ -1188,7 +1250,7 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     text_widget.insert(tk.END, "Undocked", 'big')
     text_widget.insert(tk.END, " - no highlighting is done.\n\n")
     text_widget.insert(tk.END, "Other\n", 'underline')
-    text_widget.insert(tk.END, "Selecting -All- in the station dropdown list will display materials from all construction sites.")
+    text_widget.insert(tk.END, "Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.\n")
     
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
