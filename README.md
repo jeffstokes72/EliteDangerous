@@ -53,3 +53,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2025/05/29 : Added pause to tracking. Closing the Architect Tracker window will stop the commodities from being tracked.
 + 2025/06/29 : [version 1.0] Added features - can now adjust transparent background, window opacity and stay on top of the main gui in the settings menu. Also added a verion number for bug reporting.
 + 2025/08/05 : [version 1.1] Added feature - Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.
++ 2025/11/03 : [Version 1.2] Added previous site button to UI, owned fleet carrier no longer registers as market, remove version number from window title and improved start up to detect if landed on a market or carrier.
