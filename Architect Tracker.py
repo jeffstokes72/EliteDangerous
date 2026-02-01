@@ -1,6 +1,9 @@
+__version__ = "1.2.1"
+
 import json
 import os
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
@@ -19,7 +22,7 @@ import math
 from typing import Union
 
 # Global vars
-ARCHITECT_TRACKER_VER = "1.2"
+ARCHITECT_TRACKER_VER = __version__
 ARCHITECT_GUI = None
 EDMCframe: Optional[tk.Frame] = None
 AT_BUTTON: Optional[tk.StringVar] = tk.StringVar(value="Show Architect Tracker (tracking disabled)")
@@ -57,14 +60,18 @@ MARKET_LIB_PATH = os.path.join(USER_DIR, "market_library.json")
 MARKET_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous', 'Market.json')
 CARGO_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous', 'Cargo.json')
 
-# Reset log
-with suppress(Exception):
-    os.remove(LOG_FILE)
-
 logger = logging.getLogger("ArchitectTracker")
 logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(LOG_FILE)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+file_handler = TimedRotatingFileHandler(
+        LOG_FILE,
+        when="midnight",    # rotate at midnight local time
+        interval=1,         # every 1 day
+        backupCount=7,      # <-- keep X days (set this to whatever you want)
+        encoding="utf-8",
+        utc=False           # EDMC uses local timestamps
+    )
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(lineno)d - %(message)s')
 file_handler.setFormatter(formatter)
 if not logger.hasHandlers():
     logger.addHandler(file_handler)
@@ -249,6 +256,7 @@ def save_facility_requirements(resources, station_name):
         data = {}
 
     if is_station_complete(materials):
+        logger.info("Facility %s is complete. Removing from list.", station_name)
         data.pop(station_name, None)
     else:
         data[station_name] = {"Location": CURRENT_LOCATION, "materials": materials}
@@ -280,9 +288,9 @@ def load_facility_requirements():
 
     if not SITE_LOCATION and cleaned:
         first_site = next(iter(cleaned.values()))
-        if first_site:
+        if first_site and first_site.get("Location"):
             SITE_LOCATION = first_site.get("Location")            
-            logger.debug("Set site location to: %s)", SITE_LOCATION)
+            logger.debug("Set site location to: %s", SITE_LOCATION)
         else:
             SITE_LOCATION = None
         
@@ -330,7 +338,6 @@ def isItemInDemand(item) -> bool:
                     prices.append(price)
 
     if not prices:
-        logger.debug("Item '%s' is not needed by any site", item_name)
         return False
 
     in_demand = all(item_price < price for price in prices)
@@ -381,11 +388,14 @@ def update_market_library() -> None:
 
                     # Update ClosestMarket if closer
                     close_entry = existing.get("ClosestMarket")
-                    existing_distance = (
-                        calculate_distance(*close_entry["Location"], *SITE_LOCATION)
-                        if close_entry else float("inf")
-                    )
-                    new_distance = calculate_distance(*CURRENT_LOCATION, *SITE_LOCATION)
+                    if close_entry:
+                        existing_distance = calculate_distance(*close_entry["Location"], *SITE_LOCATION)
+                    else:
+                        existing_distance = float("inf")                        
+                    if CURRENT_LOCATION and SITE_LOCATION:
+                        new_distance = calculate_distance(*CURRENT_LOCATION, *SITE_LOCATION)
+                    else:
+                        new_distance = float("inf")
                     if new_distance < existing_distance:
                         logger.debug("Updating ClosestMarket for: %s", item_name)
                         existing["ClosestMarket"] = {
@@ -456,7 +466,6 @@ class ArchitectTrackerGUI(tk.Toplevel):
     column_visibility = {}
 
     def __init__(self, parent):
-        global ARCHITECT_TRACKER_VER
         super().__init__(parent)
         self.title("Architect Tracker")
         self.geometry("800x600")
@@ -937,7 +946,7 @@ def toggle_gui():
 def plugin_start3(plugin_dir):
     global SHOW_UI_AT_START
     
-    logger.info("Starting Architect Tracker plugin")
+    logger.info("Starting Architect Tracker plugin (%s)", ARCHITECT_TRACKER_VER)
     SHOW_UI_AT_START = config.get_bool('ArchTrack_showUI')
     if SHOW_UI_AT_START:
         show_gui()
@@ -1071,9 +1080,6 @@ def capi_fleetcarrier(data: CAPIData):
     CARRIER_TRACKER.update(data)
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.refresh()
-        
-def cmdr_data(data: CAPIData, is_beta):
-    logger.debug("cmdr_data: %s", data.get('lastStarport'))
 
 # --- Settings Hooks ---
 def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
