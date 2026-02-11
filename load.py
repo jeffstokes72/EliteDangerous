@@ -1,4 +1,4 @@
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 import json
 import os
@@ -17,6 +17,8 @@ import myNotebook as nb
 from config import appname, config
 from enum import Enum
 import traceback
+import semantic_version
+from config import appversion
 
 import math
 from typing import Union
@@ -77,48 +79,54 @@ if not logger.hasHandlers():
     logger.addHandler(file_handler)
     
 # --- Settings persistence ---
-def load_gui_settings():
+def load_gui_settings():    
     try:
         vis = {}
         cols = list(DEFAULT_COLUMNS.keys())
         for c in cols:
             key = "ArchTrack_" + c.replace(" ", "_")
-            val = config.get_bool(key)
-            if val is not None:
-                vis[c] = val
-            else:
+            if config.get(key) is None:
                 vis[c] = True
                 logger.info(f"Key: %s not found using default setting.", key)
+            else:
+                vis[c] = config.get_bool(key)                
+        vis["Material"] = True
             
-        hid = config.get_bool('ArchTrack_hide_Provided')
-        if hid == None:
+        if config.get('ArchTrack_hide_Provided') is None:
             hid = False
             logger.info(f"Hid not found using default settings.")
+        else:
+            hid = config.get_bool('ArchTrack_hide_Provided')               
             
-        theme = config.get_str('ArchTrack_theme')
-        if not theme:
+        if config.get('ArchTrack_theme') is None:
             theme = "Dark Mode"
             logger.info(f"Theme not found using default settings.")
+        else:            
+            theme = config.get_str('ArchTrack_theme')
             
-        col_display = config.get_list('ArchTrack_cols')
-        if not col_display:
+        if config.get('ArchTrack_cols') is None:
             col_display = cols
             logger.info(f"Column names not found using default settings.")
+        else:            
+            col_display = config.get_list('ArchTrack_cols')
             
-        trans_bg = config.get_bool('ArchTrack_tbg')
-        if trans_bg == None:
+        if config.get('ArchTrack_tbg') is None:
             trans_bg = False
             logger.info(f"trans_bg not found using default settings.")
+        else:
+            trans_bg = config.get_bool('ArchTrack_tbg')
             
-        win_top = config.get_bool('ArchTrack_wintop')
-        if win_top == None:
+        if config.get('ArchTrack_wintop') is None:
             win_top = False
             logger.info(f"win_top not found using default settings.")
+        else:                    
+            win_top = config.get_bool('ArchTrack_wintop')
             
-        opac_amt = config.get_int('ArchTrack_opcamt')
-        if opac_amt == None:
+        if config.get('ArchTrack_opcamt') is None:
             opac_amt = 100
             logger.info(f"opac_amt not found using default settings.")
+        else:
+            opac_amt = config.get_int('ArchTrack_opcamt')
             
         return vis, hid, theme, col_display, trans_bg, win_top, opac_amt
     except Exception as e:
@@ -169,25 +177,32 @@ class FleetCarrierCargoTracker:
         self.callsign = ""
         self.load()
 
+    # update from CAPI data
     def update(self, data):
         cargo_items = data.get('cargo', [])
         if not isinstance(cargo_items, list):
             logger.warning("Unexpected cargo data format.")
             return
-        self.commodities.clear()
-        for item in cargo_items:
-            name = item.get("commodity")
-            qty = item.get("qty", 0)
-            if not name:
-                logger.warning("Missing commodity name in cargo item: %s", item)
-                continue
-            self.commodities[name] = self.commodities.get(name, 0) + qty
+        try:
+            newcargo = {}
+            for item in cargo_items:
+                name = item.get("commodity")
+                qty = item.get("qty", 0)
+                if not name:
+                    logger.warning("Missing commodity name in cargo item: %s. Skipping it.", item)
+                    continue
+                newcargo[name] = newcargo[name, 0] + qty #materials purchase at different prices have different slots
+                logger.debug("Fleet carrier has %s tonnes of %s", qty, name)            
+            self.commodities.clear()
+            self.commodities = newcargo
 
-        carrier_info = data.get("name", {})
-        hex_name = carrier_info.get("vanityName")
-        self.carrier_name = decode_vanity_name(hex_name) if hex_name else "Unnamed Carrier"
-        self.callsign = carrier_info.get("callsign", "")
-        self.save()
+            carrier_info = data.get("name", {})
+            hex_name = carrier_info.get("vanityName")
+            self.carrier_name = decode_vanity_name(hex_name) if hex_name else "Unnamed Carrier"
+            self.callsign = carrier_info.get("callsign", "")
+            self.save()
+        except Exception as e:
+            logger.error("Error updating fleet carrier cargo from CAPI: %s", e)
 
     def apply_transfer_event(self, transfers):
         for transfer in transfers:
@@ -947,6 +962,16 @@ def plugin_start3(plugin_dir):
     global SHOW_UI_AT_START
     
     logger.info("Starting Architect Tracker plugin (%s)", ARCHITECT_TRACKER_VER)
+
+    # Up until 5.0.0-beta1 config.appversion is a string
+    if isinstance(appversion, str):
+        core_version = semantic_version.Version(appversion)
+    elif callable(appversion):
+        # From 5.0.0-beta1 it's a function, returning semantic_version.Version
+        core_version = appversion()
+    # Yes, just blow up if config.appverison is neither str nor callable
+    logger.info(f'Core EDMarketConnector version: {core_version}')
+    
     SHOW_UI_AT_START = config.get_bool('ArchTrack_showUI')
     if SHOW_UI_AT_START:
         show_gui()
@@ -1137,7 +1162,7 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
         c_name.grid(row=g_row, column=1, sticky="nsew")
         
         nb.Label(col_frame, text=column_description[col]).grid(row=g_row, column=2, sticky="w", padx=5)
-        g_row = g_row +1
+        g_row = g_row + 1
 
     # BUTTONS FRAME ************************************************
     but_frame = nb.Frame(pref_frame, border=2, relief="groove")
