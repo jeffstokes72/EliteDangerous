@@ -1,7 +1,7 @@
 # EliteDangerous
 
 ## Architect Tracker
-Displays commodities required, provided and needed when you land at a construction site and tracks cargo in your fleet carrier and starship.
+Displays commodities required, provided and needed when you land at a construction site, market or fleet carrier and tracks cargo in your fleet carrier and starship.
 The focus is to create a simple to use and hands free tracker for system colonisation. I will be adding features often so check back here often. This was created using ChatGPT. It probably took me as long to create as a human could have programmed manually but I have no experience programming in Python or for the EDMC so it is kind of impressive.
 
 ![Screenshot 2025-05-15 162848](https://github.com/user-attachments/assets/c1d6b250-bd17-4492-96a2-94b1d59fb954)
