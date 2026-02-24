@@ -4,15 +4,15 @@
 Displays commodities required, provided and needed when you land at a construction site, market or fleet carrier and tracks cargo in your fleet carrier and starship.
 The focus is to create a simple to use and hands free tracker for system colonisation. I will be adding features often so check back here often. This was created using ChatGPT. It probably took me as long to create as a human could have programmed manually but I have no experience programming in Python or for the EDMC so it is kind of impressive.
 
-![Screenshot 2025-05-15 162848](https://github.com/user-attachments/assets/c1d6b250-bd17-4492-96a2-94b1d59fb954)
+<img width="861" height="591" alt="Screenshot 2026-02-23 211735" src="https://github.com/user-attachments/assets/63510b48-45ac-4d0a-be63-9c5c13b2e3cd" />
 
 Dark mode
 
-![Screenshot 2025-05-15 184939](https://github.com/user-attachments/assets/4f9beacd-d875-4708-ab02-ac642c7f2d05)
+<img width="861" height="750" alt="Screenshot 2026-02-23 212637" src="https://github.com/user-attachments/assets/71da0068-ddbe-4235-9a3a-97e95e1ddc99" />
 
 Light Mode
 
-![Screenshot 2025-06-29 160607](https://github.com/user-attachments/assets/bcb2fbb5-bb2e-4736-af27-35c64b02d018)
+<img width="1121" height="794" alt="Screenshot 2026-02-23 211756" src="https://github.com/user-attachments/assets/87069526-9399-40b8-8874-5cab3314a56d" />
 
 Settings Window
 
@@ -20,9 +20,10 @@ Settings Window
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
-1. Create a directory called "ArchitectTracker" in the the ED: Marketplace Connector plugins folder.
-2. Save the file called "load.py" into it.
-3. Start EDMC.
+1. Download a zip file of the latest release <a href="https://github.com/kfpopeye/EliteDangerous/archive/refs/tags/v1.3.zip">here</a> or by clicking the "Releases" link to the right and then selecting the latest release shown.
+2. Create a directory called "ArchitectTracker" (make sure there are no spaces) in the the ED: Marketplace Connector plugins folder.
+3. Extract the downloaded zip file into this directory. Make sure no subdirectories are created. All files should appear directlu inside the "ArchitectTracker" directory.
+4. Start EDMC.
 
 ### Usage
 + When you land at a construction site the plugin will (after a few moments) list all the commodities and amounts required, provided and needed. You can switch between sites from the dropdown list in the upper left or the ">" button. The window will resize itself to fit all the commodities.
@@ -36,6 +37,19 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
   + Fleeet Carrier - site needs it and fleet carrier has some.
   + Construction site - site needs it and starship has some.
 + Closing the Architect Tracker window will stop the sites, commodities and markets from being tracked. This is handy if you're landing at markets but don't want the information to override your current closest\cheapest information.
++ Buttons on the UI:
+  - <b>X</b> - deletes currently shown construction site. Disabled when -ALL- sites are listed.
+  - <b><</b> or <b>></b> - changes to previous or next site in list. Wraps around list.
+  - <b>$\Ly</b> - toggles between showing the cheapest or closest markets in the preferred market column.
+  - <b>Pause</b> or <b>Unpause</b> - this button next to the Carrier name will pause or unpause updating the fleet carrier cargo quantities from Fdev's fleet carrier companion api. See section below.
+
+ ### Fleet Carrier Cargo Quantities
+- Information coming from the fleet carrier CAPI (fcapi) queries can often become unsyncronized with the actual amounts shown in the game. This causes Architect Tracker to sometimes display incorrect fleet carrier cargo quantities. As a work around, I have added a pause\unpause button next to the carrier name.
+- Transferring cargo to\from your starship or purchasing\selling commodities while docked at your fleet carrier are still tracked by Architect Tracker regardless.
+- The pause\unpause button has 2 modes it can operate which can be set in the "Settings" of EDMC:
+  - "First then pause" mode will accept the first fcapi query then ignore any others unless the pause button is clicked. This is the default mode. I have found that the first query is usually accurate if I haven't played for over an hour.
+  - "Only when UNpaused" mode will accept all fcapi queries unless you pause them.
+- Note: if you sell commodities to other players from your fleet carrier, pausing fcapi queries will cause the fleet carrier cargo amounts in Architect Tracker to become out of sync. Unpausing will, hopefully, restore them.
 
 ### Notes
 1. VR programs like Desktop+ can display this window inside the game for you. The ">" and "$\Ly" buttons are bound to the keys ">" and "p" respectively for Voice Attack users. Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
@@ -55,3 +69,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2025/08/05 : [version 1.1] Added feature - Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.
 + 2025/11/03 : [Version 1.2] Added previous site button to UI, owned fleet carrier no longer registers as market, remove version number from window title and improved start up to detect if landed on a market or carrier.
 + 2026/02/12 : [Version 1.2.2] Fixed bug that prevented Material column from displaying for some users.
++ 2026/02/23 : [Version 1.3] Added pause button for fleet carrier cargo, added totals row at bottom of list, delete site button is disabled when ALL sites are shown, smaller bug fixes.
