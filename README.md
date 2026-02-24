@@ -52,7 +52,7 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 - Note: if you sell commodities to other players from your fleet carrier, pausing fcapi queries will cause the fleet carrier cargo amounts in Architect Tracker to become out of sync. Unpausing will, hopefully, restore them.
 
 ### Notes
-1. VR programs like Desktop+ can display this window inside the game for you. The ">" and "$\Ly" buttons are bound to the keys ">" and "p" respectively for Voice Attack users. Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
+1. VR programs like Desktop+ can display this window inside the game for you. The ">" and "$\Ly" buttons are bound to the keys ">" and "p" respectively for Voice Attack users. Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking. The pause\unpause button is bound to "u".
 
 ### Notable Changes
 + 2025/04/12 : Added support for multiple construction sites. Sites are removed automaticly when they are completed.
