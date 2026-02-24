@@ -1,4 +1,14 @@
-__version__ = "1.2.2.1"
+__version__ = "1.2.3"
+
+"""
+Displays commodities required, provided and needed when you land at a construction site,
+market or fleet carrier and tracks cargo in your fleet carrier and starship.
+
+Author: CMDR kfpopeye and ChatGPT
+Date: 2025-04-08
+Git: https://github.com/kfpopeye/EliteDangerous
+License: GNU GENERAL PUBLIC LICENSE Version 2
+"""
 
 import json
 import os
@@ -19,18 +29,21 @@ from enum import Enum
 import traceback
 import semantic_version
 from config import appversion
+import webbrowser
 
 import math
 from typing import Union
 
 # Global vars
+EDMC_ROOT = None
+FCAPI_PAUSED = False
 ARCHITECT_TRACKER_VER = __version__
 ARCHITECT_GUI = None
 EDMCframe: Optional[tk.Frame] = None
 AT_BUTTON: Optional[tk.StringVar] = tk.StringVar(value="Show Architect Tracker (tracking disabled)")
 DEFAULT_COLUMNS = {"Material": True, "Required": True, "Provided": True, "Needed": True,
-                    "Pref Market": True, "Carrier Qty": True, "Ship Qty": True, "Shortfall": True
-                    }
+                   "Pref Market": True, "Carrier Qty": True, "Ship Qty": True, "Shortfall": True
+                  }
 SHOW_UI_AT_START = True
 class SHIP_MODE(Enum):
     Unknown = 0
@@ -42,7 +55,7 @@ SHIP_STATE = SHIP_MODE.Unknown
 
 CURRENT_LOCATION = None
 SITE_LOCATION = None
-    
+
 # Configure user directories for different OS's
 if platform.system() == "Windows":
     USER_DIR = os.path.join(os.getenv("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local")), "ArchitectTracker")
@@ -57,13 +70,14 @@ SAVE_FILE = os.path.join(USER_DIR, "construction_requirements.json")
 LOG_FILE = os.path.join(USER_DIR, "EDMC_Architect_Log.txt")
 CARRIER_FILE = os.path.join(USER_DIR, "fleet_carrier_cargo.json")
 MARKET_LIB_PATH = os.path.join(USER_DIR, "market_library.json")
+COMMODITY_FILE = "commodity_list.txt"
 
 #files created by EDMC
 MARKET_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous', 'Market.json')
 CARGO_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous', 'Cargo.json')
 
 logger = logging.getLogger("ArchitectTracker")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 file_handler = TimedRotatingFileHandler(
         LOG_FILE,
@@ -77,9 +91,9 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(lineno)d - %(mess
 file_handler.setFormatter(formatter)
 if not logger.hasHandlers():
     logger.addHandler(file_handler)
-    
+
 # --- Settings persistence ---
-def load_gui_settings():    
+def load_gui_settings():
     try:
         vis = {}
         cols = list(DEFAULT_COLUMNS.keys())
@@ -89,45 +103,45 @@ def load_gui_settings():
                 vis[c] = True
                 logger.info(f"Key: %s not found using default setting.", key)
             else:
-                vis[c] = config.get_bool(key)                
+                vis[c] = config.get_bool(key)
         vis["Material"] = True
-            
+
         if config.get('ArchTrack_hide_Provided') is None:
             hid = False
             logger.info(f"Hid not found using default settings.")
         else:
-            hid = config.get_bool('ArchTrack_hide_Provided')               
-            
+            hid = config.get_bool('ArchTrack_hide_Provided')
+
         if config.get('ArchTrack_theme') is None:
             theme = "Dark Mode"
             logger.info(f"Theme not found using default settings.")
-        else:            
+        else:
             theme = config.get_str('ArchTrack_theme')
-            
+
         if config.get('ArchTrack_cols') is None:
             col_display = cols
             logger.info(f"Column names not found using default settings.")
-        else:            
+        else:
             col_display = config.get_list('ArchTrack_cols')
-            
+
         if config.get('ArchTrack_tbg') is None:
             trans_bg = False
             logger.info(f"trans_bg not found using default settings.")
         else:
             trans_bg = config.get_bool('ArchTrack_tbg')
-            
+
         if config.get('ArchTrack_wintop') is None:
             win_top = False
             logger.info(f"win_top not found using default settings.")
-        else:                    
+        else:
             win_top = config.get_bool('ArchTrack_wintop')
-            
+
         if config.get('ArchTrack_opcamt') is None:
             opac_amt = 100
             logger.info(f"opac_amt not found using default settings.")
         else:
             opac_amt = config.get_int('ArchTrack_opcamt')
-            
+
         return vis, hid, theme, col_display, trans_bg, win_top, opac_amt
     except Exception as e:
         logger.error(f"Error loading GUI settings: {e}")
@@ -148,7 +162,7 @@ def save_gui_settings():
         config.set('ArchTrack_tbg', bool(ARCHITECT_GUI.trans_bg))
         config.set('ArchTrack_wintop', bool(ARCHITECT_GUI.win_top))
         config.set('ArchTrack_opcamt', int(ARCHITECT_GUI.opac_amount))
-    except Exception as e:                                                  
+    except Exception as e:
         logger.error(f"Error saving GUI settings: {e}")
 
 # --- Helpers ---
@@ -179,30 +193,34 @@ class FleetCarrierCargoTracker:
 
     # update from CAPI data
     def update(self, data):
+        #store list of ALL cargo
         cargo_items = data.get('cargo', [])
         if not isinstance(cargo_items, list):
             logger.warning("Unexpected cargo data format.")
             return
-        try:
-            newcargo = {}
-            for item in cargo_items:
+
+        newcargo = {}
+        for item in cargo_items:
+            try:
                 name = item.get("commodity")
                 qty = item.get("qty", 0)
                 if not name:
                     logger.warning("Missing commodity name in cargo item: %s. Skipping it.", item)
                     continue
-                newcargo[name] = newcargo[name, 0] + qty #materials purchase at different prices have different slots
-                logger.debug("Fleet carrier has %s tonnes of %s", qty, name)            
-            self.commodities.clear()
-            self.commodities = newcargo
+                newcargo[name] = newcargo.get(name, 0) + qty #materials purchase at different prices have different slots
+                logger.debug("Fleet carrier has %s tonnes of %s", qty, name)
+            except Exception as e:
+                logger.error("Error updating fleet carrier cargo from CAPI: %s", e)
+                continue
 
-            carrier_info = data.get("name", {})
-            hex_name = carrier_info.get("vanityName")
-            self.carrier_name = decode_vanity_name(hex_name) if hex_name else "Unnamed Carrier"
-            self.callsign = carrier_info.get("callsign", "")
-            self.save()
-        except Exception as e:
-            logger.error("Error updating fleet carrier cargo from CAPI: %s", e)
+        self.commodities.clear()
+        self.commodities = newcargo
+
+        carrier_info = data.get("name", {})
+        hex_name = carrier_info.get("vanityName")
+        self.carrier_name = decode_vanity_name(hex_name) if hex_name else "Unnamed Carrier"
+        self.callsign = carrier_info.get("callsign", "")
+        self.save()
 
     def apply_transfer_event(self, transfers):
         for transfer in transfers:
@@ -214,15 +232,18 @@ class FleetCarrierCargoTracker:
             current = self.commodities.get(name, 0)
             if direction == "tocarrier":
                 self.commodities[name] = current + qty
+                logger.info("Transfered: %s x %s to carrier", name, qty)
             else:
                 self.commodities[name] = max(0, current - qty)
+                logger.info("Transfered: %s x %s to starship", name, qty)
         self.save()
-        
+
     def apply_market_purchase(self, eventData):
         name = eventData.get("Type").capitalize()
         qty = eventData.get("Count", 0)
         current = self.commodities.get(name, 0)
         self.commodities[name] = max(0, current - qty)
+        logger.info("Puchased: %s x %s from carrier", name, qty)
         self.save()
 
     def get_quantity(self, commodity_name):
@@ -270,11 +291,12 @@ def save_facility_requirements(resources, station_name):
     except Exception:
         data = {}
 
-    if is_station_complete(materials):
+    if is_station_complete(materials) and station_name in data:
         logger.info("Facility %s is complete. Removing from list.", station_name)
         data.pop(station_name, None)
     else:
         data[station_name] = {"Location": CURRENT_LOCATION, "materials": materials}
+        logger.info("Adding\\updating facility %s to list.", station_name)
 
     try:
         with open(SAVE_FILE, "w", encoding="utf-8") as f:
@@ -284,7 +306,7 @@ def save_facility_requirements(resources, station_name):
 
 def load_facility_requirements():
     global SITE_LOCATION
-    
+
     if not os.path.exists(SAVE_FILE):
         return {}
     try:
@@ -304,20 +326,20 @@ def load_facility_requirements():
     if not SITE_LOCATION and cleaned:
         first_site = next(iter(cleaned.values()))
         if first_site and first_site.get("Location"):
-            SITE_LOCATION = first_site.get("Location")            
-            logger.debug("Set site location to: %s", SITE_LOCATION)
+            SITE_LOCATION = first_site.get("Location")
+            logger.info("Set site location to: %s", SITE_LOCATION)
         else:
             SITE_LOCATION = None
-        
+
     return cleaned
-    
+
 def is_facility(station):
     # Load new data
     data = load_facility_requirements()
     # Prepare data for display
     cleaned = [
         (
-          (full.split(':', 1)[-1].strip() if ':' in full else 
+          (full.split(':', 1)[-1].strip() if ':' in full else
            full.split(';', 1)[-1].strip() if ';' in full else full)
         )
         for full in data
@@ -326,7 +348,7 @@ def is_facility(station):
     return station in cleaned
 
 # load cargo for currently piloted ship
-def load_ships_cargo_data():
+def load_starship_cargo_data():
     if not os.path.exists(CARGO_JSON):
         return []
     try:
@@ -337,30 +359,27 @@ def load_ships_cargo_data():
         logger.error("Error loading cargo data: %s", e)
         return []
 
-# do any construction sites require the item AND is the item buy price cheaper than the sell price
-def isItemInDemand(item) -> bool:
-    item_name = item.get("Name")
-    item_price = item.get("SellPrice")
-    prices = []
+# is the item a construction commodity
+COMMODITIES = None
+def isItemConstructionCommodity(item) -> bool:
+    global COMMODITIES
 
-    site_data = load_facility_requirements()
-    for site in site_data.values():  # iterate over site dicts directly
-        materials = site.get("materials", {})
-        for mat, vals in materials.items():
-            if mat == item_name:
-                price = vals.get("Price")
-                if price is not None:
-                    prices.append(price)
-
-    if not prices:
+    if not os.path.exists(COMMODITY_FILE):
+        logger.error("Commodity data file does not exist: %s", COMMODITY_FILE)
         return False
 
-    in_demand = all(item_price < price for price in prices)
-    if in_demand:
-        logger.info("Item '%s' is in demand (price: %s < all site prices: %s)", item_name, item_price, prices)
+    if COMMODITIES is None:
+        with open(COMMODITY_FILE, "r") as f:
+            lines = [line.strip() for line in f]
+        COMMODITIES = [f"${line}_name;" for line in lines]
+        
+    item_name = item.get("Name")
+    if item_name in COMMODITIES:
+        logger.debug("Item: %s is a construction commodity.", item_name)
+        return True
     else:
-        logger.debug("Item '%s' is NOT in demand (price: %s vs site prices: %s)", item_name, item_price, prices)
-    return in_demand
+        logger.debug("Item: %s is NOT a construction commodity.", item_name)
+        return False
 
 #a list of the cheapest and closest markets that are selling an item
 def update_market_library() -> None:
@@ -379,34 +398,36 @@ def update_market_library() -> None:
         # Load market data from EDMC
         with open(MARKET_JSON, "r", encoding="utf-8") as f:
             market = json.load(f)
-        
-        station_name = market.get("StationName")        
+
+        station_name = market.get("StationName")
         items = market.get("Items", [])
 
         for item in items:
             if item.get("Stock", 0) > 0:  # Item is for sale
                 item_name = item.get("Name")
                 m_price = item.get("SellPrice")
-                
-                if item_name and isItemInDemand(item):
-                    existing = market_lib.get(item_name, {})
 
-                    # Update CheapMarket if cheaper
+                if item_name and isItemConstructionCommodity(item):
+                    existing = market_lib.get(item_name, {})
                     cheap_entry = existing.get("CheapMarket")
-                    if not cheap_entry or m_price < cheap_entry["Price"]:
+                    
+                    if not cheap_entry or m_price < cheap_entry["Price"]: # Update CheapMarket if cheaper or no entry
                         logger.debug("Updating CheapMarket for: %s", item_name)
                         existing["CheapMarket"] = {
                             "Price": m_price,
                             "StationName": station_name,
                             "Location": CURRENT_LOCATION
                         }
+                    elif station_name == cheap_entry.get("StationName"): #update price if station is already cheapest entry
+                        logger.debug("Updating price for: %s", item_name)
+                        existing["CheapMarket"]["Price"] = m_price
 
-                    # Update ClosestMarket if closer
+                    # Update ClosestMarket if closer or no entry
                     close_entry = existing.get("ClosestMarket")
                     if close_entry:
                         existing_distance = calculate_distance(*close_entry["Location"], *SITE_LOCATION)
                     else:
-                        existing_distance = float("inf")                        
+                        existing_distance = float("inf")
                     if CURRENT_LOCATION and SITE_LOCATION:
                         new_distance = calculate_distance(*CURRENT_LOCATION, *SITE_LOCATION)
                     else:
@@ -439,12 +460,12 @@ def get_prefMarket_name(material):
                 market_lib = json.load(f)
         else:
             return ""
-            
+
         resource = market_lib.get(material)
         if not resource:
             return ""
         pref_cheap_market = config.get_bool('ArchTrack_prefCheap')
-        
+
         if pref_cheap_market:
             market = resource.get("CheapMarket")
             return market.get("StationName", "")
@@ -462,7 +483,7 @@ def is_market_selling(material) -> bool:
     # Load market data from EDMC
     with open(MARKET_JSON, "r", encoding="utf-8") as f:
         market = json.load(f)
-    
+
     # Load market info
     station_name = market.get("StationName")
     items = market.get("Items", [])
@@ -473,12 +494,109 @@ def is_market_selling(material) -> bool:
                 return True
     return False
 
+class Tooltip:
+    def __init__(self, widget, text, delay=400, follow_mouse=False):
+        self.widget = widget
+        self.text = text
+        self.delay = delay
+        self.follow_mouse = follow_mouse
+
+        self.tooltip = None
+        self.after_id = None
+
+        self.widget.bind("<Enter>", self._on_enter, add="+")
+        self.widget.bind("<Leave>", self._on_leave, add="+")
+        self.widget.bind("<ButtonPress>", self._on_leave, add="+")
+
+        if follow_mouse:
+            self.widget.bind("<Motion>", self._on_motion, add="+")
+
+    # --------------------
+
+    def _on_enter(self, event=None):
+        self._schedule()
+
+    def _on_leave(self, event=None):
+        self._unschedule()
+        self._hide()
+
+    def _on_motion(self, event):
+        if self.tooltip:
+            self._position(event)
+
+    # --------------------
+
+    def _schedule(self):
+        self._unschedule()
+        self.after_id = self.widget.after(self.delay, self._show)
+
+    def _unschedule(self):
+        if self.after_id:
+            self.widget.after_cancel(self.after_id)
+            self.after_id = None
+
+    # --------------------
+
+    def _show(self):
+        if self.tooltip:
+            return
+
+        root = self.widget.winfo_toplevel()
+
+        self.tooltip = tk.Frame(
+            root,
+            bg="#FFFFEA",
+            highlightbackground="black",
+            highlightthickness=1,
+            bd=0
+        )
+
+        label = tk.Label(
+            self.tooltip,
+            text=self.text,
+            bg="#FFFFEA",
+            justify="left",
+            wraplength=250
+        )
+        label.pack(ipadx=6, ipady=4)
+
+        self._position()
+
+        # Force above everything in this window
+        self.tooltip.lift()
+
+    def _position(self, event=None):
+        root = self.widget.winfo_toplevel()
+
+        if event:
+            x = event.x_root + 15
+            y = event.y_root + 15
+        else:
+            x, y = self.widget.winfo_pointerxy()
+            x += 15
+            y += 15
+
+        # Convert screen coords to root coords
+        rx = root.winfo_rootx()
+        ry = root.winfo_rooty()
+
+        x -= rx
+        y -= ry
+
+        self.tooltip.place(x=x, y=y)
+
+    def _hide(self):
+        if self.tooltip:
+            self.tooltip.destroy()
+            self.tooltip = None
+
 # --- GUI Definition ---
 class ArchitectTrackerGUI(tk.Toplevel):
     edBlue = "#1fbeff"
     edOrange = "#ff8500"
     bgBlack = "#1a1a1a"
     column_visibility = {}
+    canvas_tooltip = None
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -487,7 +605,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.configure(bg=self.bgBlack)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.column_visibility, self.hide_provided, self.theme, self.column_names, self.trans_bg, self.win_top, self.opac_amount = load_gui_settings()
-        
+
         self.setAlpha(self.opac_amount)
         self.setStayOnTop(self.win_top)
         self.setTransparentBg(self.trans_bg)
@@ -498,9 +616,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         else:
             self._build_widgets()
             self.refresh()
-            
+
     def setStayOnTop(self, val):
-        self.win_top = val        
+        self.win_top = val
         if platform.system() == "Darwin":
             self.wm_attributes("-topmost", self.win_top)
         elif platform.system() == "Windows":
@@ -516,7 +634,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.attributes("-alpha", self.opac_amount / 100)
         else:
             self.wm_attributes("-alpha", self.opac_amount / 100)
-            
+
     def setTransparentBg(self, val):
         self.trans_bg = val
         if self.theme == "Dark Mode":
@@ -558,7 +676,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         """Adjust column widths to fit content."""
         style_font = self.style.lookup("ArchTrack.Treeview", "font")
         font = tkFont.Font(font=style_font)
-        
+
         for col in self.tree["columns"]:
             max_width = 0
             if col != "#0":  # Exclude the tree column
@@ -571,7 +689,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
                 max_width = max(max_width, width)
                 # Add some padding
                 self.tree.column(col, width=max_width)
-                
+
         self.update_idletasks()
 
         """Adjust height to fit content."""
@@ -587,12 +705,12 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.style = ttk.Style()
         if self.theme == "Dark Mode":
             self.style.theme_use("clam")
-            self.style.configure("ArchTrack.Treeview.Heading", 
-                                    background=ArchitectTrackerGUI.bgBlack, 
+            self.style.configure("ArchTrack.Treeview.Heading",
+                                    background=ArchitectTrackerGUI.bgBlack,
                                     foreground=ArchitectTrackerGUI.edOrange)
-            self.style.configure("ArchTrack.TButton", 
-                                    background=ArchitectTrackerGUI.bgBlack, 
-                                    foreground=ArchitectTrackerGUI.edOrange, 
+            self.style.configure("ArchTrack.TButton",
+                                    background=ArchitectTrackerGUI.bgBlack,
+                                    foreground=ArchitectTrackerGUI.edOrange,
                                     padding=(6, 2))
             self.style.configure("ArchTrack.Vertical.TScrollbar",
                                     gripcount=0,
@@ -604,21 +722,24 @@ class ArchitectTrackerGUI(tk.Toplevel):
                                     sliderrelief="flat",
                                     thickness=12,  # Scrollbar thickness
                                     arrowcolor=ArchitectTrackerGUI.edOrange)  # Color for the arrows
-            self.style.configure("ArchTrack.Treeview", 
-                                    background=ArchitectTrackerGUI.bgBlack, 
-                                    foreground=ArchitectTrackerGUI.edOrange, 
+            self.style.configure("ArchTrack.Treeview",
+                                    background=ArchitectTrackerGUI.bgBlack,
+                                    foreground=ArchitectTrackerGUI.edOrange,
                                     rowheight=24,
                                     selectbackground=ArchitectTrackerGUI.bgBlack)
-            self.style.configure("ArchTrack.TCombobox", 
-                                    background=ArchitectTrackerGUI.bgBlack, 
-                                    foreground=ArchitectTrackerGUI.edOrange, 
-                                    selectbackground=ArchitectTrackerGUI.bgBlack, 
+            self.style.configure("ArchTrack.TCombobox",
+                                    background=ArchitectTrackerGUI.bgBlack,
+                                    foreground=ArchitectTrackerGUI.edOrange,
+                                    selectbackground=ArchitectTrackerGUI.bgBlack,
                                     arrowcolor=ArchitectTrackerGUI.edOrange)
-            self.style.configure("ArchTrack.TFrame", 
+            self.style.configure("ArchTrack.TFrame",
                                     background=ArchitectTrackerGUI.bgBlack)
-            self.style.configure("ArchTrack.TLabel", 
-                                    background=ArchitectTrackerGUI.bgBlack, 
+            self.style.configure("ArchTrack.TLabel",
+                                    background=ArchitectTrackerGUI.bgBlack,
                                     foreground=ArchitectTrackerGUI.edOrange)
+            self.style.map("ArchTrack.TButton",
+               foreground=[("disabled", ArchitectTrackerGUI.bgBlack)],  # Color for disabled text
+               background=[("disabled", "#7d7d7d")])  # Color for disabled background
             self.style.map("ArchTrack.Treeview", foreground=[("selected", ArchitectTrackerGUI.edBlue)])
             self.style.map("ArchTrack.TCombobox",
                                 fieldbackground=[('readonly', ArchitectTrackerGUI.bgBlack)], # Background color of the entry field
@@ -647,39 +768,51 @@ class ArchitectTrackerGUI(tk.Toplevel):
         # Top controls (row 0)
         dropframe = ttk.Frame(frame, padding=8, style="ArchTrack.TFrame")
         dropframe.grid(row=0, column=0, sticky="nsew", padx=(0, 2))
-        
+
         self.deleteStation = ttk.Button(dropframe, text="X", style="ArchTrack.TButton", width=1, command=self.on_delete_station)
         self.deleteStation.grid(row=0, column=0, sticky="w")
-        
+        Tooltip(self.deleteStation, "Delete the site currently shown.")
+
         self.station_var = tk.StringVar()
+        self.station_var.trace_add("write", self._on_change_station_var)
         self.dropdown = ttk.Combobox(dropframe, textvariable=self.station_var, state="readonly", style="ArchTrack.TCombobox")
         self.dropdown.grid(row=0, column=1, sticky="w", padx=(0, 2))
         self.dropdown.bind("<<ComboboxSelected>>", lambda e: self.refresh())
-        
+
         self.changeToPrevStation = ttk.Button(dropframe, text="<", style="ArchTrack.TButton", width=1, command=self.on_prev_station)
         self.changeToPrevStation.grid(row=0, column=2, sticky="w")
-        
+        Tooltip(self.changeToPrevStation, "Change to the previous site.")
+
         self.changeStation = ttk.Button(dropframe, text=">", style="ArchTrack.TButton", width=1, command=self.on_next_station)
         self.changeStation.grid(row=0, column=3, sticky="w")
-        
+        Tooltip(self.changeStation, "Change to the next site.")
+
         marketframe = ttk.Frame(frame, padding=8, style="ArchTrack.TFrame")
         marketframe.grid(row=0, column=3, sticky="nsew", padx=(0, 2))
-        
+
         self.togglePrefStation = ttk.Button(marketframe, text="$\\Ly", style="ArchTrack.TButton", width=4, command=self.on_toggle_prefMarket)
         self.togglePrefStation.grid(row=0, column=0, sticky="w")
+        Tooltip(self.togglePrefStation, "Switch between closest and cheapest market.")
 
         ttk.Label(marketframe, text="Preferred Market:", style="ArchTrack.TLabel").grid(row=0, column=1, sticky="e", padx=(0, 5))
         self.market_name_label = ttk.Label(marketframe, text="", style="ArchTrack.TLabel")
-        self.market_name_label.grid(row=0, column=2, sticky="w")        
+        self.market_name_label.grid(row=0, column=2, sticky="w")
         cheap = config.get_bool('ArchTrack_prefCheap')
         if cheap:
             self.market_name_label['text'] = 'cheapest ($)'
         else:
             self.market_name_label['text'] = 'closest (Ly)'
 
-        ttk.Label(frame, text="Carrier:", style="ArchTrack.TLabel").grid(row=0, column=5, sticky="e", padx=(10, 5))
-        self.carrier_label = ttk.Label(frame, text="", style="ArchTrack.TLabel")
-        self.carrier_label.grid(row=0, column=6, sticky="w")
+        carrierframe = ttk.Frame(frame, padding=8, style="ArchTrack.TFrame")
+        carrierframe.grid(row=0, column=5, sticky="nsew", padx=(0, 2))
+
+        self.canvas = tk.Canvas(carrierframe, width=25, height=25)
+        self.canvas.grid(row=0, column=0, sticky="w")
+        self.draw_canvas()
+
+        ttk.Label(carrierframe, text="Carrier:", style="ArchTrack.TLabel").grid(row=0, column=1, sticky="e", padx=(0, 5))
+        self.carrier_label = ttk.Label(carrierframe, text="", style="ArchTrack.TLabel")
+        self.carrier_label.grid(row=0, column=2, sticky="w")
 
         # Treeview setup (row 1)
         cols = list(DEFAULT_COLUMNS.keys())
@@ -697,8 +830,59 @@ class ArchitectTrackerGUI(tk.Toplevel):
         frame.rowconfigure(1, weight=1)
         for i in range(8):
             frame.columnconfigure(i, weight=1 if i < 7 else 0)
-            
+
         self.refresh_columns()  # Ensure columns initial visibility
+
+    def draw_canvas(self):
+        if self.theme == "Dark Mode":
+            bg = self.style.lookup("ArchTrack.TButton", "background")
+            fg = self.style.lookup("ArchTrack.TButton", "foreground")
+            active_bg = self.style.lookup("ArchTrack.TButton", "background", state=("active",))
+        else:
+            bg = self.style.lookup("TButton", "background")
+            fg = self.style.lookup("TButton", "foreground")
+            active_bg = self.style.lookup("TButton", "background", state=("active",))
+
+        # Clear canvas first
+        self.canvas.delete("all")
+
+        # Draw main rectangle
+        self.rect_id = self.canvas.create_rectangle(
+            0, 0, 25, 25,
+            fill=bg,
+            outline="black",
+            tags="canvas_button"
+        )
+
+        # Draw play/pause symbol
+        if FCAPI_PAUSED:
+            self.canvas.create_rectangle(7, 5, 12, 20, fill=fg, outline="black", tags="canvas_button")
+            self.canvas.create_rectangle(15, 5, 20, 20, fill=fg, outline="black", tags="canvas_button")
+            tooltip_text = "Press to UNpause\ncarrier updates."
+        else:
+            self.canvas.create_polygon(7, 5, 7, 20, 20, 13, fill=fg, outline="black", tags="canvas_button")
+            tooltip_text = "Press to pause\ncarrier updates."
+
+        # Attach tooltip to the canvas itself (not individual items)
+        if hasattr(self, "canvas_tooltip") and self.canvas_tooltip:
+            self.canvas_tooltip._hide()
+        self.canvas_tooltip = Tooltip(self.canvas, tooltip_text, follow_mouse=True)
+
+        # Bind hover for rectangle color
+        self.canvas.tag_bind("canvas_button", "<Enter>", lambda e: self.canvas.itemconfig(self.rect_id, fill=active_bg))
+        self.canvas.tag_bind("canvas_button", "<Leave>", lambda e: self.canvas.itemconfig(self.rect_id, fill=bg))
+
+        # Bind click for canvas (anywhere)
+        self.canvas.bind("<Button-1>", self.on_canvas_click)
+        
+    def _on_change_station_var(self, *args):
+        if self.station_var.get() == '-All-':
+            self.deleteStation.config(state="disabled")
+        else:
+            self.deleteStation.config(state="enabled")
+
+    def _on_canvas_hover(self, event, color):
+        self.canvas.itemconfig("canvas_button", fill=color)
 
     def refresh(self):
         # Remember the currently selected station name
@@ -711,13 +895,12 @@ class ArchitectTrackerGUI(tk.Toplevel):
         # Prepare data for display
         display = [
             (
-              (full.split(':', 1)[-1].strip() if ':' in full else 
+              (full.split(':', 1)[-1].strip() if ':' in full else
                full.split(';', 1)[-1].strip() if ';' in full else full),
               full
             )
             for full in data
         ]
-        display.sort(key=lambda x: x[0])  # Sort alphabetically
         self.station_map = {name: full for name, full in display}
         self.station_map['-All-'] = None
 
@@ -738,20 +921,29 @@ class ArchitectTrackerGUI(tk.Toplevel):
         else:
             # No data - clear tree
             self.tree.delete(*self.tree.get_children())
-            
-        # Set the market and carrier labels
+
+        # Set the carrier label
         self.carrier_label['text'] = CARRIER_TRACKER.carrier_name or 'N/A'
-            
+
+        self.draw_canvas() #resets pause button
+
         self.update_idletasks()
         self.auto_size_tree()
         width = self.winfo_reqwidth()
         height = self.winfo_reqheight()
-        self.geometry(f"{width}x{height}") 
+        '''
+        #is this needed for VR?
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        if height > screen_height:
+            height = screen_height
+        '''
+        self.geometry(f"{width}x{height}")
 
     def display_station(self):
         self.tree.delete(*self.tree.get_children())
         sel = self.station_var.get()
-        
+
         if sel == '-All-':
             materials = {}
             for site in self.data.values():
@@ -769,8 +961,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
             if not full:
                 return
             materials = self.data[full]['materials']
-        
-        cargo_items = load_ships_cargo_data()
+
+        cargo_items = load_starship_cargo_data()
         # Create lookup for cargo items
         cargo_lookup = {i.get('Name'): i for i in cargo_items}
 
@@ -785,13 +977,23 @@ class ArchitectTrackerGUI(tk.Toplevel):
         else:
             if self.trans_bg:
                 self.tree.tag_configure('oddrow', background='#d9d9d9')
-            else:                
+            else:
                 self.tree.tag_configure('oddrow', background='#ffffff')
             self.tree.tag_configure('evenrow', background='#d9d9d9')
             self.tree.tag_configure('highlightedrow', foreground='#ff6347')
+        
+        self.tree.tag_configure('totalsrow', font=('TkDefaultFont', 10, 'bold'))
+            
+        req_total = 0
+        prov_total = 0
+        need_total = 0
+        fc_total = 0
+        ship_total = 0
+        short_total = 0
+        rows_index = 0
 
         # Insert the materials into the tree
-        for idx, (mat, vals) in enumerate(materials.items()):
+        for idx, (mat, vals) in enumerate(sorted(materials.items())):
             req = vals['RequiredAmount']
             prov = vals['ProvidedAmount']
             if self.hide_provided and prov >= req:
@@ -801,15 +1003,15 @@ class ArchitectTrackerGUI(tk.Toplevel):
             need = req - prov
 
             pref_market = get_prefMarket_name(mat)
-            
+
             # Get fleet carrier and ship cargo quantities
             #TODO: change these to use $_name (can't till EDMC updates cargo and fc)
             fc_qty = CARRIER_TRACKER.get_quantity(safeMat)
             ship_qty = cargo_lookup.get(safeMat, {}).get('Count', 0)
-            
+
             # Calculate shortage
             short = max(0, need - (fc_qty + ship_qty))
-            
+
             # Determine row color based on even or odd index
             row_tag = 'evenrow' if idx % 2 == 0 else 'oddrow'
             tags = [row_tag]
@@ -827,12 +1029,34 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
             # Insert row into the tree view
             self.tree.insert("", "end", values=(locName, req, prov, need, pref_market,
-                                               fc_qty, ship_qty, short), tags=(tags))
+                                               fc_qty, ship_qty, short), tags=tuple(tags))
+                                               
+            rows_index += 1
+            req_total = req_total + req
+            prov_total = prov_total + prov
+            need_total = need_total + need
+            fc_total = fc_total + fc_qty
+            ship_total = ship_total + ship_qty
+            short_total = short_total + short
+            
+        total_row_tag = 'evenrow' if rows_index % 2 == 0 else 'oddrow'
+        tags = (total_row_tag, 'totalsrow')
+        self.tree.insert("", "end", values=("Totals", req_total, prov_total, need_total, "",
+                                               fc_total, ship_total, short_total), tags=tuple(tags))
 
     def on_close(self):
         AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         self.destroy()  # Close the window
-        
+
+    def on_canvas_click(self, event):
+        global FCAPI_PAUSED
+        FCAPI_PAUSED = not FCAPI_PAUSED
+        if FCAPI_PAUSED:
+            logger.info(f'Fleet carrier API paused.')
+        else:
+            logger.info(f'Fleet carrier API UNpaused.')
+        self.draw_canvas()
+
     def on_next_station(self):
         values = self.dropdown['values']
         if not values:
@@ -846,7 +1070,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.dropdown.current(next_ndx)
         logger.info("Changing to station: %s", self.dropdown.get())
         self.refresh()
-        
+
     def on_prev_station(self):
         values = self.dropdown['values']
         if not values:
@@ -860,10 +1084,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.dropdown.current(prev_ndx)
         logger.info("Changing to station: %s", self.dropdown.get())
         self.refresh()
-        
+
     def change_station(self, station):
-        short_name = (station.split(':', 1)[-1].strip() if ':' in station else 
-                        station.split(';', 1)[-1].strip() if ';' in station 
+        short_name = (station.split(':', 1)[-1].strip() if ':' in station else
+                        station.split(';', 1)[-1].strip() if ';' in station
                         else station)
 
         values = self.dropdown['values']
@@ -876,6 +1100,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             return
         else:
             self.refresh()
+            
         values = self.dropdown['values']
         if short_name in values:
             self.station_var.set(short_name)
@@ -890,15 +1115,15 @@ class ArchitectTrackerGUI(tk.Toplevel):
             logger.info("Deleted station: %s", station_name)
         else:
             logger.info("Could not delete station: %s", station_name)
-  
+
         try:
             with open(SAVE_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, indent=4)
         except Exception as e:
             logger.error("Error saving data: %s", e)
-            
+
         self.refresh()
-        
+
     def reset_Style(self, new_theme):
         self.theme = new_theme
         logger.info("reset_Style theme is: %s", self.theme)
@@ -919,7 +1144,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         """for col in visible_columns:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=100)"""
-            
+
     def on_toggle_prefMarket(self):
         old = config.get_bool('ArchTrack_prefCheap')
         config.set('ArchTrack_prefCheap', bool(not old))
@@ -928,7 +1153,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         else:
             self.market_name_label['text'] = 'closest (Ly)'
         self.refresh()
-        
+
     def rename_column(self, c, v):
         self.tree.heading(c, text=v)
         cols = self.tree["columns"]
@@ -939,28 +1164,30 @@ class ArchitectTrackerGUI(tk.Toplevel):
 def show_gui():
     global ARCHITECT_GUI
     global AT_BUTTON
-    
+
     if not ARCHITECT_GUI or not ARCHITECT_GUI.winfo_exists():
-        ARCHITECT_GUI = ArchitectTrackerGUI(None)
+        ARCHITECT_GUI = ArchitectTrackerGUI(EDMC_ROOT)
     else:
         ARCHITECT_GUI.lift()
         ARCHITECT_GUI.refresh()
     AT_BUTTON.set("Hide Architect Tracker (tracking)")
-        
+
 def toggle_gui():
     global ARCHITECT_GUI
     global AT_BUTTON
-    
+
     if not ARCHITECT_GUI or not ARCHITECT_GUI.winfo_exists():
         AT_BUTTON.set("Hide Architect Tracker (tracking)")
-        ARCHITECT_GUI = ArchitectTrackerGUI(None)
+        ARCHITECT_GUI = ArchitectTrackerGUI(EDMC_ROOT)
     else:
         AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         ARCHITECT_GUI.destroy()
 
 def plugin_start3(plugin_dir):
     global SHOW_UI_AT_START
-    
+    global FCAPI_PAUSED
+    global COMMODITY_FILE
+
     logger.info("Starting Architect Tracker plugin (%s)", ARCHITECT_TRACKER_VER)
 
     # Up until 5.0.0-beta1 config.appversion is a string
@@ -971,31 +1198,54 @@ def plugin_start3(plugin_dir):
         core_version = appversion()
     # Yes, just blow up if config.appverison is neither str nor callable
     logger.info(f'Core EDMarketConnector version: {core_version}')
-    
+
+    COMMODITY_FILE = os.path.join(plugin_dir, COMMODITY_FILE)
+
+    if config.get('ArchTrack_fcapimode') is None:
+        fcapi_mode = "First then pause"
+        config.set('ArchTrack_fcapimode', fcapi_mode)
+        logger.info(f"fcapi_mode not found using default settings.")
+    else:
+        fcapi_mode = config.get_str('ArchTrack_fcapimode')
+
+    if fcapi_mode == "Only when unpaused":
+        FCAPI_PAUSED = True
+        logger.info(f'Fleet carrier API paused.')
+
     SHOW_UI_AT_START = config.get_bool('ArchTrack_showUI')
     if SHOW_UI_AT_START:
         show_gui()
     return "ArchitectTracker"
-    
+
 def on_key_press(event):
+    if event.char == 't':
+       toggle_gui()
+       return
+       
+    if not ARCHITECT_GUI or not ARCHITECT_GUI.winfo_exists() or not SITE_LOCATION:
+        return
+        
     if event.char == '>':
         ARCHITECT_GUI.on_next_station()
     elif event.char == '<':
         ARCHITECT_GUI.on_prev_station()
     elif event.char == 'p':
         ARCHITECT_GUI.on_toggle_prefMarket()
-    elif event.char == 't':
-       toggle_gui()
+    elif event.char == 'u':
+        ARCHITECT_GUI.on_canvas_click(event)
 
 def plugin_app(parent: tk.Frame) -> tk.Frame:
     global EDMCframe
     global AT_BUTTON
+    global EDMC_ROOT
+
+    EDMC_ROOT = parent.winfo_toplevel()
 
     parent.bind_all('<KeyPress>', on_key_press)
 
     EDMCframe = tk.Frame(parent)
     tk.Button(EDMCframe, textvariable=AT_BUTTON, command=toggle_gui).pack(fill=tk.X, padx=5, pady=5)
-    
+
     theme.update(EDMCframe)
     return EDMCframe
 
@@ -1004,6 +1254,7 @@ def plugin_stop():
         AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         ARCHITECT_GUI.destroy()
     logger.info("Shutting down.")
+    logger.info("***************************************")
 
 # --- Data Hooks ---
 def journal_entry(cmdr, is_beta, system, station, entry, state):
@@ -1011,109 +1262,110 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     global SITE_LOCATION
     global SHIP_STATE
     
+    if "StarPos" in entry:
+        CURRENT_LOCATION = tuple(entry["StarPos"])
+        logger.info("Set current location to: %s", CURRENT_LOCATION)
+    
     if not ARCHITECT_GUI and not ARCHITECT_GUI.winfo_exists():
         return
         
-    #logger.debug("STATION: %s", station)
-    #logger.debug("ENTRY: %s", entry)
-    #logger.debug("STATE: %s", state)
-    #logger.debug("CMDR: %s", cmdr)
-    
+    if (SHIP_STATE == SHIP_MODE.Unknown):
+        if state.get("IsDocked") is True:
+            if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
+                SHIP_STATE = SHIP_MODE.DockedAtFC
+                logger.info("Ship state: Docked at FC")
+            elif is_facility(station):
+                SHIP_STATE = SHIP_MODE.DockedAtSite
+                logger.info("Ship state: Docked at site")
+            else:
+                SHIP_STATE = SHIP_MODE.DockedAtMarket
+                logger.info("Ship state: Docked at market")
+        else:
+            SHIP_STATE = SHIP_MODE.Undocked
+            logger.info("Ship state: Undocked")
+
     event = entry.get("event")
 
     if event == "ColonisationConstructionDepot":
         SHIP_STATE = SHIP_MODE.DockedAtSite
-        logger.info("Ship state: Docked at site")
+        logger.info("Ship state: Docked at site: %s", station)
         resources = entry.get("ResourcesRequired", [])
         save_facility_requirements(resources, station)
         if not SITE_LOCATION: #reinitialize if no construction sites existed
             if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
                 ARCHITECT_GUI.destroy()
             SITE_LOCATION = CURRENT_LOCATION
-            logger.debug("Set site location to current location: %s", SITE_LOCATION)
+            logger.info("Set site location to current location: %s", SITE_LOCATION)
             show_gui()
         elif ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
             ARCHITECT_GUI.change_station(station)
-            ARCHITECT_GUI.refresh()
-
-    elif event in ("Cargo", "CargoDepot"):
-        logger.debug("Received cargo event.")
-        if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-            ARCHITECT_GUI.refresh()
 
     elif event == "Market":
         # do not register my fleet carrier as a market
         if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
             return;
-        SHIP_STATE = SHIP_MODE.DockedAtMarket        
-        logger.info("Ship state: Docked at market")
+        SHIP_STATE = SHIP_MODE.DockedAtMarket
+        logger.info("Ship state: Docked at market: %s", station)
         update_market_library()
-        if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-            ARCHITECT_GUI.refresh()
-            
+
     elif event == "MarketBuy":
         if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
-            logger.info("Purchased from my fleet carrier.");
             CARRIER_TRACKER.apply_market_purchase(entry)
-        if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-            ARCHITECT_GUI.refresh()
 
     elif event == "CargoTransfer":
         transfers = entry.get("Transfers", [])
         if CARRIER_TRACKER:
             CARRIER_TRACKER.apply_transfer_event(transfers)
-        if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-            ARCHITECT_GUI.refresh()
-            
+
     elif event == "Docked":
         if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
             SHIP_STATE = SHIP_MODE.DockedAtFC
             logger.info("Ship state: Docked at FC")
-            if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-                ARCHITECT_GUI.refresh()
-                
+
     elif event == "Undocked":
         SHIP_STATE = SHIP_MODE.Undocked
         logger.info("Ship state: Undocked")
-        if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-            ARCHITECT_GUI.refresh()
-                
-    elif event in ["FSDJump", "Location"]: #location happened after loadgame
-        if "StarPos" in entry:
-            CURRENT_LOCATION = tuple(entry["StarPos"])
-            logger.info("Set current location to: %s", CURRENT_LOCATION)
-        
-        if (SHIP_STATE == SHIP_MODE.Unknown):
-            if state.get("IsDocked") is True:
-                if CARRIER_TRACKER and station == CARRIER_TRACKER.callsign:
-                    SHIP_STATE = SHIP_MODE.DockedAtFC
-                    logger.info("Ship state: Docked at FC")
-                elif is_facility(station):
-                    SHIP_STATE = SHIP_MODE.DockedAtSite
-                    logger.info("Ship state: Docked at site")
-                else:
-                    SHIP_STATE = SHIP_MODE.DockedAtMarket
-                    logger.info("Ship state: Docked at market")
-            else:
-                SHIP_STATE = SHIP_MODE.Undocked
-                logger.info("Ship state: Undocked")
-            if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-                ARCHITECT_GUI.refresh()
+
+    if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists() and SITE_LOCATION: #only refresh if we have construction sites to show
+        ARCHITECT_GUI.refresh()
 
 def capi_fleetcarrier(data: CAPIData):
-    logger.info("Received fleet carrier CAPI data") #only OUR carrier, others are treated as markets
-    CARRIER_TRACKER.update(data)
+    global FCAPI_PAUSED
+
+    if FCAPI_PAUSED:
+        logger.info("Ignored fleet carrier API data")
+        return
+
+    if config.get('ArchTrack_fcapimode') is None:
+        fcapi_mode = "First then pause"
+        config.set('ArchTrack_fcapimode', fcapi_mode)
+        logger.info(f"fcapi_mode not found using default settings.")
+    else:
+        fcapi_mode = config.get_str('ArchTrack_fcapimode')
+
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
-        ARCHITECT_GUI.refresh()
+        logger.info("Received fleet carrier CAPI data") #only OUR carrier, others are treated as markets
+        CARRIER_TRACKER.update(data)
+        if fcapi_mode == "First then pause":
+            FCAPI_PAUSED = True
+            logger.info(f'Fleet carrier API paused.')
+        if SITE_LOCATION: #only refresh if we have construction sites to show
+            ARCHITECT_GUI.refresh()
 
 # --- Settings Hooks ---
 def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
     global SHOW_UI_AT_START
     global ARCHITECT_TRACKER_VER
     column_display_vars = {}
-    
+
     column_visibility, hide_provided, theme, column_display, trans_bg, win_top, opac_amount = load_gui_settings() #SHOW_UI_AT_START is set in plugin_start3()
-    
+
+    if config.get('ArchTrack_fcapimode') is None:
+        fcapi_mode = "First then pause"
+        logger.info(f"fcapi_mode not found using default settings.")
+    else:
+        fcapi_mode = config.get_str('ArchTrack_fcapimode')
+
     column_description = {}
     column_description["Material"] = "The commodities the construction site requires."
     column_description["Required"] = "The total amount required by the construction site."
@@ -1123,15 +1375,21 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     column_description["Carrier Qty"] = "The total amount you fleet carrier has."
     column_description["Ship Qty"] = "The total amount your starship has."
     column_description["Shortfall"] = "Needed minus Carrier Qty minus Ship Qty (or 0 if negative)"
-    
+
     # PREFS FRAME ************************************************
     pref_frame = nb.Frame(parent)
-    nb.Label(pref_frame, text="Architect Tracker (" + ARCHITECT_TRACKER_VER + ") plugin by kfpopeye. Found here: https://github.com/kfpopeye/EliteDangerous").grid(row=0, column=1, columnspan=2, sticky="nsew")
-    
+    title_frame = nb.Frame(pref_frame, border=0)
+    title_frame.grid(row=0, column=1, columnspan=2)
+    nb.Label(title_frame, text="Architect Tracker (" + ARCHITECT_TRACKER_VER + ") plugin by CMDR kfpopeye.").grid(row=0, column=1, sticky="nsew")
+    nb.Button(title_frame, text="Open website", command=open_url).grid(row=0, column=2, sticky="w")
+
+    upper_row = nb.Frame(pref_frame, border=0)
+    upper_row.grid(row=1, column=1, columnspan=2)
+
     # COLUMNS FRAME ************************************************
-    col_frame = nb.Frame(pref_frame, border=2, relief="groove")
-    col_frame.grid(row=1, column=1, columnspan=2)
-    
+    col_frame = nb.Frame(upper_row, border=2, relief="groove")
+    col_frame.grid(row=1, column=0)
+
     #configure column headers
     g_row = 0
     nb.Label(col_frame, text="Change columns to display or rename:").grid(row=g_row, column=0, columnspan=2, sticky="nsew")
@@ -1143,7 +1401,7 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
                 col_frame,
                 text=col,
                 variable=var,
-                state="disabled"              
+                state="disabled"
             )
             var.set(True)
         else:
@@ -1154,21 +1412,50 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
                 command=lambda c=col, v=var: toggle_column(c, v.get())
             )
         chk.grid(row=g_row, column=0, sticky="nsew")
-        
+
         display_var = tk.StringVar(value=column_display[idx])
         column_display_vars[col] = display_var
         c_name = tk.Entry(col_frame, textvariable=display_var)
         c_name.bind("<KeyRelease>", lambda e, c=col, v=display_var: on_column_rename(c, v.get()))
         c_name.grid(row=g_row, column=1, sticky="nsew")
-        
+
         nb.Label(col_frame, text=column_description[col]).grid(row=g_row, column=2, sticky="w", padx=5)
         g_row = g_row + 1
+
+    # CAPI FRAME ************************************************
+    capi_frame = nb.Frame(upper_row, border=2, relief="groove")
+    capi_frame.grid(row=1, column=1, sticky="nsew")
+    g_row = 0
+
+    #select FCAPI mode
+    nb.Label(capi_frame, text="Select fleet capi mode:").grid(row=g_row, sticky="nw")
+    g_row = g_row +1
+    fcapi_var = tk.StringVar(value=fcapi_mode)
+    capi_opt = ttk.Combobox(capi_frame, textvariable=fcapi_var, state="readonly")
+    capi_opt['values'] = ("First then pause", "Only when unpaused")
+    capi_opt.grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+    capi_opt.bind("<<ComboboxSelected>>", lambda event: change_fcapi_mode(fcapi_var.get()))
+
+    #display fcapi notes
+    text2_widget = tk.Text(capi_frame, height=8, width=40, wrap='word', font=('Verdana', 9), border=0)
+    text2_widget.tag_configure('big', font=('Verdana', 9, 'bold'))
+    text2_widget.tag_configure('underline', font=('Verdana', 9, 'underline'))
+
+    text2_widget.insert(tk.END, "Fleet Carrier API Options\n\n", 'underline')
+    text2_widget.insert(tk.END, "First then pause\n", 'big')
+    text2_widget.insert(tk.END, "Accepts the first update then automatically pauses.\n")
+    text2_widget.insert(tk.END, "Only when UNpaused\n", 'big')
+    text2_widget.insert(tk.END, "Only accepts updates when NOT paused.\n")
+
+    text2_widget.config(state='disabled')
+    text2_widget.grid(row=g_row, sticky="nsew", padx=5, pady=5)
 
     # BUTTONS FRAME ************************************************
     but_frame = nb.Frame(pref_frame, border=2, relief="groove")
     but_frame.grid(row=2, column=1, sticky="nw")
     g_row = 0
-    
+
     #remove fully provided materials
     hide_var = tk.BooleanVar(value=hide_provided)
     chk_hide = nb.Checkbutton(
@@ -1178,7 +1465,7 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
         command=lambda val=hide_var: toggle_hide_provided(val.get())
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
-     
+
     #select UI colours
     nb.Label(but_frame, text="Select colours to use:").grid(row=g_row, sticky="nw")
     g_row = g_row +1
@@ -1188,7 +1475,7 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     color_opt.grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
     color_opt.bind("<<ComboboxSelected>>", lambda event: reset_Style(theme_var.get()))
-    
+
     # Opacity Settings
     trans_var = tk.BooleanVar(value=trans_bg)
     nb.Checkbutton(
@@ -1212,19 +1499,19 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     g_row = g_row +1
     onum_var = tk.IntVar(value=opac_amount)
     ttk.Scale(
-        but_frame, 
+        but_frame,
         from_=10, to=100, variable=onum_var,
         command=lambda val: slider_changed(sldr_label, val)
     ).grid(row=g_row, sticky="news")
     g_row = g_row +1
-    
+
     #delete market data
     nb.Button(but_frame, text="Delete Market Data", command=on_delete_markets).grid(row=g_row, sticky="nsew", padx=5, pady=5)
     g_row = g_row +1
     italic_font = tkFont.Font(family="Helvetica", size=8, slant="italic")
     nb.Label(but_frame, text="Delete cannot be undone.", font=italic_font).grid(row=g_row, sticky="nw", padx=10, pady=1)
     g_row = g_row +1
-    
+
     #show at startup
     show_var = tk.BooleanVar(value=SHOW_UI_AT_START)
     chk_hide = nb.Checkbutton(
@@ -1234,42 +1521,45 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
         command=lambda v=show_var: toggle_showUIatStart(v.get())
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
-        
+
     #Open Log Directory
     nb.Button(but_frame, text="Open Log Directory", command=on_log_open).grid(row=g_row, sticky="nsew", padx=5, pady=5)
     g_row = g_row +1
-    
+
     # NOTES FRAME ************************************************
     note_frame = nb.Frame(pref_frame, border=2, relief="groove")
     note_frame.grid(row=2, column=2, columnspan=2, sticky="nsew")
-    
+
     #display button and highlighting notes
-    text_widget = tk.Text(note_frame, height=20, width=70, wrap='word', font=('Verdana', 9), border=0)
+    text_widget = tk.Text(note_frame, height=19, width=85, wrap='word', font=('Verdana', 9), border=0)
     text_widget.tag_configure('big', font=('Verdana', 9, 'bold'))
     text_widget.tag_configure('underline', font=('Verdana', 9, 'underline'))
-    
+
     """Button Descriptions
     X - deletes the current construction site. Handy if someone else completes it.
     < and > - shows the previous or next site in the list. (Bound the '<' and '>' keys for Voice Attack users.)
     $\\Ly - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (This is bound the the 'p' key for Voice Attack users.)
-    
+    Pause\\Unpause - pauses and unpause updating fleet carrier cargo from Fdev servers, which can become out of sync with game data. (Bound to 'u' key)
+
     Row highlighting
     Depending on where you are docked, rows are highlighted to indicate:
     Markets - market is selling the item and you have shortfall.
     Fleeet Carrier - site needs it and fleet carrier has some.
     Construction site - site needs it and starship has some.
-    
+
     Other
     Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.
     """
-    
+
     text_widget.insert(tk.END, "Button Descriptions\n", 'underline')
     text_widget.insert(tk.END, "X", 'big')
     text_widget.insert(tk.END, " - deletes the current construction site. Handy if someone else completes it.\n")
     text_widget.insert(tk.END, "< and >", 'big')
     text_widget.insert(tk.END, " - shows the previous or next site in the list. (Bound the '<' and '>' keys for Voice Attack users.)\n")
     text_widget.insert(tk.END, "$\\Ly", 'big')
-    text_widget.insert(tk.END, " - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (Bound the the 'p' key for Voice Attack users.)\n\n")
+    text_widget.insert(tk.END, " - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (Bound the the 'p' key for Voice Attack users.)\n")
+    text_widget.insert(tk.END, "Pause\\Unpause", 'big')
+    text_widget.insert(tk.END, " - pauses and unpause updating fleet carrier cargo from Fdev servers, which can become out of sync with game data. (Bound to 'u' key)\n\n")
     text_widget.insert(tk.END, "Row highlighting\n", 'underline')
     text_widget.insert(tk.END, "Depending on where you are docked, rows are highlighted to indicate:\n")
     text_widget.insert(tk.END, "Markets", 'big')
@@ -1282,13 +1572,16 @@ def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | No
     text_widget.insert(tk.END, " - no highlighting is done.\n\n")
     text_widget.insert(tk.END, "Other\n", 'underline')
     text_widget.insert(tk.END, "Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.\n")
-    
+
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-    
+
     pref_frame.grid_columnconfigure(0, minsize=5)
     return pref_frame
-    
+
+def open_url():
+    webbrowser.open_new("https://github.com/kfpopeye/EliteDangerous")
+
 def slider_changed(lbl, val):
     val = int(float(val))
     s = "Window Opacity = " + str(val) + "%"
@@ -1296,7 +1589,7 @@ def slider_changed(lbl, val):
     config.set('ArchTrack_opcamt', val)
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.setAlpha(val)
-    
+
 def toggle_win_top(val):
     config.set('ArchTrack_wintop', bool(val))
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
@@ -1319,31 +1612,31 @@ def on_log_open():
         subprocess.check_call(['xdg-open', '--', USER_DIR])
     elif sys.platform == 'win32':
         subprocess.check_call(['explorer', USER_DIR])
-    
+
 def on_column_rename(c, v):
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.rename_column(c, v)
-    
+
 def prefs_changed(cmdr: str, is_beta: bool) -> None:
     save_gui_settings()
-    
+
 def toggle_column(col, val):
     c = "ArchTrack_" + col.replace(" ", "_")
     config.set(c, val)
-    
+
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.toggle_column(col, val)
-    
+
 def toggle_hide_provided(val):
     config.set('ArchTrack_hide_Provided', bool(val))
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.toggle_hide_provided(val)
-    
+
 def reset_Style(style):
     config.set('ArchTrack_theme', str(style))
     if ARCHITECT_GUI and ARCHITECT_GUI.winfo_exists():
         ARCHITECT_GUI.reset_Style(style)
-    
+
 def on_delete_markets():
     try:
         if os.path.exists(MARKET_LIB_PATH):
@@ -1353,7 +1646,10 @@ def on_delete_markets():
 
     except Exception as e:
         logger.error("Delete market Data error: %s", e)
-        
+
 def toggle_showUIatStart(b):
     global SHOW_UI_AT_START
     SHOW_UI_AT_START = b
+
+def change_fcapi_mode(mode):
+    config.set('ArchTrack_fcapimode', mode)
