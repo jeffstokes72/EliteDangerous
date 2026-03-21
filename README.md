@@ -20,7 +20,7 @@ Settings Window
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
-1. Download a zip file of the latest release <a href="https://github.com/kfpopeye/EliteDangerous/archive/refs/tags/v1.3.zip">here</a> or by clicking the "Releases" link to the right and then selecting the latest release shown.
+1. Download a zip file of the latest release <a href="https://github.com/kfpopeye/EliteDangerous/archive/refs/tags/v1.4.zip">here</a> or by clicking the "Releases" link to the right and then selecting the latest release shown.
 2. Create a directory called "ArchitectTracker" (make sure there are no spaces) in the the ED: Marketplace Connector plugins folder.
 3. Extract the downloaded zip file into this directory. Make sure no subdirectories are created. All files should appear directly inside the "ArchitectTracker" directory.
 4. Start EDMC.
