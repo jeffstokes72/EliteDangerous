@@ -4,11 +4,11 @@
 Displays commodities required, provided and needed when you land at a construction site, market or fleet carrier and tracks cargo in your fleet carrier and starship.
 The focus is to create a simple to use and hands free tracker for system colonisation. I will be adding features often so check back here often. This was created using ChatGPT. It probably took me as long to create as a human could have programmed manually but I have no experience programming in Python or for the EDMC so it is kind of impressive.
 
-<img width="861" height="591" alt="Screenshot 2026-02-23 211735" src="https://github.com/user-attachments/assets/63510b48-45ac-4d0a-be63-9c5c13b2e3cd" />
+<img width="833" height="593" alt="Screenshot 2026-03-20 192521" src="https://github.com/user-attachments/assets/04c893f3-c70b-4bbc-832b-5c4bed7b1abd" />
 
 Dark mode
 
-<img width="861" height="750" alt="Screenshot 2026-02-23 212637" src="https://github.com/user-attachments/assets/71da0068-ddbe-4235-9a3a-97e95e1ddc99" />
+<img width="833" height="582" alt="Screenshot 2026-03-20 192537" src="https://github.com/user-attachments/assets/57065805-b590-4e85-bdc1-dcef7ab051d6" />
 
 Light Mode
 
@@ -22,12 +22,12 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 ### Install Instructions
 1. Download a zip file of the latest release <a href="https://github.com/kfpopeye/EliteDangerous/archive/refs/tags/v1.3.zip">here</a> or by clicking the "Releases" link to the right and then selecting the latest release shown.
 2. Create a directory called "ArchitectTracker" (make sure there are no spaces) in the the ED: Marketplace Connector plugins folder.
-3. Extract the downloaded zip file into this directory. Make sure no subdirectories are created. All files should appear directlu inside the "ArchitectTracker" directory.
+3. Extract the downloaded zip file into this directory. Make sure no subdirectories are created. All files should appear directly inside the "ArchitectTracker" directory.
 4. Start EDMC.
 
 ### Usage
 + When you land at a construction site the plugin will (after a few moments) list all the commodities and amounts required, provided and needed. You can switch between sites from the dropdown list in the upper left or the ">" button. The window will resize itself to fit all the commodities.
-+ The "Pref Market" column displays either the cheapest and closest market where that commidity has been found. The "$\Ly" button toggles between cheapest and closest martket.
++ The "Pref Market" column displays either the cheapest, closest or alternate market where that commidity has been found. This list is further filtered by orbital or surface markets. See "Prefered Markets" section below for more information.
 + To display\update your fleet carrier cargo, open the "Carrier Management" in-game tool. The quantities will appear after a few moments (this can take a while and occasionaly display incorrect number). If you are also selling commodities from your fleet carrier, you will need to update this list as needed (sales are not tracked).
 + Starship cargo will be displayed automatically.
 + The shortfall column displays how much of a commodity you still need to aquire.
@@ -40,10 +40,21 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + Buttons on the UI:
   - <b>X</b> - deletes currently shown construction site. Disabled when -ALL- sites are listed.
   - <b><</b> or <b>></b> - changes to previous or next site in list. Wraps around list.
-  - <b>$\Ly</b> - toggles between showing the cheapest or closest markets in the preferred market column.
+  - <b>$\Ly\Alt</b> - toggles between showing the cheapest, closest or alternate markets in the preferred market column. See "Preferred Markets" section below for more information.
+  - <b>O\S</b> - toggles between showing orbital or surface markets in the preferred market column. See "Preferred Markets" section below for more information.
   - <b>Pause</b> or <b>Unpause</b> - this button next to the Carrier name will pause or unpause updating the fleet carrier cargo quantities from Fdev's fleet carrier companion api. See section below.
 
- ### Fleet Carrier Cargo Quantities
+### Preferred Markets
+- The "Preferred Market" column displays markets you have found that sell construction commodities. The system name is not shown so it is suggested that you bookmark the stations.
+- Markets can be filtered using the $\Ly\Alt and O\S buttons at the top of the inteface. Filtering includes:
+  - $ : the station that has the cheapest sell price that was below your construction sites buy price.
+  - Ly : the station that is closest to your colony system whose sell price was below your construction sites buy price.
+  - Alt : the station that is closest to your colony system whose sell price was NOT below your construction sites buy price.
+  - O : orbital stations are shown. If none have been found, a surface settlement is shown with an asterix (*) prepended to the name. Otherwise it will be blank.
+  - S : surface settlement are shown. If none have been found, an orbital station is shown with an asterix (*) prepended to the name. Otherwise it will be blank.
+- Note: if you started using this plugin prior to version 1.4, the old data will be shown with a double asterix (**) prepended to the name untill you have landed at the market again.
+
+### Fleet Carrier Cargo Quantities
 - Information coming from the fleet carrier CAPI (fcapi) queries can often become unsyncronized with the actual amounts shown in the game. This causes Architect Tracker to sometimes display incorrect fleet carrier cargo quantities. As a work around, I have added a pause\unpause button next to the carrier name.
 - Transferring cargo to\from your starship or purchasing\selling commodities while docked at your fleet carrier are still tracked by Architect Tracker regardless.
 - The pause\unpause button has 2 modes it can operate which can be set in the "Settings" of EDMC:
@@ -52,7 +63,13 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 - Note: if you sell commodities to other players from your fleet carrier, pausing fcapi queries will cause the fleet carrier cargo amounts in Architect Tracker to become out of sync. Unpausing will, hopefully, restore them.
 
 ### Notes
-1. VR programs like Desktop+ can display this window inside the game for you. The "<", ">" and "$\Ly" buttons are bound to the keys "<", ">" and "p" respectively for Voice Attack users. Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking. The pause\unpause button is bound to "u".
+1. VR programs like Desktop+ can display this window inside the game for you.
+2. For Voice Attack users:
+  - The "<", ">" buttons are bound to the keys "<", ">" respectiveley.
+  - The "$\Ly\Alt" button is bound to key "p".
+  - The "O\S" button is bound to key "o".
+  - The pause\unpause button is bound to "u".
+  - Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
 
 ### Notable Changes
 + 2025/04/12 : Added support for multiple construction sites. Sites are removed automaticly when they are completed.
@@ -70,3 +87,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2025/11/03 : [Version 1.2] Added previous site button to UI, owned fleet carrier no longer registers as market, remove version number from window title and improved start up to detect if landed on a market or carrier.
 + 2026/02/12 : [Version 1.2.2] Fixed bug that prevented Material column from displaying for some users.
 + 2026/02/23 : [Version 1.3] Added pause button for fleet carrier cargo, added totals row at bottom of list, delete site button is disabled when ALL sites are shown, smaller bug fixes.
++ 2026/03/20 : [Version 1.4] Added alternate and orbital\surface filtering to preferred markets. Renamed construction sites and markets will now be updated when you land on them the next time. Minor UI beautifications.
