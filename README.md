@@ -34,7 +34,7 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + Settings are available in the E:D Market Connector under File menu->Settings->ArchitectTracker tab. You can choose whioch columns to display, set the text displayed in the column header and other settings (see screenshot above).
 + Rows are highlighted (see screenshots above) depending on where you are docked, rows are highlighted to indicate:
   + Markets - market is selling the item and you have shortfall.
-  + Fleeet Carrier - site needs it and fleet carrier has some.
+  + Fleeet Carrier - site needs it and fleet carrier has some AND starship does not have enough.
   + Construction site - site needs it and starship has some.
 + Closing the Architect Tracker window will stop the sites, commodities and markets from being tracked. This is handy if you're landing at markets but don't want the information to override your current closest\cheapest information.
 + Buttons on the UI:
