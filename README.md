@@ -88,3 +88,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2026/02/12 : [Version 1.2.2] Fixed bug that prevented Material column from displaying for some users.
 + 2026/02/23 : [Version 1.3] Added pause button for fleet carrier cargo, added totals row at bottom of list, delete site button is disabled when ALL sites are shown, smaller bug fixes.
 + 2026/03/20 : [Version 1.4] Added alternate and orbital\surface filtering to preferred markets. Renamed construction sites and markets will now be updated when you land on them the next time. Minor UI beautifications.
++ 2026/04/04 : [Version 1.5] Changed highlight rules when on fleet carrier. Now, if you have enough of a commodity on your starship to meet the needs of the construction site, the commodity will no longer be highlighted.
