@@ -57,7 +57,7 @@ MARKET_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'S
 CARGO_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous', 'Cargo.json')
 
 logger = logging.getLogger("ArchitectTracker")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 file_handler = TimedRotatingFileHandler(
         LOG_FILE,

@@ -83,11 +83,14 @@ def save_gui_settings():
         logger.error(f"Error saving GUI settings: {e}")
 
 def compare_material_to_list(materials):
+    global COMMODITIES
+    
     for name in materials:
         if name and not isItemConstructionCommodity(name):
-            logger.warning("%s not found in commodity list.", name)
+            logger.warning("%s not found in commodity list, adding it.", name)
             with open(globals.COMMODITY_FILE, "a", encoding="utf-8") as f:
                 f.write(name + "\n")
+                COMMODITIES.add(name)
 
 # --- Helpers ---
 def calculate_distance(x1: Union[int, float], y1: Union[int, float], z1: Union[int, float], x2: Union[int, float], y2: Union[int, float], z2: Union[int, float]):
@@ -246,7 +249,7 @@ def check_if_market_renamed(market_lib, market):
     station_id = market.get("MarketID")
     m = get_market_by_station_id(market_lib, station_id)
     if m and m["StationName"] != station_name:
-        logger.info("Updating station name: '%s' [%s] to %s)", m["StationName"], station_id, station_name)
+        logger.info("Updating station name: '%s' [%s] to %s", m["StationName"], station_id, station_name)
         m["StationName"] = station_name
 
 def get_market_by_station_id(data, station_id):

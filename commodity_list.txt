@@ -53,3 +53,5 @@ $battleweapons_name;
 $nonlethalweapons_name;
 $reactivearmour_name;
 $heliostaticfurnaces_name;
+$hazardousenvironmentsuits_name;
+$mutomimager_name;

@@ -196,7 +196,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     """Button Descriptions
     X - deletes the current construction site. Handy if someone else completes it.
     < and > - shows the previous or next site in the list. (Bound the '<' and '>' keys for Voice Attack users.)
-    $\\Ly - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (This is bound the the 'p' key for Voice Attack users.)
+    $\\Ly\\Alt - toggles between cheapest, closest and alternate market. Prices and distances are tracked whenever you open a commodity market. (This is bound the the 'p' key for Voice Attack users.)
     Pause\\Unpause - pauses and unpause updating fleet carrier cargo from Fdev servers, which can become out of sync with game data. (Bound to 'u' key)
 
     Row highlighting
@@ -214,8 +214,10 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, " - deletes the current construction site. Handy if someone else completes it.\n")
     text_widget.insert(tk.END, "< and >", 'big')
     text_widget.insert(tk.END, " - shows the previous or next site in the list. (Bound the '<' and '>' keys for Voice Attack users.)\n")
-    text_widget.insert(tk.END, "$\\Ly", 'big')
-    text_widget.insert(tk.END, " - toggles between cheapest and closest market. Prices and distances are tracked whenever you open a commodity market. Prices are only considered if they are lower than the buy prices of all construction sites. (Bound the the 'p' key for Voice Attack users.)\n")
+    text_widget.insert(tk.END, "$\\Ly\\Alt", 'big')
+    text_widget.insert(tk.END, " - toggles between cheapest, closest and alternate market. Prices and distances are tracked whenever you open a commodity market. (This is bound the the 'p' key for Voice Attack users.)\n")
+    text_widget.insert(tk.END, "O\\S", 'big')
+    text_widget.insert(tk.END, " - toggles between orbital and surface markets. Works together with cheapest, closest and alternate. (Bound to 'o' key)\n")
     text_widget.insert(tk.END, "Pause\\Unpause", 'big')
     text_widget.insert(tk.END, " - pauses and unpause updating fleet carrier cargo from Fdev servers, which can become out of sync with game data. (Bound to 'u' key)\n\n")
     text_widget.insert(tk.END, "Row highlighting\n", 'underline')

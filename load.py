@@ -1,4 +1,4 @@
-__version__ = "1.4"
+__version__ = "1.5"
 
 """
 Displays commodities required, provided and needed when you land at a construction site,
@@ -119,6 +119,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         event = entry.get("event")
 
         if event == "ColonisationConstructionDepot":
+            if station == None:
+                return
             globals.SHIP_STATE = globals.SHIP_MODE.DockedAtSite
             logger.info("Ship state: Docked at site: %s", station)
             resources = entry.get("ResourcesRequired", [])
@@ -134,6 +136,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                 globals.ARCHITECT_GUI.change_station(station)
 
         elif event == "Market":
+            if station == None:
+                return
             # do not register my fleet carrier as a market
             if not station == globals.CARRIER_TRACKER.callsign:
                 globals.SHIP_STATE = globals.SHIP_MODE.DockedAtMarket

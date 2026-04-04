@@ -322,6 +322,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         if data == {}:
             self.clear_frame()
             self._build_info_widgets()
+            globals.SITE_LOCATION = None
             return
         self.data = data
 
@@ -467,7 +468,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
                 if for_sale and short > 0:
                     tags.append('highlightedrow')
             elif globals.SHIP_STATE == globals.SHIP_MODE.DockedAtFC:
-                if need > 0 and fc_qty > 0:
+                if need > 0 and fc_qty > 0 and need > ship_qty:
                     tags.append('highlightedrow')
             elif globals.SHIP_STATE == globals.SHIP_MODE.DockedAtSite:
                 if need > 0 and ship_qty > 0:
