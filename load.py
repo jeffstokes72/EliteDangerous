@@ -1,4 +1,4 @@
-__version__ = "1.5"
+__version__ = "1.5a"
 
 """
 Displays commodities required, provided and needed when you land at a construction site,
@@ -49,6 +49,7 @@ def plugin_start3(plugin_dir):
             core_version = appversion()
         # Yes, just blow up if config.appverison is neither str nor callable
         logger.info(f'Core EDMarketConnector version: {core_version}')
+        logger.info('OS: %s', platform.system())
 
         globals.COMMODITY_FILE = os.path.join(plugin_dir, globals.COMMODITY_FILE)
 
@@ -62,6 +63,8 @@ def plugin_start3(plugin_dir):
         if fcapi_mode == "Only when unpaused":
             globals.FCAPI_PAUSED = True
             logger.info(f'Fleet carrier API paused.')
+            
+        globals.CURRENT_LOCATION = helpers.get_current_location_from_journal()
 
         globals.SHOW_UI_AT_START = config.get_bool('ArchTrack_showUI')
         if globals.SHOW_UI_AT_START:
