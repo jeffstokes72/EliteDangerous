@@ -39,13 +39,13 @@ DOCKED_STATION_TYPE = STATION_TYPE.Unknown
 # Configure user directories for different OS's
 if platform.system() == "Windows":
     USER_DIR = os.path.join(os.getenv("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local")), "ArchitectTracker")
+    ed_save_path = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous')
 elif platform.system() == "Darwin":
     USER_DIR = os.path.join(os.path.expanduser("~/Library/Application Support"), "ArchitectTracker")
 else:
     USER_DIR = os.path.join(os.path.expanduser("~/.config"), "ArchitectTracker")
-
-os.makedirs(USER_DIR, exist_ok=True)
-
+    ed_save_path = find_proton_saved_games()
+    
 SAVE_FILE = os.path.join(USER_DIR, "construction_requirements.json")
 LOG_FILE = os.path.join(USER_DIR, "EDMC_Architect_Log.txt")
 CARRIER_FILE = os.path.join(USER_DIR, "fleet_carrier_cargo.json")
@@ -53,9 +53,9 @@ MARKET_LIB_PATH = os.path.join(USER_DIR, "market_library_v2.json")
 COMMODITY_FILE = "commodity_list.txt"
 
 #files created by EDMC
-MARKET_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous', 'Market.json')
-CARGO_JSON = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous', 'Cargo.json')
-
+MARKET_JSON = os.path.join(ed_save_path, 'Market.json')
+CARGO_JSON = os.path.join(ed_save_path, 'Cargo.json')
+    
 logger = logging.getLogger("ArchitectTracker")
 logger.setLevel(logging.INFO)
 
@@ -71,6 +71,22 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s:%(line
 file_handler.setFormatter(formatter)
 if not logger.hasHandlers():
     logger.addHandler(file_handler)
+
+if not os.path.exists(ed_save_path):
+    logger.error(f'Could not find the saved games directory: {ed_save_path}')
+
+os.makedirs(USER_DIR, exist_ok=True)
     
 import fleetcarriercargotracker
 CARRIER_TRACKER = fleetcarriercargotracker.FleetCarrierCargoTracker()
+
+def find_proton_saved_games():
+    home = os.path.expanduser("~")
+    possible_paths = [
+        os.path.join(home, ".steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"),
+        os.path.join(home, ".local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"),
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+    return None
