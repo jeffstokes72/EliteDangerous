@@ -36,6 +36,17 @@ class STATION_TYPE(Enum):
     Surface = 2
 DOCKED_STATION_TYPE = STATION_TYPE.Unknown
 
+def find_proton_saved_games():
+    home = os.path.expanduser("~")
+    possible_paths = [
+        os.path.join(home, ".steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"),
+        os.path.join(home, ".local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"),
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+    return None
+
 # Configure user directories for different OS's
 if platform.system() == "Windows":
     USER_DIR = os.path.join(os.getenv("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local")), "ArchitectTracker")
@@ -79,14 +90,3 @@ os.makedirs(USER_DIR, exist_ok=True)
     
 import fleetcarriercargotracker
 CARRIER_TRACKER = fleetcarriercargotracker.FleetCarrierCargoTracker()
-
-def find_proton_saved_games():
-    home = os.path.expanduser("~")
-    possible_paths = [
-        os.path.join(home, ".steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"),
-        os.path.join(home, ".local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"),
-    ]
-    for path in possible_paths:
-        if os.path.exists(path):
-            return path
-    return None
