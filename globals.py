@@ -53,8 +53,9 @@ if platform.system() == "Windows":
     ed_save_path = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous')
 elif platform.system() == "Darwin":
     USER_DIR = os.path.join(os.path.expanduser("~/Library/Application Support"), "ArchitectTracker")
+    ed_save_path = os.path.join(os.getenv('USERPROFILE', os.path.expanduser('~')), 'Saved Games', 'Frontier Developments', 'Elite Dangerous')
 else:
-    USER_DIR = os.path.join(os.path.expanduser("~/.config"), "ArchitectTracker")
+    USER_DIR = os.path.join(os.path.expanduser("~"), ".config", "ArchitectTracker")
     ed_save_path = find_proton_saved_games()
     
 SAVE_FILE = os.path.join(USER_DIR, "construction_requirements.json")
@@ -85,8 +86,14 @@ if not logger.hasHandlers():
 
 if not os.path.exists(ed_save_path):
     logger.error(f'Could not find the saved games directory: {ed_save_path}')
-
+else:
+    logger.info(f'Found the saved games directory: {ed_save_path}')
+    
 os.makedirs(USER_DIR, exist_ok=True)
+if not os.path.exists(USER_DIR):
+    logger.error(f'Could not find the user directory: {USER_DIR}')
+else:
+    logger.info(f'Found the user directory: {USER_DIR}')
     
 import fleetcarriercargotracker
 CARRIER_TRACKER = fleetcarriercargotracker.FleetCarrierCargoTracker()
