@@ -58,42 +58,54 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.wm_attributes("-alpha", self.opac_amount / 100)
 
     def setTransparentBg(self, val):
-        self.trans_bg = val
-        if self.theme == "Dark Mode":
-            if self.trans_bg:
-                if platform.system() == "Darwin":
-                    self.wm_attributes("-transparent", self.trans_bg)
-                    self.config(bg='systemTransparent')
-                elif platform.system() == "Windows":
-                    self.attributes('-transparentcolor', ArchitectTrackerGUI.bgBlack)
+        """Linux does not support this unless working under a native Win32 platform (ie. wine)"""
+        try:
+            self.trans_bg = val
+            if self.theme == "Dark Mode":
+                if self.trans_bg:
+                    if platform.system() == "Darwin":
+                        self.wm_attributes("-transparent", self.trans_bg)
+                        self.config(bg='systemTransparent')
+                    elif platform.system() == "Windows":
+                        self.attributes('-transparentcolor', ArchitectTrackerGUI.bgBlack)
+                    else:
+                        ws = self.tk.call("tk", "windowingsystem")
+                        if ws == "win32":
+                            self.wm_attributes("-transparent", self.trans_bg)
                 else:
-                    self.wm_attributes("-transparent", self.trans_bg)
-            else:
-                if platform.system() == "Darwin":
-                    self.wm_attributes("-transparent", self.trans_bg)
-                    self.config(bg='white')
-                elif platform.system() == "Windows":
-                    self.attributes('-transparentcolor', "red")
+                    if platform.system() == "Darwin":
+                        self.wm_attributes("-transparent", self.trans_bg)
+                        self.config(bg='white')
+                    elif platform.system() == "Windows":
+                        self.attributes('-transparentcolor', "red")
+                    else:
+                        ws = self.tk.call("tk", "windowingsystem")
+                        if ws == "win32":
+                            self.wm_attributes("-transparent", "red")
+            elif self.theme == "Light Mode":
+                if self.trans_bg:
+                    if platform.system() == "Darwin":
+                        self.wm_attributes("-transparent", self.trans_bg)
+                        self.config(bg='systemTransparent')
+                    elif platform.system() == "Windows":
+                        self.attributes('-transparentcolor', '#d9d9d9')
+                    else:
+                        ws = self.tk.call("tk", "windowingsystem")
+                        if ws == "win32":
+                            self.wm_attributes("-transparent", '#d9d9d9')
                 else:
-                    self.wm_attributes("-transparent", "red")
-        elif self.theme == "Light Mode":
-            if self.trans_bg:
-                if platform.system() == "Darwin":
-                    self.wm_attributes("-transparent", self.trans_bg)
-                    self.config(bg='systemTransparent')
-                elif platform.system() == "Windows":
-                    self.attributes('-transparentcolor', '#d9d9d9')
-                else:
-                    self.wm_attributes("-transparent", '#d9d9d9')
-            else:
-                if platform.system() == "Darwin":
-                    self.wm_attributes("-transparent", self.trans_bg)
-                    self.config(bg='white')
-                elif platform.system() == "Windows":
-                    self.attributes('-transparentcolor', "red")
-                else:
-                    self.wm_attributes("-transparent", "red")
-
+                    if platform.system() == "Darwin":
+                        self.wm_attributes("-transparent", self.trans_bg)
+                        self.config(bg='white')
+                    elif platform.system() == "Windows":
+                        self.attributes('-transparentcolor', "red")
+                    else:
+                        ws = self.tk.call("tk", "windowingsystem")
+                        if ws == "win32":
+                            self.wm_attributes("-transparent", "red")
+        except tk.TclError as e:
+            logger.warning("Transparency not supported under this Linux version: %s", e)
+    
     def auto_size_tree(self):
         """Adjust column widths to fit content."""
         style_font = self.style.lookup("ArchTrack.Treeview", "font")
