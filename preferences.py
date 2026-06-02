@@ -134,14 +134,33 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     g_row = g_row +1
     color_opt.bind("<<ComboboxSelected>>", lambda event: reset_Style(theme_var.get()))
 
-    # Opacity Settings
-    trans_var = tk.BooleanVar(value=trans_bg)
-    nb.Checkbutton(
-        but_frame,
-        text="Use Transparent Background",
-        variable=trans_var,
-        command=lambda val=trans_var: toggle_trans_bg(val.get())
-    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    # Transparency, On top and Opacity Settings
+    if platform.system() in ("Darwin", "Windows"):
+        trans_var = tk.BooleanVar(value=trans_bg)
+        nb.Checkbutton(
+            but_frame,
+            text="Use Transparent Background\n(Not supported in Linux)",
+            variable=trans_var,
+            command=lambda val=trans_var: toggle_trans_bg(val.get())
+        ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    else:
+        ws = self.tk.call("tk", "windowingsystem")
+        if ws == "win32":
+            trans_var = tk.BooleanVar(value=trans_bg)
+            nb.Checkbutton(
+                but_frame,
+                text="Use Transparent Background\n(Not supported in Linux)",
+                variable=trans_var,
+                command=lambda val=trans_var: toggle_trans_bg(val.get())
+            ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+        else:
+            trans_var = tk.BooleanVar(value=False)
+            nb.Checkbutton(
+                but_frame,
+                text="Use Transparent Background\n(Not supported in Linux)",
+                variable=trans_var,
+                state="disabled"
+            ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
     wintop_var = tk.BooleanVar(value=win_top)
     nb.Checkbutton(
@@ -202,7 +221,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     Row highlighting
     Depending on where you are docked, rows are highlighted to indicate:
     Markets - market is selling the item and you have shortfall.
-    Fleeet Carrier - site needs it and fleet carrier has some.
+    Fleeet Carrier - site needs it and fleet carrier has some AND starship does not have enough.
     Construction site - site needs it and starship has some.
 
     Other
@@ -225,7 +244,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "Markets", 'big')
     text_widget.insert(tk.END, " - market is selling the item and you have shortfall.\n")
     text_widget.insert(tk.END, "Fleeet Carrier", 'big')
-    text_widget.insert(tk.END, " - site needs it and fleet carrier has some.\n")
+    text_widget.insert(tk.END, " - site needs it and fleet carrier has some AND starship does not have enough.\n")
     text_widget.insert(tk.END, "Construction site", 'big')
     text_widget.insert(tk.END, " - site needs it and starship has some.\n")
     text_widget.insert(tk.END, "Undocked", 'big')
