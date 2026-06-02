@@ -37,6 +37,11 @@ class STATION_TYPE(Enum):
 DOCKED_STATION_TYPE = STATION_TYPE.Unknown
 
 def find_proton_saved_games():
+    from config import config        
+    logdir = config.get('journaldir')
+    if logdir not None:
+        return logdir
+
     home = os.path.expanduser("~")
     possible_paths = [
         os.path.join(home, ".steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous"),
@@ -45,6 +50,7 @@ def find_proton_saved_games():
     for path in possible_paths:
         if os.path.exists(path):
             return path
+            
     return None
 
 # Configure user directories for different OS's
@@ -67,8 +73,6 @@ COMMODITY_FILE = "commodity_list.txt"
 #files created by EDMC
 MARKET_JSON = os.path.join(ED_SAVE_PATH, 'Market.json')
 CARGO_JSON = os.path.join(ED_SAVE_PATH, 'Cargo.json')
-
-os.makedirs(USER_DIR, exist_ok=True)
     
 logger = logging.getLogger("ArchitectTracker")
 logger.setLevel(logging.DEBUG)
