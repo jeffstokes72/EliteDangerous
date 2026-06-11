@@ -64,24 +64,11 @@ else:
     USER_DIR = os.path.join(os.path.expanduser("~"), ".config", "ArchitectTracker")
     ED_SAVE_PATH = find_proton_saved_games()
 
-from config import config
-if not os.path.exists(USER_DIR):
-    if config.get('ArchTrack_UserDir') is not None:
-        USER_DIR = config.get_str('ArchTrack_UserDir')
-    else:
-        path = filedialog.askdirectory(title="Select User Data Folder")
-        if path:
-            USER_DIR = path
-            config.set('ArchTrack_UserDir', str(USER_DIR))
-            
-if not os.path.exists(ED_SAVE_PATH):
-    if config.get('ArchTrack_EDSaveDir') is not None:
-        ED_SAVE_PATH = config.get_str('ArchTrack_EDSaveDir')
-    else:
-        path = filedialog.askdirectory(title="Select Elite Dangerous Journal Folder")
-        if path:
-            ED_SAVE_PATH = path
-            config.set('ArchTrack_EDSaveDir', str(ED_SAVE_PATH))    
+try:
+    os.makedirs(USER_DIR, exist_ok=True)
+except Exception as e:
+    from tkinter import messagebox
+    messagebox.showerror("Error", f"Could not create directory: {USER_DIR}")
     
 SAVE_FILE = os.path.join(USER_DIR, "construction_requirements.json")
 LOG_FILE = os.path.join(USER_DIR, "EDMC_Architect_Log.txt")
@@ -90,8 +77,9 @@ MARKET_LIB_PATH = os.path.join(USER_DIR, "market_library_v2.json")
 COMMODITY_FILE = "commodity_list.txt"
 
 #files created by EDMC
-MARKET_JSON = os.path.join(ED_SAVE_PATH, 'Market.json')
-CARGO_JSON = os.path.join(ED_SAVE_PATH, 'Cargo.json')
+if ED_SAVE_PATH and os.path.exists(ED_SAVE_PATH):
+    MARKET_JSON = os.path.join(ED_SAVE_PATH, 'Market.json')
+    CARGO_JSON = os.path.join(ED_SAVE_PATH, 'Cargo.json')
     
 logger = logging.getLogger("ArchitectTracker")
 logger.setLevel(logging.DEBUG)
