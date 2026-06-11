@@ -54,9 +54,26 @@ def plugin_start3(plugin_dir):
         globals.COMMODITY_FILE = os.path.join(plugin_dir, globals.COMMODITY_FILE)
         
         if not os.path.exists(globals.ED_SAVE_PATH):
-            logger.error(f'Could not find the saved games directory: {globals.ED_SAVE_PATH}')
+            if config.get('ArchTrack_EDSaveDir') is not None:
+                globals.ED_SAVE_PATH = config.get_str('ArchTrack_EDSaveDir')
+            else:
+                from tkinter import filedialog
+                path = filedialog.askdirectory(title="Select Elite Dangerous Journal Folder")
+                if path:
+                    globals.ED_SAVE_PATH = path
+                    config.set('ArchTrack_EDSaveDir', str(globals.ED_SAVE_PATH))
+                    logger.info(f'Found the ED journal directory: {globals.ED_SAVE_PATH}')
+                else:
+                    logger.error(f'Could not find the ED journal directory: {globals.ED_SAVE_PATH}')
+                    from tkinter import messagebox
+                    messagebox.showerror("Error", "Cannot continue without the Elite Dangerous journal files.")
+                    plugin_stop()
         else:
-            logger.info(f'Found the saved games directory: {globals.ED_SAVE_PATH}')
+            logger.info(f'Found the ED journal directory: {globals.ED_SAVE_PATH}')
+            
+        globals.MARKET_JSON = os.path.join(globals.ED_SAVE_PATH, 'Market.json')
+        globals.CARGO_JSON = os.path.join(globals.ED_SAVE_PATH, 'Cargo.json')
+        globals.CURRENT_LOCATION = helpers.get_current_location_from_journal()
             
         if not os.path.exists(globals.USER_DIR):
             logger.error(f'Could not find the user directory: {globals.USER_DIR}')
@@ -74,8 +91,6 @@ def plugin_start3(plugin_dir):
             globals.FCAPI_PAUSED = True
             logger.info(f'Fleet carrier API paused.')
             
-        globals.CURRENT_LOCATION = helpers.get_current_location_from_journal()
-
         globals.SHOW_UI_AT_START = config.get_bool('ArchTrack_showUI')
         if globals.SHOW_UI_AT_START:
             helpers.show_gui()
