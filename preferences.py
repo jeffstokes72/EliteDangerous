@@ -300,12 +300,10 @@ def on_log_open():
                     try:
                         subprocess.Popen(cmd)
                         logger.info("Opened folder via sandbox method: %s", cmd[0])
-                        return
                     except Exception as e:
                         logger.warning("Failed sandbox open with %s: %s", cmd[0], repr(e))
 
                 logger.error("No sandbox-compatible opener found.")
-                return
 
             # --- Native Linux ---
             else:
