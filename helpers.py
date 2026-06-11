@@ -9,6 +9,14 @@ from config import appname, appversion, config
 import globals
 from globals import logger
 
+# for linux
+def is_flatpak():
+    return (
+        os.path.exists("/.flatpak-info") or
+        "FLATPAK_SANDBOX_DIR" in os.environ or
+        os.environ.get("FLATPAK_ID") is not None
+    )
+
 # --- Settings persistence ---
 def load_gui_settings():
     try:
