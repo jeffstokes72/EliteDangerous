@@ -144,7 +144,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
             command=lambda val=trans_var: toggle_trans_bg(val.get())
         ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     else:
-        ws = self.tk.call("tk", "windowingsystem")
+        ws = parent.tk.call("tk", "windowingsystem")
         if ws == "win32":
             trans_var = tk.BooleanVar(value=trans_bg)
             nb.Checkbutton(
@@ -284,13 +284,44 @@ def toggle_trans_bg(val):
 def on_log_open():
     import subprocess
     import sys
+    from log_viewer import LogViewerGUI
 
     if sys.platform == 'darwin':
-        subprocess.check_call(['open', '--', globals.USER_DIR])
-    elif sys.platform == 'linux2':
-        subprocess.check_call(['xdg-open', '--', globals.USER_DIR])
-    elif sys.platform == 'win32':
-        subprocess.check_call(['explorer', globals.USER_DIR])
+        subprocess.Popen(['open', globals.USER_DIR])
+        
+    elif sys.platform.startswith('linux'):
+        try:
+            # --- Flatpak / sandboxed environment ---
+            if helpers.is_flatpak():
+                logger.info("Detected Flatpak sandbox environment")
+
+                # Prefer portal-aware tool
+                for cmd in (["gio", "open", globals.USER_DIR], ["xdg-open", globals.USER_DIR]):
+                    try:
+                        subprocess.Popen(cmd)
+                        logger.info("Opened folder via sandbox method: %s", cmd[0])
+                        return
+                    except Exception as e:
+                        logger.warning("Failed sandbox open with %s: %s", cmd[0], repr(e))
+
+                logger.error("No sandbox-compatible opener found.")
+                return
+
+            # --- Native Linux ---
+            else:
+                try:
+                    subprocess.Popen(["xdg-open", globals.USER_DIR])
+                    logger.info("Opened folder via xdg-open")
+                except Exception as e:
+                    logger.error("xdg-open failed: %s", repr(e))
+
+        except Exception as e:
+            logger.error("Failed to open folder %s: %s", globals.USER_DIR, repr(e))
+        
+    elif sys.platform.startswith('win'):
+        subprocess.Popen(['explorer', globals.USER_DIR])
+        
+    logviewer = LogViewerGUI(globals.EDMC_ROOT)
 
 def on_column_rename(c, v):
     if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
