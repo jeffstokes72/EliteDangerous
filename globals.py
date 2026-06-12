@@ -82,7 +82,7 @@ if ED_SAVE_PATH and os.path.exists(ED_SAVE_PATH):
     CARGO_JSON = os.path.join(ED_SAVE_PATH, 'Cargo.json')
     
 logger = logging.getLogger("ArchitectTracker")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 file_handler = TimedRotatingFileHandler(
         LOG_FILE,
