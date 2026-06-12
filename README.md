@@ -20,7 +20,7 @@ Settings Window
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
-1. Download a zip file of the latest release <a href="https://github.com/kfpopeye/EliteDangerous/archive/refs/tags/v1.5.zip">here</a> or by clicking the "Releases" link to the right and then selecting the latest release shown.
+1. Download a zip file of the latest release <a href="https://github.com/kfpopeye/EliteDangerous/archive/refs/tags/v1.6.zip">here</a> or by clicking the "Releases" link to the right and then selecting the latest release shown.
 2. Create a directory called "ArchitectTracker" (make sure there are no spaces) in the the ED: Marketplace Connector plugins folder.
 3. Extract the downloaded zip file into this directory. Make sure no subdirectories are created. All files should appear directly inside the "ArchitectTracker" directory.
 4. Start EDMC.
@@ -89,3 +89,5 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2026/02/23 : [Version 1.3] Added pause button for fleet carrier cargo, added totals row at bottom of list, delete site button is disabled when ALL sites are shown, smaller bug fixes.
 + 2026/03/20 : [Version 1.4] Added alternate and orbital\surface filtering to preferred markets. Renamed construction sites and markets will now be updated when you land on them the next time. Minor UI beautifications.
 + 2026/04/04 : [Version 1.5] Changed highlight rules when on fleet carrier. Now, if you have enough of a commodity on your starship to meet the needs of the construction site, the commodity will no longer be highlighted.
++ 2026/06/11 : [Version 1.6] Major bug fixes for Linux users. Special thanks to Commanders PatientNr0, mgrzegor, Fasgort and LiamtheLion879
+ for taking time to report bugs and work with me to fix them. Added log viewer to settings tab which should helppeople report bugs.
