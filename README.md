@@ -1,3 +1,4 @@
+<img width="1121" height="813" alt="Screenshot 2026-06-11 194230" src="https://github.com/user-attachments/assets/bd104ae2-b14c-4ec2-90b6-73d542bbf264" />
 # EliteDangerous
 
 ## Architect Tracker
@@ -12,7 +13,7 @@ Dark mode
 
 Light Mode
 
-<img width="1121" height="794" alt="Screenshot 2026-02-23 211756" src="https://github.com/user-attachments/assets/87069526-9399-40b8-8874-5cab3314a56d" />
+<img width="1121" height="813" alt="Screenshot 2026-06-11 194230" src="https://github.com/user-attachments/assets/8783bce0-6144-40a3-9726-ae3f78b6388b" />
 
 Settings Window
 
