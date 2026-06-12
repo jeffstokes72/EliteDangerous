@@ -200,7 +200,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     g_row = g_row +1
 
     #Open Log Directory
-    nb.Button(but_frame, text="Open Log Directory", command=on_log_open).grid(row=g_row, sticky="nsew", padx=5, pady=5)
+    nb.Button(but_frame, text="Open Log Directory\\Viewer", command=on_log_open).grid(row=g_row, sticky="nsew", padx=5, pady=5)
     g_row = g_row +1
 
     # NOTES FRAME ************************************************
