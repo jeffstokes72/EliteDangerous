@@ -1,4 +1,3 @@
-<img width="1121" height="813" alt="Screenshot 2026-06-11 194230" src="https://github.com/user-attachments/assets/bd104ae2-b14c-4ec2-90b6-73d542bbf264" />
 # EliteDangerous
 
 ## Architect Tracker
