@@ -98,7 +98,7 @@ def compare_material_to_list(materials):
             logger.warning("%s not found in commodity list, adding it.", name)
             with open(globals.COMMODITY_FILE, "a", encoding="utf-8") as f:
                 f.write(name + "\n")
-                COMMODITIES.add(name)
+                COMMODITIES.append(name)
 
 # --- Helpers ---
 def calculate_distance(x1: Union[int, float], y1: Union[int, float], z1: Union[int, float], x2: Union[int, float], y2: Union[int, float], z2: Union[int, float]):
@@ -231,7 +231,7 @@ def ensure_commodities_loaded() -> bool:
             return False
 
         with open(globals.COMMODITY_FILE, "r") as f:
-            COMMODITIES = [line.strip() for line in f]
+            COMMODITIES = list(dict.fromkeys(line.strip() for line in f if line.strip()))
     return True
 
 def isItemConstructionCommodity(item_name) -> bool:
