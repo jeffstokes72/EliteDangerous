@@ -191,7 +191,7 @@ def get_current_location_from_journal():
                 return tuple(data["StarPos"])
     return None
 
-def save_facility_requirements(resources, station_name, mID):
+def save_facility_requirements(resources, station_name, mID, system=None):
     materials = {r["Name"]: {"Name_Localised": r["Name_Localised"],
                                    "RequiredAmount": r["RequiredAmount"],
                                    "ProvidedAmount": r["ProvidedAmount"],
@@ -211,12 +211,16 @@ def save_facility_requirements(resources, station_name, mID):
         data[station_name]["ID"] = mID
         logger.debug("Added ID to: %s", station_name)
 
+    system = system or globals.CURRENT_SYSTEM
+
     if station_name in data and data[station_name]["ID"] == mID:
         if is_station_complete(materials):
             logger.info("Facility %s is complete. Removing from list.", station_name)
             data.pop(station_name, None)
         else:
             data[station_name]["materials"] = materials
+            if system:  #the system is only recorded from 1.7 onwards
+                data[station_name]["System"] = system
             logger.info("Updating facility %s.", station_name)
     else:
         for s, info in data.items():
@@ -225,7 +229,8 @@ def save_facility_requirements(resources, station_name, mID):
                 logger.info("Removed facility %s because it is now %s.", s, station_name)
                 break
         if not is_station_complete(materials):
-            data[station_name] = {"Location": globals.CURRENT_LOCATION, "ID": mID, "materials": materials}
+            data[station_name] = {"Location": globals.CURRENT_LOCATION, "System": system,
+                                  "ID": mID, "materials": materials}
             logger.info("Adding facility %s to list.", station_name)
 
     try:
@@ -312,28 +317,31 @@ def isItemConstructionCommodity(item_name) -> bool:
         logger.debug("Item: %s is NOT a construction commodity.", item_name)
         return False
 
-# does the item cost less than all buy prices at construction sites
-def isItemBelowConstructionCost(item_name, item_price) -> bool:
-    prices = []
+# what every construction site is paying for each commodity, read once
+def load_site_prices() -> dict:
+    prices = {}
+    for site in load_facility_requirements().values():
+        for mat, vals in site.get("materials", {}).items():
+            price = vals.get("Price")
+            if price is not None:
+                prices.setdefault(mat, []).append(price)
+    return prices
 
-    site_data = load_facility_requirements()
-    for site in site_data.values():  # iterate over site dicts directly
-        materials = site.get("materials", {})
-        for mat, vals in materials.items():
-            if mat == item_name:
-                price = vals.get("Price")
-                if price is not None:
-                    prices.append(price)
+# does the item cost less than all buy prices at construction sites
+def isItemBelowConstructionCost(item_name, item_price, site_prices=None) -> bool:
+    if site_prices is None:
+        site_prices = load_site_prices()
+    prices = site_prices.get(item_name, [])
 
     if not prices:
-        logger.info("Item '%s' is not needed by any site", item_name)
+        logger.debug("Item '%s' is not needed by any site", item_name)
         return False
 
     in_demand = all(item_price < price for price in prices)
     if in_demand:
-        logger.info("Item '%s' is in demand (price: %s < all site prices: %s)", item_name, item_price, prices)
+        logger.debug("Item '%s' is in demand (price: %s < all site prices: %s)", item_name, item_price, prices)
     else:
-        logger.info("Item '%s' is NOT in demand (price: %s vs site prices: %s)", item_name, item_price, prices)
+        logger.debug("Item '%s' is NOT in demand (price: %s vs site prices: %s)", item_name, item_price, prices)
     return in_demand
 
 def check_if_market_renamed(market_lib, market):
@@ -350,20 +358,91 @@ def get_market_by_station_id(data, station_id):
             return market
     return None
 
-def ensure_market_exists(market_lib, station_name, station_id):
+def ensure_market_exists(market_lib, station_name, station_id, location=None, station_type=None):
+    if location is None:
+        location = globals.CURRENT_LOCATION
+    if station_type is None:
+        station_type = globals.DOCKED_STATION_TYPE
     market = get_market_by_station_id(market_lib, station_id)
     if market is None:
         market_lib["Markets"].append({
             "StationName": station_name,
-            "Location": globals.CURRENT_LOCATION,
+            "Location": location,
             "StationID": station_id,
-            "Type": globals.DOCKED_STATION_TYPE.name
+            "Type": station_type.name
         })
         logger.debug("Adding new market: %s", station_name)
-    elif not market.get("Location") and globals.CURRENT_LOCATION:
+        return
+    if not market.get("Location") and location:
         #recorded before we knew where we were, so fill it in now
-        market["Location"] = globals.CURRENT_LOCATION
+        market["Location"] = location
         logger.debug("Filled in the location of market: %s", station_name)
+    if station_name and market.get("StationName") != station_name:
+        market["StationName"] = station_name
+
+# One observation of "this market sells this commodity at this price", from
+# wherever it came from: docking somewhere, or an import. Keeping both callers
+# on the same rules is the point, so the two sources stay comparable.
+def record_market_price(market_lib, item_name, price, station_name, station_id,
+                        station_type, location, site_prices=None):
+    if not item_name or not station_id or not price:
+        return
+    type_name = station_type.name
+    commodity = market_lib["Commodities"].setdefault(item_name, {})
+
+    def add_market():
+        ensure_market_exists(market_lib, station_name, station_id, location, station_type)
+
+    def distance_from_site():
+        if not location or not globals.SITE_LOCATION:
+            return float("inf")
+        return calculate_distance(*location, *globals.SITE_LOCATION)
+
+    def closer_than(entry):
+        if not entry:
+            return True
+        return distance_from_site() < distance_to_site(market_lib, entry["StationID"])
+
+    if isItemBelowConstructionCost(item_name, price, site_prices):
+        cheap_markets = commodity.setdefault("CheapMarkets", {})
+        cheap_entry = cheap_markets.get(type_name)
+        if not cheap_entry or price < cheap_entry["Price"]:  # cheaper, or nothing recorded
+            add_market()
+            logger.debug("Updating CheapMarket for: %s", item_name)
+            cheap_markets[type_name] = {"Price": price, "StationID": station_id}
+        elif station_id == cheap_entry.get("StationID"):  # same station, new price
+            cheap_entry["Price"] = price
+
+        close_markets = commodity.setdefault("ClosestMarkets", {})
+        if closer_than(close_markets.get(type_name)):
+            add_market()
+            logger.debug("Updating ClosestMarket for: %s", item_name)
+            close_markets[type_name] = {"Price": price, "StationID": station_id}
+        return
+
+    logger.debug("Item %s was expensive.", item_name)
+    cheap_entry = commodity.setdefault("CheapMarkets", {}).get(type_name)
+    close_entry = commodity.setdefault("ClosestMarkets", {}).get(type_name)
+    #if this market is already listed as cheap or closest market for item, skip it
+    if (cheap_entry and cheap_entry.get("StationID") == station_id) or \
+            (close_entry and close_entry.get("StationID") == station_id):
+        logger.debug("%s was already a cheap or closest entry.", station_name)
+        return
+
+    alt_markets = commodity.setdefault("AlternateMarkets", {})
+    if closer_than(alt_markets.get(type_name)):
+        add_market()
+        logger.debug("Updating AlternateMarket for: %s", item_name)
+        alt_markets[type_name] = {"Price": price, "StationID": station_id}
+    else:
+        logger.debug("%s has a closer AlternateMarket", item_name)
+
+def save_market_library(market_lib):
+    try:
+        with open(globals.MARKET_LIB_PATH, "w", encoding="utf-8") as f:
+            json.dump(market_lib, f, indent=2)
+    except OSError as e:
+        logger.error("Error saving the market library: %s", e)
 
 def get_market_library():
     # Load existing persistent dictionary if available or create default
@@ -423,90 +502,25 @@ def update_market_library() -> None:
         not_selling_list = None
         if ensure_commodities_loaded():
             not_selling_list = list(COMMODITIES)
+        site_prices = load_site_prices()
 
         for item in items:
             if item.get("Stock", 0) > 0:  # Item is for sale
                 item_name = item.get("Name")
-                m_price = item.get("SellPrice")
+                # BuyPrice is what the commander pays; SellPrice is what the
+                # station would pay us for it, which is not the cost of hauling.
+                m_price = item.get("BuyPrice")
 
                 if item_name and isItemConstructionCommodity(item_name):
                     if item_name in not_selling_list:
                         not_selling_list.remove(item_name)
-                    commodity = market_lib["Commodities"].setdefault(item_name, {})
+                    record_market_price(market_lib, item_name, m_price, station_name,
+                                        station_id, globals.DOCKED_STATION_TYPE,
+                                        globals.CURRENT_LOCATION, site_prices)
 
-                    if isItemBelowConstructionCost(item_name, m_price):
-                        cheap_markets = commodity.setdefault("CheapMarkets", {})
-                        cheap_entry = cheap_markets.get(globals.DOCKED_STATION_TYPE.name)
-
-                        if not cheap_entry or m_price < cheap_entry["Price"]: # Update CheapMarket if cheaper or no entry
-                            ensure_market_exists(market_lib, station_name, station_id)
-                            logger.debug("Updating CheapMarket for: %s", item_name)
-                            cheap_markets[globals.DOCKED_STATION_TYPE.name] = {
-                                "Price": m_price,
-                                "StationID": station_id
-                            }
-                        elif station_id == cheap_entry.get("StationID"): #update price if station is already cheapest entry
-                            logger.debug("Updating price for: %s", item_name)
-                            cheap_entry["Price"] = m_price
-
-                        # Update ClosestMarket if closer or no entry
-                        close_markets = commodity.setdefault("ClosestMarkets", {})
-                        close_entry = close_markets.get(globals.DOCKED_STATION_TYPE.name)
-                        if close_entry:
-                            existing_distance = distance_to_site(market_lib, close_entry["StationID"])
-                        else:
-                            existing_distance = float("inf")
-                        if globals.CURRENT_LOCATION and globals.SITE_LOCATION:
-                            new_distance = calculate_distance(*globals.CURRENT_LOCATION, *globals.SITE_LOCATION)
-                        else:
-                            new_distance = float("inf")
-                        if new_distance < existing_distance:
-                            ensure_market_exists(market_lib, station_name, station_id)
-                            logger.debug("Updating ClosestMarket for: %s", item_name)
-                            close_markets[globals.DOCKED_STATION_TYPE.name] = {
-                                "Price": m_price,
-                                "StationID": station_id
-                            }
-                    else:
-                        logger.debug("Item %s was expensive.", item_name)
-                        # Update alternate market if closer or no entry
-                        cheap_m_list = commodity.setdefault("CheapMarkets", {})
-                        cheap_entry = cheap_m_list.get(globals.DOCKED_STATION_TYPE.name)
-                        close_m_list = commodity.setdefault("ClosestMarkets", {})
-                        close_entry = close_m_list.get(globals.DOCKED_STATION_TYPE.name)
-                        alt_m_list = commodity.setdefault("AlternateMarkets", {})
-                        alt_entry = alt_m_list.get(globals.DOCKED_STATION_TYPE.name)
-
-                        #if this market is already listed as cheap or closest market for item, skip it
-                        if (cheap_entry and cheap_entry.get("StationID") == station_id) or (close_entry and close_entry.get("StationID") == station_id):
-                            logger.debug("%s was already a cheap or closest entry.", station_name)
-                            continue
-
-                        if alt_entry:
-                            existing_distance = distance_to_site(market_lib, alt_entry["StationID"])
-                        else:
-                            existing_distance = float("inf")
-                        if globals.CURRENT_LOCATION and globals.SITE_LOCATION:
-                            new_distance = calculate_distance(*globals.CURRENT_LOCATION, *globals.SITE_LOCATION)
-                        else:
-                            new_distance = float("inf")
-                        if new_distance < existing_distance:
-                            ensure_market_exists(market_lib, station_name, station_id)
-                            logger.debug("Updating AlternateMarket for: %s", item_name)
-                            alt_m_list[globals.DOCKED_STATION_TYPE.name] = {
-                                "Price": m_price,
-                                "StationID": station_id
-                            }
-                        else:
-                            logger.debug("%s has a closer AlternateMarket", item_name)
-                            
-                    market_lib["Commodities"][item_name] = commodity
-        
         if not_selling_list != None:
             purge_market_from_other_commodities(market_lib, not_selling_list, station_id, station_name) #removes station ID if no longer selling commodities
-        # Save updated dictionary
-        with open(globals.MARKET_LIB_PATH, "w", encoding="utf-8") as f:
-            json.dump(market_lib, f, indent=2)
+        save_market_library(market_lib)
         remove_from_old_market_library(station_name) #purge old v1.3 library
 
     except json.JSONDecodeError as e:
