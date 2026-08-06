@@ -6,7 +6,7 @@ import tkinter.font as tkFont
 import webbrowser
 
 import myNotebook as nb
-from config import appname, appversion, config
+from config import config
 
 import globals
 from globals import logger
@@ -20,7 +20,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
 
     if config.get('ArchTrack_fcapimode') is None:
         fcapi_mode = "First then pause"
-        logger.info(f"fcapi_mode not found using default settings.")
+        logger.info("fcapi_mode not found using default settings.")
     else:
         fcapi_mode = config.get_str('ArchTrack_fcapimode')
 
@@ -116,7 +116,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
 
     #remove fully provided materials
     hide_var = tk.BooleanVar(value=hide_provided)
-    chk_hide = nb.Checkbutton(
+    nb.Checkbutton(
         but_frame,
         text="Remove delivered from lists",
         variable=hide_var,
@@ -191,7 +191,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
 
     #show at startup
     show_var = tk.BooleanVar(value=globals.SHOW_UI_AT_START)
-    chk_hide = nb.Checkbutton(
+    nb.Checkbutton(
         but_frame,
         text="Show UI at EDMC startup",
         variable=show_var,
@@ -290,36 +290,28 @@ def on_log_open():
         subprocess.Popen(['open', globals.USER_DIR])
         
     elif sys.platform.startswith('linux'):
-        try:
-            # --- Flatpak / sandboxed environment ---
-            if helpers.is_flatpak():
-                logger.info("Detected Flatpak sandbox environment")
+        # Under Flatpak, gio talks to the portal and xdg-open may not exist, so try
+        # both in turn and stop at the first one that actually starts.
+        if helpers.is_flatpak():
+            logger.info("Detected Flatpak sandbox environment")
+            openers = (["gio", "open", globals.USER_DIR], ["xdg-open", globals.USER_DIR])
+        else:
+            openers = (["xdg-open", globals.USER_DIR], ["gio", "open", globals.USER_DIR])
 
-                # Prefer portal-aware tool
-                for cmd in (["gio", "open", globals.USER_DIR], ["xdg-open", globals.USER_DIR]):
-                    try:
-                        subprocess.Popen(cmd)
-                        logger.info("Opened folder via sandbox method: %s", cmd[0])
-                    except Exception as e:
-                        logger.warning("Failed sandbox open with %s: %s", cmd[0], repr(e))
-
-                logger.error("No sandbox-compatible opener found.")
-
-            # --- Native Linux ---
-            else:
-                try:
-                    subprocess.Popen(["xdg-open", globals.USER_DIR])
-                    logger.info("Opened folder via xdg-open")
-                except Exception as e:
-                    logger.error("xdg-open failed: %s", repr(e))
-
-        except Exception as e:
-            logger.error("Failed to open folder %s: %s", globals.USER_DIR, repr(e))
+        for cmd in openers:
+            try:
+                subprocess.Popen(cmd)
+                logger.info("Opened folder via %s", cmd[0])
+                break
+            except Exception as e:
+                logger.warning("Could not open the folder with %s: %s", cmd[0], repr(e))
+        else:
+            logger.error("Could not open %s: no working file manager found.", globals.USER_DIR)
         
     elif sys.platform.startswith('win'):
         subprocess.Popen(['explorer', globals.USER_DIR])
-        
-    logviewer = LogViewerGUI(globals.EDMC_ROOT)
+
+    LogViewerGUI(globals.EDMC_ROOT)
 
 def on_column_rename(c, v):
     #save straight away, the tracker window may not be open to save it for us
