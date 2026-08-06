@@ -56,7 +56,7 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 
 ### Fleet Carrier Cargo Quantities
 - Information coming from the fleet carrier CAPI (fcapi) queries can often become unsyncronized with the actual amounts shown in the game. This causes Architect Tracker to sometimes display incorrect fleet carrier cargo quantities. As a work around, I have added a pause\unpause button next to the carrier name.
-- Transferring cargo to\from your starship or purchasing\selling commodities while docked at your fleet carrier are still tracked by Architect Tracker regardless.
+- Transferring cargo to\from your starship or buying\selling commodities at your own fleet carrier's market are still tracked by Architect Tracker regardless.
 - The pause\unpause button has 2 modes it can operate which can be set in the "Settings" of EDMC:
   - "First then pause" mode will accept the first fcapi query then ignore any others unless the pause button is clicked. This is the default mode. I have found that the first query is usually accurate if I haven't played for over an hour.
   - "Only when UNpaused" mode will accept all fcapi queries unless you pause them.
@@ -70,6 +70,9 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
   - The "O\S" button is bound to key "o".
   - The pause\unpause button is bound to "u".
   - Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
+  - These keys are ignored while you are typing in a text box, so renaming a column in the settings tab or filtering the log viewer will not trigger them.
+3. Linux: the plugin uses the journal folder EDMC is already watching. If EDMC has found your journals then so has the plugin, whether Elite is installed under Steam, Flatpak Steam, Snap Steam or on a second drive. If neither can find them, set the folder in EDMC's File > Settings > Configuration tab.
+4. Running the tests (only needed if you are changing the code): `python3 tests/test_plugin.py`, or `xvfb-run -a python3 tests/test_plugin.py` on a machine with no display. EDMC does not need to be installed.
 
 ### Notable Changes
 + 2025/04/12 : Added support for multiple construction sites. Sites are removed automaticly when they are completed.
