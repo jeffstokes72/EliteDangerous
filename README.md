@@ -20,7 +20,7 @@ Settings Window
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
-Quit EDMC first. The plugin folder must contain `load.py` directly — not inside a nested zip folder. If `load.py` is one level too deep, EDMC will not load the plugin correctly.
+Quit EDMC first. The plugin folder must contain `load.py` directly — not inside a nested zip folder. If `load.py` is one level too deep, EDMC will not load the plugin (and the ArchitectTracker settings tab can disappear).
 
 **Plugins folder locations**
 - Linux (normal install): `~/.local/share/EDMarketConnector/plugins/`
@@ -28,13 +28,41 @@ Quit EDMC first. The plugin folder must contain `load.py` directly — not insid
 - Windows: `%LOCALAPPDATA%\EDMarketConnector\plugins\`
 - macOS: `~/Library/Application Support/EDMarketConnector/plugins/`
 
-1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker 2.0</a> (`ArchitectTracker-2.0.zip`).
-2. Create a directory called `ArchitectTracker` (no spaces) in EDMC's plugins folder.
-3. Extract the zip **into** that directory. After install you must have:
-   `.../plugins/ArchitectTracker/load.py`
-4. Start EDMC. File → Settings should show an **ArchitectTracker** tab.
+**Recommended:** download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker 2.0</a> (`ArchitectTracker-2.0.zip`). That zip has `load.py` at the root — extract it straight into the `ArchitectTracker` plugins folder.
+
+**Linux (copy and paste):**
+
+```bash
+# Use the Flatpak line instead if that is how you run EDMC.
+PLUGIN_DIR="$HOME/.local/share/EDMarketConnector/plugins/ArchitectTracker"
+# PLUGIN_DIR="$HOME/.var/app/io.edcd.EDMarketConnector/data/EDMarketConnector/plugins/ArchitectTracker"
+
+rm -rf "$PLUGIN_DIR"
+mkdir -p "$PLUGIN_DIR"
+cd /tmp
+curl -L -o ArchitectTracker-2.0.zip https://github.com/jeffstokes72/EliteDangerous/releases/download/v2.0/ArchitectTracker-2.0.zip
+unzip -o ArchitectTracker-2.0.zip -d "$PLUGIN_DIR"
+
+# Must print OK.
+test -f "$PLUGIN_DIR/load.py" && echo "OK: load.py is in the right place" || echo "BROKEN"
+```
 
 Your construction sites and market library stay in `~/.config/ArchitectTracker/` (or the equivalent on Windows/macOS) and are not touched by reinstalling the plugin.
+
+**Manual / zip install**
+1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker-2.0.zip</a> (or clone this repo).
+2. Create a directory called `ArchitectTracker` (no spaces) inside EDMC's plugins folder.
+3. Put the plugin files **directly** in that directory. After install you must have:
+   `.../plugins/ArchitectTracker/load.py`
+   not
+   `.../plugins/ArchitectTracker/EliteDangerous-main/load.py`
+4. Start EDMC. File → Settings should show an **ArchitectTracker** tab. The main EDMC window should also show a "Show Architect Tracker" button.
+
+**If the settings tab is missing**
+1. Confirm `load.py` sits directly in the `ArchitectTracker` plugins folder (command above).
+2. Confirm you used the same plugins folder EDMC actually reads (Flatpak vs normal install).
+3. Check EDMC's own log and `~/.config/ArchitectTracker/EDMC_Architect_Log.txt` for an import or startup error.
+   A known cause was mixing pack/grid in the prefs UI; that is fixed in 2.0.
 
 ### Usage
 + When you land at a construction site the plugin will (after a few moments) list all the commodities and amounts required, provided and needed. You can switch between sites from the dropdown list in the upper left or the ">" button. The window will resize itself to fit all the commodities.
