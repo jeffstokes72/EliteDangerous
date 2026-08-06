@@ -60,62 +60,75 @@ def is_flatpak():
     )
 
 # --- Settings persistence ---
+def load_column_names():
+    """Header text for every column, always one entry per column in DEFAULT_COLUMNS."""
+    cols = list(globals.DEFAULT_COLUMNS.keys())
+    if config.get('ArchTrack_cols') is None:
+        logger.info("Column names not found using default settings.")
+        return cols
+    saved = config.get_list('ArchTrack_cols')
+    #a list saved by another version may not line up with the columns we have now
+    return [str(saved[i]) if i < len(saved) and saved[i] else cols[i] for i in range(len(cols))]
+
 def load_gui_settings():
+    cols = list(globals.DEFAULT_COLUMNS.keys())
     try:
         vis = {}
-        cols = list(globals.DEFAULT_COLUMNS.keys())
         for c in cols:
             key = "ArchTrack_" + c.replace(" ", "_")
             if config.get(key) is None:
                 vis[c] = True
-                logger.info(f"Key: %s not found using default setting.", key)
+                logger.info("Key: %s not found using default setting.", key)
             else:
                 vis[c] = config.get_bool(key)
         vis["Material"] = True
 
         if config.get('ArchTrack_hide_Provided') is None:
             hid = False
-            logger.info(f"Hid not found using default settings.")
+            logger.info("Hid not found using default settings.")
         else:
             hid = config.get_bool('ArchTrack_hide_Provided')
 
         if config.get('ArchTrack_theme') is None:
             theme = "Dark Mode"
-            logger.info(f"Theme not found using default settings.")
+            logger.info("Theme not found using default settings.")
         else:
             theme = config.get_str('ArchTrack_theme')
 
-        if config.get('ArchTrack_cols') is None:
-            col_display = cols
-            logger.info(f"Column names not found using default settings.")
-        else:
-            col_display = config.get_list('ArchTrack_cols')
+        col_display = load_column_names()
 
         if config.get('ArchTrack_tbg') is None:
             trans_bg = False
-            logger.info(f"trans_bg not found using default settings.")
+            logger.info("trans_bg not found using default settings.")
         else:
             trans_bg = config.get_bool('ArchTrack_tbg')
 
         if config.get('ArchTrack_wintop') is None:
             win_top = False
-            logger.info(f"win_top not found using default settings.")
+            logger.info("win_top not found using default settings.")
         else:
             win_top = config.get_bool('ArchTrack_wintop')
 
         if config.get('ArchTrack_opcamt') is None:
             opac_amt = 100
-            logger.info(f"opac_amt not found using default settings.")
+            logger.info("opac_amt not found using default settings.")
         else:
             opac_amt = config.get_int('ArchTrack_opcamt')
 
         return vis, hid, theme, col_display, trans_bg, win_top, opac_amt
     except Exception as e:
-        logger.error(f"Error loading GUI settings: {e}")
-        return globals.DEFAULT_COLUMNS, False, "Dark Mode", cols
+        logger.error("Error loading GUI settings: %s", e)
+        return dict(globals.DEFAULT_COLUMNS), False, "Dark Mode", cols, False, False, 100
+
+def show_ui_at_start() -> bool:
+    if config.get('ArchTrack_showUI') is None:
+        logger.info("showUI not found using default settings.")
+        return True
+    return config.get_bool('ArchTrack_showUI')
 
 def save_gui_settings():
-    logger.info(f"Saving settings.")
+    logger.info("Saving settings.")
+    config.set('ArchTrack_showUI', bool(globals.SHOW_UI_AT_START))
     if not gui_exists():
         return
     try:

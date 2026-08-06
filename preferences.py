@@ -322,6 +322,11 @@ def on_log_open():
     logviewer = LogViewerGUI(globals.EDMC_ROOT)
 
 def on_column_rename(c, v):
+    #save straight away, the tracker window may not be open to save it for us
+    names = helpers.load_column_names()
+    cols = list(globals.DEFAULT_COLUMNS.keys())
+    names[cols.index(c)] = v
+    config.set('ArchTrack_cols', names)
     if helpers.gui_exists():
         globals.ARCHITECT_GUI.rename_column(c, v)
 
@@ -357,6 +362,7 @@ def on_delete_markets():
 
 def toggle_showUIatStart(b):
     globals.SHOW_UI_AT_START = b
+    config.set('ArchTrack_showUI', bool(b))
 
 def change_fcapi_mode(mode):
     config.set('ArchTrack_fcapimode', mode)
