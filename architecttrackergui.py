@@ -132,19 +132,85 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.tree.configure(height=num_items)
         self.update_idletasks()
 
+    # ttk themes are process wide, so switching to one for our own window also
+    # restyles EDMC. Remember what EDMC was using and hand it back on the way out.
+    edmc_theme = None
+
+    def _use_theme(self, name):
+        if ArchitectTrackerGUI.edmc_theme is None:
+            ArchitectTrackerGUI.edmc_theme = self.style.theme_use()
+        if name and self.style.theme_use() != name:
+            self.style.theme_use(name)
+
+    def _restore_edmc_theme(self):
+        if not ArchitectTrackerGUI.edmc_theme:
+            return
+        try:
+            style = ttk.Style()
+            if style.theme_use() != ArchitectTrackerGUI.edmc_theme:
+                style.theme_use(ArchitectTrackerGUI.edmc_theme)
+        except tk.TclError as e:
+            logger.warning("Could not restore the EDMC theme: %s", e)
+
+    def palette(self):
+        if self.theme == "Dark Mode":
+            return {
+                "bg": self.bgBlack, "fg": self.edOrange,
+                "tree_bg": self.bgBlack, "tree_fg": self.edOrange,
+                "sel_bg": self.bgBlack, "sel_fg": self.edBlue,
+                "field": self.bgBlack,
+            }
+        #Light Mode borrows whatever the host theme uses so it looks native
+        bg = self.style.lookup("TFrame", "background") or "#d9d9d9"
+        fg = self.style.lookup("TLabel", "foreground") or "black"
+        return {
+            "bg": bg, "fg": fg,
+            "tree_bg": self.style.lookup("Treeview", "background") or "#ffffff",
+            "tree_fg": self.style.lookup("Treeview", "foreground") or fg,
+            "sel_bg": self.style.lookup("Treeview", "background", ["selected"]) or "#4a6984",
+            "sel_fg": self.style.lookup("Treeview", "foreground", ["selected"]) or "#ffffff",
+            "field": self.style.lookup("TCombobox", "fieldbackground") or "#ffffff",
+        }
+
     def setStyle(self):
         logger.info("setStyle theme is: %s", self.theme)
 
-        self.style = ttk.Style()
+        self.style = ttk.Style(self)
         if self.theme == "Dark Mode":
-            self.style.theme_use("clam")
-            self.style.configure("ArchTrack.Treeview.Heading",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange)
-            self.style.configure("ArchTrack.TButton",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange,
-                                    padding=(6, 2))
+            # The native Windows and macOS themes ignore background colours, so the
+            # dark look needs clam. Light Mode puts EDMC's own theme back.
+            self._use_theme("clam")
+        else:
+            self._restore_edmc_theme()
+
+        c = self.palette()
+        self.configure(bg=c["bg"])
+
+        # Everything below is namespaced under ArchTrack so no other plugin, and
+        # none of EDMC's own widgets, pick up these colours.
+        self.style.configure("ArchTrack.TFrame", background=c["bg"])
+        self.style.configure("ArchTrack.TLabel", background=c["bg"], foreground=c["fg"])
+        self.style.configure("ArchTrack.TButton", background=c["bg"], foreground=c["fg"], padding=(6, 2))
+        self.style.configure("ArchTrack.Treeview.Heading", background=c["bg"], foreground=c["fg"])
+        self.style.configure("ArchTrack.Treeview",
+                             background=c["tree_bg"],
+                             foreground=c["tree_fg"],
+                             fieldbackground=c["tree_bg"],
+                             rowheight=24,
+                             selectbackground=c["sel_bg"])
+        self.style.configure("ArchTrack.TCombobox",
+                             background=c["bg"], foreground=c["fg"],
+                             selectbackground=c["bg"], arrowcolor=c["fg"])
+        self.style.map("ArchTrack.TButton",
+                       foreground=[("disabled", c["bg"])],
+                       background=[("disabled", "#7d7d7d")])
+        self.style.map("ArchTrack.Treeview", foreground=[("selected", c["sel_fg"])])
+        self.style.map("ArchTrack.TCombobox",
+                       fieldbackground=[('readonly', c["field"])],
+                       background=[('readonly', c["bg"])])
+
+        if self.theme == "Dark Mode":
+            #clam only, these options do not exist in the native themes
             self.style.configure("ArchTrack.Vertical.TScrollbar",
                                     gripcount=0,
                                     background=ArchitectTrackerGUI.bgBlack,  # Dark background for the scrollbar
@@ -155,46 +221,25 @@ class ArchitectTrackerGUI(tk.Toplevel):
                                     sliderrelief="flat",
                                     thickness=12,  # Scrollbar thickness
                                     arrowcolor=ArchitectTrackerGUI.edOrange)  # Color for the arrows
-            self.style.configure("ArchTrack.Treeview",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange,
-                                    rowheight=24,
-                                    selectbackground=ArchitectTrackerGUI.bgBlack)
-            self.style.configure("ArchTrack.TCombobox",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange,
-                                    selectbackground=ArchitectTrackerGUI.bgBlack,
-                                    arrowcolor=ArchitectTrackerGUI.edOrange)            
-            self.style.configure("ArchTrack.TFrame",
-                                    background=ArchitectTrackerGUI.bgBlack)
-            self.style.configure("ArchTrack.TLabel",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange)
-            self.style.map("ArchTrack.TButton",
-               foreground=[("disabled", ArchitectTrackerGUI.bgBlack)],  # Color for disabled text
-               background=[("disabled", "#7d7d7d")])  # Color for disabled background
-            self.style.map("ArchTrack.Treeview", foreground=[("selected", ArchitectTrackerGUI.edBlue)])
-            self.style.map("ArchTrack.TCombobox",
-                                fieldbackground=[('readonly', ArchitectTrackerGUI.bgBlack)], # Background color of the entry field
-                                background=[('readonly', ArchitectTrackerGUI.bgBlack)]) # Background color of the dropdown list
-        elif self.theme == "Light Mode":
-            self.style.theme_use("default")  # Use default theme
-            self.style.configure("Treeview", rowheight=24)
+
+    def destroy(self):
+        self._restore_edmc_theme()
+        super().destroy()
 
     def _build_info_widgets(self):
+        self.has_table = False
         frame = ttk.Frame(self, padding=10, style="ArchTrack.TFrame")
         frame.pack(fill=tk.BOTH, expand=True)
         ttk.Label(frame, text="Construction site data not found!",
-                  background=self.bgBlack,
-                  foreground=self.edOrange).grid(row=0, column=0, sticky="nsew", padx=10)
+                  style="ArchTrack.TLabel").grid(row=0, column=0, sticky="nsew", padx=10)
         ttk.Label(frame,
                   text="Visit a construction site and the required commodities will automatically be displayed.",
-                  background=self.bgBlack,
-                  foreground=self.edOrange).grid(row=1, column=0, sticky="nsew", padx=10)
+                  style="ArchTrack.TLabel").grid(row=1, column=0, sticky="nsew", padx=10)
         self.update_idletasks()
         self.geometry(f"{self.winfo_reqwidth()}x{self.winfo_reqheight()}")
 
     def _build_widgets(self):
+        self.has_table = True
         frame = ttk.Frame(self, padding=8, style="ArchTrack.TFrame")
         frame.pack(fill=tk.BOTH, expand=True)
 
