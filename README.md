@@ -20,7 +20,7 @@ Settings Window
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
-Quit EDMC first. The plugin folder must contain `load.py` directly — not inside a nested `EliteDangerous-main` folder. If `load.py` is one level too deep, EDMC will not load the plugin and the ArchitectTracker settings tab will disappear.
+Quit EDMC first. The plugin folder must contain `load.py` directly — not inside a nested zip folder. If `load.py` is one level too deep, EDMC will not load the plugin (and the ArchitectTracker settings tab can disappear).
 
 **Plugins folder locations**
 - Linux (normal install): `~/.local/share/EDMarketConnector/plugins/`
@@ -28,7 +28,9 @@ Quit EDMC first. The plugin folder must contain `load.py` directly — not insid
 - Windows: `%LOCALAPPDATA%\EDMarketConnector\plugins\`
 - macOS: `~/Library/Application Support/EDMarketConnector/plugins/`
 
-**Linux (copy and paste)** — uses this fork's `main` branch:
+**Recommended:** download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker 2.0</a> (`ArchitectTracker-2.0.zip`). That zip has `load.py` at the root — extract it straight into the `ArchitectTracker` plugins folder.
+
+**Linux (copy and paste):**
 
 ```bash
 # Use the Flatpak line instead if that is how you run EDMC.
@@ -38,20 +40,17 @@ PLUGIN_DIR="$HOME/.local/share/EDMarketConnector/plugins/ArchitectTracker"
 rm -rf "$PLUGIN_DIR"
 mkdir -p "$PLUGIN_DIR"
 cd /tmp
-curl -L -o architecttracker.zip https://github.com/jeffstokes72/EliteDangerous/archive/refs/heads/main.zip
-rm -rf EliteDangerous-main
-unzip -o architecttracker.zip
-# Copy the *contents* of the zip folder, not the folder itself.
-cp -a EliteDangerous-main/. "$PLUGIN_DIR/"
+curl -L -o ArchitectTracker-2.0.zip https://github.com/jeffstokes72/EliteDangerous/releases/download/v2.0/ArchitectTracker-2.0.zip
+unzip -o ArchitectTracker-2.0.zip -d "$PLUGIN_DIR"
 
-# Must print OK. If it prints BROKEN, the settings tab will stay missing.
+# Must print OK.
 test -f "$PLUGIN_DIR/load.py" && echo "OK: load.py is in the right place" || echo "BROKEN"
 ```
 
-Your construction sites and market library stay in `~/.config/ArchitectTracker/` and are not touched by reinstalling the plugin.
+Your construction sites and market library stay in `~/.config/ArchitectTracker/` (or the equivalent on Windows/macOS) and are not touched by reinstalling the plugin.
 
 **Manual / zip install**
-1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/archive/refs/heads/main.zip">this fork's main branch</a> (or clone the repo).
+1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker-2.0.zip</a> (or clone this repo).
 2. Create a directory called `ArchitectTracker` (no spaces) inside EDMC's plugins folder.
 3. Put the plugin files **directly** in that directory. After install you must have:
    `.../plugins/ArchitectTracker/load.py`
@@ -63,6 +62,7 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 1. Confirm `load.py` sits directly in the `ArchitectTracker` plugins folder (command above).
 2. Confirm you used the same plugins folder EDMC actually reads (Flatpak vs normal install).
 3. Check EDMC's own log and `~/.config/ArchitectTracker/EDMC_Architect_Log.txt` for an import or startup error.
+   A known cause was mixing pack/grid in the prefs UI; that is fixed in 2.0.
 
 ### Usage
 + When you land at a construction site the plugin will (after a few moments) list all the commodities and amounts required, provided and needed. You can switch between sites from the dropdown list in the upper left or the ">" button. The window will resize itself to fit all the commodities.
@@ -141,3 +141,4 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 + Added : Import market data for markets you have not visited, from spansh.co.uk. Set a search radius and whether you want orbital or surface markets in the settings tab. Prices are now recorded as what you pay for a commodity rather than what the market would pay you for it.
 + 2026/06/11 : [Version 1.6] Major bug fixes for Linux users. Special thanks to Commanders PatientNr0, mgrzegor, Fasgort and LiamtheLion879
  for taking time to report bugs and work with me to fix them. Added log viewer to settings tab which should helppeople report bugs.
++ 2026/08/06 : [Version 2.0] Fork release with Linux journal discovery (Steam/Proton/Flatpak/Snap), crash fixes when the tracker window is closed, BuyPrice preferred-market tracking, Spansh nearby-market import, settings persistence with the window closed, and a fix so the EDMC settings tab no longer vanishes when opening Architect Tracker preferences.

@@ -267,7 +267,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     return pref_frame
 
 def open_url():
-    webbrowser.open_new("https://github.com/kfpopeye/EliteDangerous")
+    webbrowser.open_new("https://github.com/jeffstokes72/EliteDangerous")
 
 # --- Importing markets you have not visited ---
 import_status_label = None
