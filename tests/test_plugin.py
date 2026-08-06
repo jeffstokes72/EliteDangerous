@@ -539,5 +539,94 @@ class TestTrackerWindow(PluginTestCase):
                             style.lookup("TLabel", "background"))
 
 
+class TestAWholeSession(PluginTestCase):
+    """Drive the plugin through a realistic sequence of journal events."""
+
+    CALLSIGN = "K7Q-B2Z"
+    MATERIALS = [("$steel_name;", "Steel", 8000),
+                 ("$cmmcomposite_name;", "CMM Composite", 6400),
+                 ("$aluminium_name;", "Aluminium", 4200)]
+    SITE = "Orbital Construction Site: Vulcan Gate"
+
+    def depot(self, provided):
+        return {"event": "ColonisationConstructionDepot", "MarketID": 3700001,
+                "ResourcesRequired": [{"Name": n, "Name_Localised": loc,
+                                       "RequiredAmount": req, "ProvidedAmount": provided,
+                                       "Payment": 9000}
+                                      for n, loc, req in self.MATERIALS]}
+
+    def write_market(self, station, market_id, price):
+        self.write_json(g.MARKET_JSON, {
+            "StationName": station, "MarketID": market_id,
+            "Items": [{"Name": n, "Stock": 900, "SellPrice": price}
+                      for n, _, _ in self.MATERIALS]})
+
+    def play(self, station, entry, docked=True):
+        load.journal_entry("Cmdr", False, "Vulcan", station, entry, {"IsDocked": docked})
+        ROOT.update()
+
+    def test_a_full_run_logs_nothing_untoward(self):
+        import logging
+
+        problems = []
+
+        class Capture(logging.Handler):
+            def emit(self, record):
+                if record.levelno >= logging.WARNING \
+                        and "not found in commodity list" not in record.getMessage():
+                    problems.append(f"{record.levelname}: {record.getMessage()}")
+
+        handler = Capture()
+        g.logger.addHandler(handler)
+        g.EDMC_ROOT = ROOT
+        try:
+            config.set("ArchTrack_showUI", True)
+            load.plugin_start3(PLUGIN_DIR)
+            ROOT.update()
+
+            self.play(None, {"event": "FSDJump", "StarPos": [372.5, -131.4, -288.1]}, False)
+            self.play(self.SITE, self.depot(0))
+            load.capi_fleetcarrier({"cargo": [{"commodity": "CMM Composite", "qty": 2400},
+                                              {"commodity": "Steel", "qty": 900}],
+                                    "name": {"callsign": self.CALLSIGN,
+                                             "vanityName": "486f6d65727573"}})
+            self.play(None, {"event": "Undocked"}, False)
+            self.play(None, {"event": "SupercruiseDestinationDrop"}, False)
+
+            self.write_market("Jameson Memorial", 128666762, 4000)
+            self.play("Jameson Memorial", {"event": "Market"})
+            self.write_json(g.CARGO_JSON, {"Vessel": "Ship", "Count": 700,
+                                           "Inventory": [{"Name": "steel", "Count": 700}]})
+            self.play("Jameson Memorial", {"event": "MarketBuy", "Type": "steel", "Count": 700})
+
+            self.play(self.CALLSIGN, {"event": "Docked"})
+            self.play(self.CALLSIGN, {"event": "CargoTransfer",
+                                      "Transfers": [{"Type": "steel", "Count": 700,
+                                                     "Direction": "tocarrier"}]})
+            self.play(self.CALLSIGN, {"event": "MarketSell", "Type": "aluminium", "Count": 120})
+
+            self.play(None, {"event": "ApproachSettlement"}, False)
+            self.write_market("Dirt Farm", 3200001, 2500)
+            self.play("Dirt Farm", {"event": "Market"})
+
+            self.play(self.SITE, self.depot(4000))
+            helpers.toggle_gui()  # close it, tracking stops
+            self.play(None, {"event": "FSDJump", "StarPos": [1.0, 2.0, 3.0]}, False)
+            helpers.toggle_gui()  # and open it again
+            self.play(self.SITE, self.depot(8000))  # site finished
+            load.plugin_stop()
+        finally:
+            g.logger.removeHandler(handler)
+
+        self.assertEqual(problems, [])
+        self.assertEqual(g.CARRIER_TRACKER.commodities,
+                         {"cmmcomposite": 2400, "steel": 1600, "aluminium": 120})
+        self.assertEqual(g.CARRIER_TRACKER.carrier_name, "Homerus")
+        self.assertEqual(helpers.load_facility_requirements(), {})  # completed, so removed
+        self.assertEqual(sorted(m["StationName"] for m in helpers.get_market_library()["Markets"]),
+                         ["Dirt Farm", "Jameson Memorial"])
+        self.assertEqual(helpers.get_prefMarket_name("$steel_name;"), "Jameson Memorial")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
