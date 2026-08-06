@@ -1,9 +1,8 @@
+import json
 import platform
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
-from typing import Optional
-import traceback
 
 from config import config
 
@@ -24,9 +23,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         super().__init__(parent)
         self.title("Architect Tracker")
         self.geometry("800x600")
-        self.configure(bg=self.bgBlack)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.column_visibility, self.hide_provided, self.theme, self.column_names, self.trans_bg, self.win_top, self.opac_amount = helpers.load_gui_settings()
+        self.has_table = False
 
         self.setAlpha(self.opac_amount)
         self.setStayOnTop(self.win_top)
@@ -326,16 +325,23 @@ class ArchitectTrackerGUI(tk.Toplevel):
             widget.destroy()
 
     def refresh(self):
-        # Remember the currently selected station name
-        current_selection = self.station_var.get()
-
         # Load new data
         data = helpers.load_facility_requirements()
         if data == {}:
-            self.clear_frame()
-            self._build_info_widgets()
+            if self.has_table:
+                self.clear_frame()
+                self._build_info_widgets()
             globals.SITE_LOCATION = None
             return
+
+        # The window is showing the "no sites yet" message and now has something to
+        # show, so it needs the table building before anything can be put in it.
+        if not self.has_table:
+            self.clear_frame()
+            self._build_widgets()
+
+        # Remember the currently selected station name
+        current_selection = self.station_var.get()
         self.data = data
 
         # Prepare data for display
@@ -347,11 +353,20 @@ class ArchitectTrackerGUI(tk.Toplevel):
             )
             for full in data
         ]
-        self.station_map = {name: full for name, full in display}
+        #two sites can shorten to the same name, so keep the dropdown 1:1 with the data
+        self.station_map = {}
+        values = []
+        for name, full in display:
+            unique = name
+            suffix = 2
+            while unique in self.station_map:
+                unique = f"{name} ({suffix})"
+                suffix += 1
+            self.station_map[unique] = full
+            values.append(unique)
         self.station_map['-All-'] = None
 
         # Update dropdown
-        values = [name for name, _ in display]
         if len(values) > 1:
             values.insert(0, '-All-')
         self.dropdown['values'] = values
@@ -520,12 +535,15 @@ class ArchitectTrackerGUI(tk.Toplevel):
     def on_canvas_click(self, event):
         globals.FCAPI_PAUSED = not globals.FCAPI_PAUSED
         if globals.FCAPI_PAUSED:
-            logger.info(f'Fleet carrier API paused.')
+            logger.info('Fleet carrier API paused.')
         else:
-            logger.info(f'Fleet carrier API UNpaused.')
-        self.draw_canvas()
+            logger.info('Fleet carrier API UNpaused.')
+        if self.has_table:
+            self.draw_canvas()
 
     def on_next_station(self):
+        if not self.has_table:
+            return
         values = self.dropdown['values']
         if not values:
             logger.info("No stations to switch to.")
@@ -541,6 +559,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def on_prev_station(self):
+        if not self.has_table:
+            return
         values = self.dropdown['values']
         if not values:
             logger.info("No stations to switch to.")
@@ -556,6 +576,11 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def change_station(self, station):
+        if not self.has_table:
+            self.refresh()
+            if not self.has_table:
+                return
+
         short_name = (station.split(':', 1)[-1].strip() if ':' in station else
                         station.split(';', 1)[-1].strip() if ';' in station
                         else station)
@@ -579,15 +604,17 @@ class ArchitectTrackerGUI(tk.Toplevel):
             logger.info("Could not change to station: %s", short_name)
 
     def on_delete_station(self):
+        if not self.has_table:
+            return
         sel = self.station_var.get()
         station_name = self.station_map.get(sel)
-        if self.data.pop(station_name, None):
+        if station_name and self.data.pop(station_name, None):
             logger.info("Deleted station: %s", station_name)
         else:
             logger.info("Could not delete station: %s", station_name)
+            return
 
         try:
-            import json
             with open(globals.SAVE_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, indent=4)
         except Exception as e:
@@ -610,11 +637,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def refresh_columns(self):
+        if not self.has_table:
+            return
         visible_columns = [col for col, vis in self.column_visibility.items() if vis]
         self.tree["displaycolumns"] = visible_columns
-        """for col in visible_columns:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, width=100)"""
 
     def on_toggle_prefMarket(self):
         old = helpers.getPreferedMarket()
@@ -636,7 +662,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def rename_column(self, c, v):
-        self.tree.heading(c, text=v)
-        cols = self.tree["columns"]
-        col_index = cols.index(c)
-        self.column_names[col_index] = v
+        cols = list(globals.DEFAULT_COLUMNS.keys())
+        if c not in cols:
+            return
+        self.column_names[cols.index(c)] = v
+        if self.has_table:
+            self.tree.heading(c, text=v)
