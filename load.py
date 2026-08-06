@@ -126,7 +126,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             globals.CURRENT_LOCATION = tuple(entry["StarPos"])
             logger.info("Set current location to: %s", globals.CURRENT_LOCATION)
 
-        if not globals.ARCHITECT_GUI and not globals.ARCHITECT_GUI.winfo_exists():
+        if not helpers.gui_exists():
             return
 
         if globals.SHIP_STATE == globals.SHIP_MODE.Unknown:

@@ -3,11 +3,21 @@ import json
 import math
 from typing import Union
 import traceback
+import tkinter as tk
 
 from config import appname, appversion, config
 
 import globals
 from globals import logger
+
+# is the tracker window currently open?
+def gui_exists() -> bool:
+    if not globals.ARCHITECT_GUI:
+        return False
+    try:
+        return bool(globals.ARCHITECT_GUI.winfo_exists())
+    except tk.TclError:  # interpreter already torn down
+        return False
 
 # for linux
 def is_flatpak():
