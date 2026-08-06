@@ -736,7 +736,7 @@ class TestMarketImport(PluginTestCase):
         self.serve([page])
         summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
         self.assertGreater(summary.oldest_days, 180)
-        self.assertIn("oldest reported", str(summary))
+        self.assertIn("Oldest reported", str(summary))
 
     def test_markets_that_stock_nothing_we_need(self):
         self.save_site(needs=("$steel_name;",))  # the sample has no steel in supply
@@ -747,7 +747,7 @@ class TestMarketImport(PluginTestCase):
         self.serve([page])
         summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
         self.assertEqual(summary.prices, 0)
-        self.assertIn("none of them stock", str(summary))
+        self.assertIn("none stocking", str(summary))
 
     def test_stale_markets_are_left_out(self):
         self.save_site(needs=("$basicmedicines_name;",))

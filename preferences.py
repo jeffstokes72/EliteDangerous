@@ -216,7 +216,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     note_frame.grid(row=2, column=2, columnspan=2, sticky="nsew")
 
     #display button and highlighting notes
-    text_widget = tk.Text(note_frame, height=19, width=85, wrap='word', font=('Verdana', 9), border=0)
+    text_widget = tk.Text(note_frame, height=22, width=85, wrap='word', font=('Verdana', 9), border=0)
     text_widget.tag_configure('big', font=('Verdana', 9, 'bold'))
     text_widget.tag_configure('underline', font=('Verdana', 9, 'underline'))
 
@@ -307,24 +307,18 @@ def build_import_widgets(frame):
     import_button.grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row += 1
 
-    import_status_label = nb.Label(frame, text=import_hint(), wraplength=320, justify="left")
+    import_status_label = nb.Label(frame, text=import_hint(), wraplength=300, justify="left")
     import_status_label.grid(row=g_row, sticky="nw", padx=5)
     g_row += 1
 
-    notes = tk.Text(frame, height=8, width=44, wrap='word', font=('Verdana', 9), border=0)
-    notes.insert(tk.END, "Fills in the Pref Market column for markets you have not docked "
-                         "at yet, using prices other commanders have reported to EDDN, "
-                         "via spansh.co.uk.\n\n"
-                         "It reads the markets nearest your construction site first and "
-                         "stops after "
-                         f"{marketimport.MAX_PAGES * marketimport.PAGE_SIZE}, so close to "
-                         "the bubble you get the nearest ones rather than every one in "
-                         "range. Out in colonisation space nobody has visited most markets "
-                         "recently, so expect prices to be months old; anything over a "
-                         "year old is ignored. Docking somewhere always replaces the "
-                         "imported price with what you saw.")
-    notes.config(state='disabled')
-    notes.grid(row=g_row, sticky="nsew", padx=5, pady=5)
+    italic = tkFont.Font(family="Helvetica", size=8, slant="italic")
+    nb.Label(frame, font=italic, wraplength=300, justify="left", text=(
+        "Prices other commanders have reported to EDDN, by way of spansh.co.uk, for "
+        "markets you have not docked at yet.\n\n"
+        f"Reads the {marketimport.MAX_PAGES * marketimport.PAGE_SIZE} markets nearest "
+        "your site. Out in colonisation space most prices are months old; anything over "
+        "a year is ignored. Docking somewhere replaces the imported price with what "
+        "you saw.")).grid(row=g_row, sticky="nw", padx=5, pady=(4, 5))
     if import_running:
         import_button.config(state="disabled")
 

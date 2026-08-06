@@ -166,17 +166,15 @@ class Summary:
         if not self.markets_seen:
             return "No markets found in range."
         if not self.markets_used:
-            return (f"Found {self.markets_seen} markets but none of them stock what your "
-                    "sites still need.")
-        text = (f"Read {self.markets_used} markets "
-                f"({self.prices} prices for commodities your sites need)")
-        if self.oldest_days > 60:
-            text += f", the oldest reported {self.oldest_days} days ago"
-        if self.markets_stale:
-            text += f", skipped {self.markets_stale} over a year old"
+            return f"Found {self.markets_seen} markets, none stocking what your sites need."
+        text = f"{self.markets_used} markets, {self.prices} prices."
         if self.truncated:
-            text += f". Nearest {self.markets_seen} of {self.total_available} only"
-        return text + "."
+            text += f" Nearest {self.markets_seen} of {self.total_available}."
+        if self.oldest_days > 60:
+            text += f" Oldest reported {self.oldest_days} days ago."
+        if self.markets_stale:
+            text += f" Skipped {self.markets_stale} over a year old."
+        return text
 
 
 def wanted_commodities():
