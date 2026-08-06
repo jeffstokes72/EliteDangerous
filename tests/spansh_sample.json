@@ -1,0 +1,6435 @@
+{
+ "count": 474,
+ "results": [
+  {
+   "name": "System Colonisation Ship",
+   "system_name": "Lalande 21185",
+   "market_id": 3950968834,
+   "distance": 0.0,
+   "is_planetary": false,
+   "type": "Planetary Outpost",
+   "system_x": 0.3125,
+   "system_y": 7.5625,
+   "system_z": -3.375,
+   "market_updated_at": "2025-03-06 13:30:14+00",
+   "market": [
+    {
+     "buy_price": 2739,
+     "category": "Metals",
+     "commodity": "Steel",
+     "demand": 0,
+     "sell_price": 2738,
+     "supply": 0
+    }
+   ]
+  },
+  {
+   "name": "Beveridge Enterprise",
+   "system_name": "Lalande 21185",
+   "market_id": 4218614531,
+   "distance": 0.0,
+   "is_planetary": false,
+   "type": "Orbis Starport",
+   "system_x": 0.3125,
+   "system_y": 7.5625,
+   "system_z": -3.375,
+   "market_updated_at": "2026-08-05 21:39:52+00",
+   "market": [
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Advanced Medicines",
+     "demand": 68375,
+     "sell_price": 1762,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Agronomic Treatment",
+     "demand": 306,
+     "sell_price": 6182,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Algae",
+     "demand": 82527,
+     "sell_price": 686,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Aluminium",
+     "demand": 118743,
+     "sell_price": 2706,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Animal Meat",
+     "demand": 6605,
+     "sell_price": 1990,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Basic Medicines",
+     "demand": 20108,
+     "sell_price": 725,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Beer",
+     "demand": 472151,
+     "sell_price": 723,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Black Box",
+     "demand": 5557,
+     "sell_price": 31823,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "CMM Composite",
+     "demand": 40010,
+     "sell_price": 6812,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Clothing",
+     "demand": 233832,
+     "sell_price": 1309,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Coffee",
+     "demand": 16886,
+     "sell_price": 1990,
+     "supply": 0
+    },
+    {
+     "buy_price": 680,
+     "category": "Salvage",
+     "commodity": "Commercial Samples",
+     "demand": 0,
+     "sell_price": 673,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Computer Components",
+     "demand": 138696,
+     "sell_price": 1113,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Consumer Technology",
+     "demand": 16967,
+     "sell_price": 6925,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Damaged Escape Pod",
+     "demand": 5557,
+     "sell_price": 17415,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Domestic Appliances",
+     "demand": 71638,
+     "sell_price": 1110,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Emergency Power Cells",
+     "demand": 62873,
+     "sell_price": 2918,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Energy Grid Assembly",
+     "demand": 57949,
+     "sell_price": 3259,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fish",
+     "demand": 17975,
+     "sell_price": 986,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Food Cartridges",
+     "demand": 7159,
+     "sell_price": 320,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fruit and Vegetables",
+     "demand": 60284,
+     "sell_price": 883,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Grain",
+     "demand": 389364,
+     "sell_price": 758,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "H.E. Suits",
+     "demand": 1623413,
+     "sell_price": 833,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "HN Shock Mount",
+     "demand": 71118,
+     "sell_price": 2456,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Hardware Diagnostic Sensor",
+     "demand": 34651,
+     "sell_price": 7682,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Hostages",
+     "demand": 5557,
+     "sell_price": 35325,
+     "supply": 0
+    },
+    {
+     "buy_price": 85,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Fuel",
+     "demand": 1,
+     "sell_price": 80,
+     "supply": 767416
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Insulating Membrane",
+     "demand": 12432,
+     "sell_price": 10914,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Liquor",
+     "demand": 28172,
+     "sell_price": 1206,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Medical Diagnostic Equipment",
+     "demand": 209851,
+     "sell_price": 3625,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Meta-Alloys",
+     "demand": 32007,
+     "sell_price": 215642,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Micro Controllers",
+     "demand": 41798,
+     "sell_price": 6389,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Micro-weave Cooling Hoses",
+     "demand": 136027,
+     "sell_price": 1903,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Military Grade Fabrics",
+     "demand": 200488,
+     "sell_price": 2990,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Nanobreakers",
+     "demand": 104022,
+     "sell_price": 2401,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Neofabric Insulation",
+     "demand": 45344,
+     "sell_price": 6050,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Nerve Agents",
+     "demand": 5322,
+     "sell_price": 14267,
+     "supply": 0
+    },
+    {
+     "buy_price": 1384,
+     "category": "Weapons",
+     "commodity": "Non-Lethal Weapons",
+     "demand": 1,
+     "sell_price": 1334,
+     "supply": 7295
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Occupied Escape Pod",
+     "demand": 5557,
+     "sell_price": 31024,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Osmium",
+     "demand": 3733,
+     "sell_price": 190303,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Performance Enhancers",
+     "demand": 46354,
+     "sell_price": 6977,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Personal Effects",
+     "demand": 5557,
+     "sell_price": 9932,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Polymers",
+     "demand": 1309612,
+     "sell_price": 330,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Power Generators",
+     "demand": 21893,
+     "sell_price": 2739,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Progenitor Cells",
+     "demand": 16275,
+     "sell_price": 7546,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Radiation Baffle",
+     "demand": 83864,
+     "sell_price": 2288,
+     "supply": 0
+    },
+    {
+     "buy_price": 1612,
+     "category": "Weapons",
+     "commodity": "Reactive Armour",
+     "demand": 1,
+     "sell_price": 1555,
+     "supply": 302525
+    },
+    {
+     "buy_price": 72,
+     "category": "Waste",
+     "commodity": "Scrap",
+     "demand": 1,
+     "sell_price": 60,
+     "supply": 329142
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Steel",
+     "demand": 53278,
+     "sell_price": 4433,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Synthetic Meat",
+     "demand": 33312,
+     "sell_price": 685,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Synthetic Reagents",
+     "demand": 71963,
+     "sell_price": 7681,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Tea",
+     "demand": 58399,
+     "sell_price": 2183,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Telemetry Suite",
+     "demand": 77349,
+     "sell_price": 3259,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Thorium",
+     "demand": 236277,
+     "sell_price": 12579,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Titanium",
+     "demand": 50590,
+     "sell_price": 4722,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Tritium",
+     "demand": 5150,
+     "sell_price": 57175,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Unoccupied Escape Pod",
+     "demand": 4879,
+     "sell_price": 4373,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Water",
+     "demand": 31781,
+     "sell_price": 515,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Water Purifiers",
+     "demand": 55397,
+     "sell_price": 530,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Wine",
+     "demand": 169414,
+     "sell_price": 809,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Wreckage Components",
+     "demand": 5557,
+     "sell_price": 9343,
+     "supply": 0
+    }
+   ]
+  },
+  {
+   "name": "Powell High",
+   "system_name": "Wolf 359",
+   "market_id": 128155640,
+   "distance": 4.00561129854109,
+   "is_planetary": false,
+   "type": "Coriolis Starport",
+   "system_x": 3.875,
+   "system_y": 6.46875,
+   "system_z": -1.90625,
+   "market_updated_at": "2026-08-03 21:35:34+00",
+   "market": [
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Advanced Medicines",
+     "demand": 1373,
+     "sell_price": 1847,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Agronomic Treatment",
+     "demand": 0,
+     "sell_price": 5742,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Algae",
+     "demand": 6634,
+     "sell_price": 713,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Aluminium",
+     "demand": 4258,
+     "sell_price": 3109,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Animal Meat",
+     "demand": 408,
+     "sell_price": 1834,
+     "supply": 0
+    },
+    {
+     "buy_price": 404,
+     "category": "Machinery",
+     "commodity": "Atmospheric Processors",
+     "demand": 1,
+     "sell_price": 376,
+     "supply": 2422
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Auto-Fabricators",
+     "demand": 2949,
+     "sell_price": 4854,
+     "supply": 0
+    },
+    {
+     "buy_price": 521,
+     "category": "Medicines",
+     "commodity": "Basic Medicines",
+     "demand": 1,
+     "sell_price": 472,
+     "supply": 2
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Beer",
+     "demand": 8057,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Beryllium",
+     "demand": 1158,
+     "sell_price": 42175,
+     "supply": 0
+    },
+    {
+     "buy_price": 79,
+     "category": "Waste",
+     "commodity": "Biowaste",
+     "demand": 1,
+     "sell_price": 48,
+     "supply": 733
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Black Box",
+     "demand": 0,
+     "sell_price": 29800,
+     "supply": 0
+    },
+    {
+     "buy_price": 2478,
+     "category": "Machinery",
+     "commodity": "Building Fabricators",
+     "demand": 1,
+     "sell_price": 2414,
+     "supply": 55
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "CMM Composite",
+     "demand": 3086,
+     "sell_price": 6845,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Ceramic Composites",
+     "demand": 110001,
+     "sell_price": 2009,
+     "supply": 0
+    },
+    {
+     "buy_price": 638,
+     "category": "Consumer Items",
+     "commodity": "Clothing",
+     "demand": 1,
+     "sell_price": 579,
+     "supply": 2169
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Cobalt",
+     "demand": 5746,
+     "sell_price": 14507,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Coffee",
+     "demand": 865,
+     "sell_price": 2016,
+     "supply": 0
+    },
+    {
+     "buy_price": 607,
+     "category": "Technology",
+     "commodity": "Computer Components",
+     "demand": 1,
+     "sell_price": 568,
+     "supply": 133
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Conductive Fabrics",
+     "demand": 25181,
+     "sell_price": 2443,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Consumer Technology",
+     "demand": 55,
+     "sell_price": 7147,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Copper",
+     "demand": 41674,
+     "sell_price": 994,
+     "supply": 0
+    },
+    {
+     "buy_price": 2190,
+     "category": "Machinery",
+     "commodity": "Crop Harvesters",
+     "demand": 1,
+     "sell_price": 2133,
+     "supply": 1712
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Damaged Escape Pod",
+     "demand": 0,
+     "sell_price": 16083,
+     "supply": 0
+    },
+    {
+     "buy_price": 651,
+     "category": "Consumer Items",
+     "commodity": "Domestic Appliances",
+     "demand": 1,
+     "sell_price": 609,
+     "supply": 1293
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Emergency Power Cells",
+     "demand": 891,
+     "sell_price": 2761,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fish",
+     "demand": 2148,
+     "sell_price": 1010,
+     "supply": 0
+    },
+    {
+     "buy_price": 138,
+     "category": "Foods",
+     "commodity": "Food Cartridges",
+     "demand": 1,
+     "sell_price": 90,
+     "supply": 1108
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fruit and Vegetables",
+     "demand": 3083,
+     "sell_price": 907,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gallium",
+     "demand": 7156,
+     "sell_price": 26699,
+     "supply": 0
+    },
+    {
+     "buy_price": 2103,
+     "category": "Machinery",
+     "commodity": "Geological Equipment",
+     "demand": 1,
+     "sell_price": 2047,
+     "supply": 3490
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gold",
+     "demand": 0,
+     "sell_price": 54779,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Grain",
+     "demand": 7327,
+     "sell_price": 782,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "H.E. Suits",
+     "demand": 20929,
+     "sell_price": 860,
+     "supply": 0
+    },
+    {
+     "buy_price": 1824,
+     "category": "Machinery",
+     "commodity": "HN Shock Mount",
+     "demand": 1,
+     "sell_price": 1776,
+     "supply": 1410
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Haematite",
+     "demand": 7933,
+     "sell_price": 9712,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Hostages",
+     "demand": 11,
+     "sell_price": 34594,
+     "supply": 0
+    },
+    {
+     "buy_price": 126,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Fuel",
+     "demand": 1,
+     "sell_price": 120,
+     "supply": 3834
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Peroxide",
+     "demand": 48566,
+     "sell_price": 3190,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Indium",
+     "demand": 0,
+     "sell_price": 23481,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Insulating Membrane",
+     "demand": 1914,
+     "sell_price": 11855,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Leather",
+     "demand": 57554,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Liquid oxygen",
+     "demand": 25861,
+     "sell_price": 2340,
+     "supply": 0
+    },
+    {
+     "buy_price": 748,
+     "category": "Legal Drugs",
+     "commodity": "Liquor",
+     "demand": 1,
+     "sell_price": 713,
+     "supply": 215
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Lithium",
+     "demand": 18349,
+     "sell_price": 2452,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Low Temperature Diamonds",
+     "demand": 0,
+     "sell_price": 155575,
+     "supply": 0
+    },
+    {
+     "buy_price": 3814,
+     "category": "Machinery",
+     "commodity": "Marine Equipment",
+     "demand": 1,
+     "sell_price": 3722,
+     "supply": 10366
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Micro Controllers",
+     "demand": 826,
+     "sell_price": 6452,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Micro-weave Cooling Hoses",
+     "demand": 10485,
+     "sell_price": 1929,
+     "supply": 0
+    },
+    {
+     "buy_price": 1025,
+     "category": "Machinery",
+     "commodity": "Mineral Extractors",
+     "demand": 1,
+     "sell_price": 977,
+     "supply": 3514
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Natural Fabrics",
+     "demand": 46913,
+     "sell_price": 1303,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Non-Lethal Weapons",
+     "demand": 415,
+     "sell_price": 2405,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Occupied Escape Pod",
+     "demand": 0,
+     "sell_price": 29275,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Osmium",
+     "demand": 710,
+     "sell_price": 193908,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Painite",
+     "demand": 0,
+     "sell_price": 51992,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Palladium",
+     "demand": 0,
+     "sell_price": 58097,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Performance Enhancers",
+     "demand": 224,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Personal Effects",
+     "demand": 11,
+     "sell_price": 9527,
+     "supply": 0
+    },
+    {
+     "buy_price": 4025,
+     "category": "Weapons",
+     "commodity": "Personal Weapons",
+     "demand": 1,
+     "sell_price": 3928,
+     "supply": 18
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Platinum",
+     "demand": 14,
+     "sell_price": 181319,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Polymers",
+     "demand": 156390,
+     "sell_price": 1263,
+     "supply": 0
+    },
+    {
+     "buy_price": 2640,
+     "category": "Machinery",
+     "commodity": "Power Generators",
+     "demand": 1,
+     "sell_price": 2573,
+     "supply": 1312
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Praseodymium",
+     "demand": 6221,
+     "sell_price": 8711,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Progenitor Cells",
+     "demand": 0,
+     "sell_price": 6849,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Reactive Armour",
+     "demand": 383,
+     "sell_price": 2668,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Robotics",
+     "demand": 10157,
+     "sell_price": 3031,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Samarium",
+     "demand": 3957,
+     "sell_price": 36449,
+     "supply": 0
+    },
+    {
+     "buy_price": 226,
+     "category": "Waste",
+     "commodity": "Scrap",
+     "demand": 1,
+     "sell_price": 189,
+     "supply": 5397
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Semiconductors",
+     "demand": 151728,
+     "sell_price": 1741,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Silver",
+     "demand": 0,
+     "sell_price": 48045,
+     "supply": 0
+    },
+    {
+     "buy_price": 1003,
+     "category": "Machinery",
+     "commodity": "Skimmer Components",
+     "demand": 1,
+     "sell_price": 960,
+     "supply": 155
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Steel",
+     "demand": 2828,
+     "sell_price": 4915,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Superconductors",
+     "demand": 14643,
+     "sell_price": 7793,
+     "supply": 0
+    },
+    {
+     "buy_price": 1246,
+     "category": "Consumer Items",
+     "commodity": "Survival Equipment",
+     "demand": 1,
+     "sell_price": 1167,
+     "supply": 69
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Synthetic Fabrics",
+     "demand": 73014,
+     "sell_price": 1467,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Synthetic Meat",
+     "demand": 2027,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Tantalum",
+     "demand": 11486,
+     "sell_price": 15241,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Tea",
+     "demand": 474,
+     "sell_price": 2209,
+     "supply": 0
+    },
+    {
+     "buy_price": 3745,
+     "category": "Machinery",
+     "commodity": "Thermal Cooling Units",
+     "demand": 1,
+     "sell_price": 3653,
+     "supply": 37
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Titanium",
+     "demand": 2684,
+     "sell_price": 5216,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Tobacco",
+     "demand": 1027,
+     "sell_price": 5737,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Tritium",
+     "demand": 0,
+     "sell_price": 61028,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Unoccupied Escape Pod",
+     "demand": 20,
+     "sell_price": 4081,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Uranium",
+     "demand": 14596,
+     "sell_price": 7950,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Water",
+     "demand": 5725,
+     "sell_price": 564,
+     "supply": 0
+    },
+    {
+     "buy_price": 748,
+     "category": "Machinery",
+     "commodity": "Water Purifiers",
+     "demand": 1,
+     "sell_price": 677,
+     "supply": 337
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Wine",
+     "demand": 1572,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Wreckage Components",
+     "demand": 95,
+     "sell_price": 8949,
+     "supply": 0
+    }
+   ]
+  },
+  {
+   "name": "Tryggvason Installation",
+   "system_name": "Wolf 359",
+   "market_id": 3534964992,
+   "distance": 4.00561129854109,
+   "is_planetary": true,
+   "type": "Planetary Port",
+   "system_x": 3.875,
+   "system_y": 6.46875,
+   "system_z": -1.90625,
+   "market_updated_at": "2026-08-04 21:44:55+00",
+   "market": [
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Advanced Medicines",
+     "demand": 4574,
+     "sell_price": 1847,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Agronomic Treatment",
+     "demand": 0,
+     "sell_price": 5742,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Algae",
+     "demand": 44239,
+     "sell_price": 713,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Aluminium",
+     "demand": 16302,
+     "sell_price": 3251,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Animal Meat",
+     "demand": 1356,
+     "sell_price": 2016,
+     "supply": 0
+    },
+    {
+     "buy_price": 403,
+     "category": "Machinery",
+     "commodity": "Atmospheric Processors",
+     "demand": 1,
+     "sell_price": 376,
+     "supply": 8071
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Auto-Fabricators",
+     "demand": 9823,
+     "sell_price": 4854,
+     "supply": 0
+    },
+    {
+     "buy_price": 432,
+     "category": "Medicines",
+     "commodity": "Basic Medicines",
+     "demand": 1,
+     "sell_price": 392,
+     "supply": 7370
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Beer",
+     "demand": 26853,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Beryllium",
+     "demand": 10168,
+     "sell_price": 42772,
+     "supply": 0
+    },
+    {
+     "buy_price": 79,
+     "category": "Waste",
+     "commodity": "Biowaste",
+     "demand": 1,
+     "sell_price": 48,
+     "supply": 2443
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Black Box",
+     "demand": 32,
+     "sell_price": 31034,
+     "supply": 0
+    },
+    {
+     "buy_price": 2478,
+     "category": "Machinery",
+     "commodity": "Building Fabricators",
+     "demand": 1,
+     "sell_price": 2414,
+     "supply": 13377
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "CMM Composite",
+     "demand": 25526,
+     "sell_price": 6845,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Ceramic Composites",
+     "demand": 366663,
+     "sell_price": 2009,
+     "supply": 0
+    },
+    {
+     "buy_price": 639,
+     "category": "Consumer Items",
+     "commodity": "Clothing",
+     "demand": 1,
+     "sell_price": 580,
+     "supply": 721
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Cobalt",
+     "demand": 19150,
+     "sell_price": 14506,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Coffee",
+     "demand": 2877,
+     "sell_price": 2016,
+     "supply": 0
+    },
+    {
+     "buy_price": 648,
+     "category": "Technology",
+     "commodity": "Computer Components",
+     "demand": 1,
+     "sell_price": 607,
+     "supply": 4334
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Conductive Fabrics",
+     "demand": 87162,
+     "sell_price": 2443,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Consumer Technology",
+     "demand": 320,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Copper",
+     "demand": 366470,
+     "sell_price": 1156,
+     "supply": 0
+    },
+    {
+     "buy_price": 2190,
+     "category": "Machinery",
+     "commodity": "Crop Harvesters",
+     "demand": 1,
+     "sell_price": 2134,
+     "supply": 5702
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Damaged Escape Pod",
+     "demand": 157,
+     "sell_price": 16896,
+     "supply": 0
+    },
+    {
+     "buy_price": 657,
+     "category": "Consumer Items",
+     "commodity": "Domestic Appliances",
+     "demand": 1,
+     "sell_price": 615,
+     "supply": 425
+    },
+    {
+     "buy_price": 2190,
+     "category": "Machinery",
+     "commodity": "Emergency Power Cells",
+     "demand": 1,
+     "sell_price": 2134,
+     "supply": 1627
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Evacuation Shelter",
+     "demand": 1262,
+     "sell_price": 907,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fish",
+     "demand": 7159,
+     "sell_price": 1010,
+     "supply": 0
+    },
+    {
+     "buy_price": 105,
+     "category": "Foods",
+     "commodity": "Food Cartridges",
+     "demand": 1,
+     "sell_price": 69,
+     "supply": 49310
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fruit and Vegetables",
+     "demand": 10267,
+     "sell_price": 907,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gallium",
+     "demand": 18590,
+     "sell_price": 27081,
+     "supply": 0
+    },
+    {
+     "buy_price": 2103,
+     "category": "Machinery",
+     "commodity": "Geological Equipment",
+     "demand": 1,
+     "sell_price": 2047,
+     "supply": 14896
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gold",
+     "demand": 0,
+     "sell_price": 54779,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Grain",
+     "demand": 24416,
+     "sell_price": 782,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "H.E. Suits",
+     "demand": 69753,
+     "sell_price": 860,
+     "supply": 0
+    },
+    {
+     "buy_price": 1824,
+     "category": "Machinery",
+     "commodity": "HN Shock Mount",
+     "demand": 1,
+     "sell_price": 1776,
+     "supply": 4699
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Haematite",
+     "demand": 26678,
+     "sell_price": 9712,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Hostages",
+     "demand": 32,
+     "sell_price": 34594,
+     "supply": 0
+    },
+    {
+     "buy_price": 126,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Fuel",
+     "demand": 1,
+     "sell_price": 120,
+     "supply": 12777
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Peroxide",
+     "demand": 161880,
+     "sell_price": 3190,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Indium",
+     "demand": 8162,
+     "sell_price": 25086,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Insulating Membrane",
+     "demand": 16066,
+     "sell_price": 11855,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Landmines",
+     "demand": 5424,
+     "sell_price": 5111,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Leather",
+     "demand": 255729,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Liquid oxygen",
+     "demand": 88589,
+     "sell_price": 2340,
+     "supply": 0
+    },
+    {
+     "buy_price": 742,
+     "category": "Legal Drugs",
+     "commodity": "Liquor",
+     "demand": 1,
+     "sell_price": 708,
+     "supply": 1442
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Lithium",
+     "demand": 130840,
+     "sell_price": 2452,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Low Temperature Diamonds",
+     "demand": 109,
+     "sell_price": 261651,
+     "supply": 0
+    },
+    {
+     "buy_price": 3814,
+     "category": "Machinery",
+     "commodity": "Marine Equipment",
+     "demand": 1,
+     "sell_price": 3722,
+     "supply": 34548
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Micro Controllers",
+     "demand": 2741,
+     "sell_price": 6452,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Micro-weave Cooling Hoses",
+     "demand": 87363,
+     "sell_price": 1929,
+     "supply": 0
+    },
+    {
+     "buy_price": 1024,
+     "category": "Machinery",
+     "commodity": "Mineral Extractors",
+     "demand": 1,
+     "sell_price": 977,
+     "supply": 11730
+    },
+    {
+     "buy_price": 5932,
+     "category": "Technology",
+     "commodity": "Muon Imager",
+     "demand": 1,
+     "sell_price": 5862,
+     "supply": 117
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Natural Fabrics",
+     "demand": 1042094,
+     "sell_price": 1303,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Non-Lethal Weapons",
+     "demand": 1373,
+     "sell_price": 2404,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Occupied Escape Pod",
+     "demand": 31,
+     "sell_price": 30340,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Osmium",
+     "demand": 2364,
+     "sell_price": 193908,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Painite",
+     "demand": 110,
+     "sell_price": 34728,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Palladium",
+     "demand": 2671,
+     "sell_price": 59409,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Performance Enhancers",
+     "demand": 739,
+     "sell_price": 7716,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Personal Effects",
+     "demand": 32,
+     "sell_price": 9527,
+     "supply": 0
+    },
+    {
+     "buy_price": 4016,
+     "category": "Weapons",
+     "commodity": "Personal Weapons",
+     "demand": 1,
+     "sell_price": 3919,
+     "supply": 59
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Platinum",
+     "demand": 203,
+     "sell_price": 221751,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Polymers",
+     "demand": 726957,
+     "sell_price": 1263,
+     "supply": 0
+    },
+    {
+     "buy_price": 2640,
+     "category": "Machinery",
+     "commodity": "Power Generators",
+     "demand": 1,
+     "sell_price": 2573,
+     "supply": 4777
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Praseodymium",
+     "demand": 20730,
+     "sell_price": 8711,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Progenitor Cells",
+     "demand": 204,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Reactive Armour",
+     "demand": 1267,
+     "sell_price": 2666,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Reinforced Mounting Plate",
+     "demand": 3977,
+     "sell_price": 3120,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Robotics",
+     "demand": 33834,
+     "sell_price": 3031,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Samarium",
+     "demand": 13192,
+     "sell_price": 36449,
+     "supply": 0
+    },
+    {
+     "buy_price": 218,
+     "category": "Waste",
+     "commodity": "Scrap",
+     "demand": 1,
+     "sell_price": 182,
+     "supply": 18912
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Semiconductors",
+     "demand": 508727,
+     "sell_price": 1741,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Silver",
+     "demand": 5861,
+     "sell_price": 49242,
+     "supply": 0
+    },
+    {
+     "buy_price": 1054,
+     "category": "Machinery",
+     "commodity": "Skimmer Components",
+     "demand": 1,
+     "sell_price": 1009,
+     "supply": 515
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Steel",
+     "demand": 9425,
+     "sell_price": 4915,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Superconductors",
+     "demand": 49392,
+     "sell_price": 7793,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Surface Stabilisers",
+     "demand": 78572,
+     "sell_price": 1384,
+     "supply": 0
+    },
+    {
+     "buy_price": 1048,
+     "category": "Consumer Items",
+     "commodity": "Survival Equipment",
+     "demand": 1,
+     "sell_price": 981,
+     "supply": 3516
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Synthetic Fabrics",
+     "demand": 382588,
+     "sell_price": 1467,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Synthetic Meat",
+     "demand": 6754,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Tantalum",
+     "demand": 25818,
+     "sell_price": 15241,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Tea",
+     "demand": 1566,
+     "sell_price": 2209,
+     "supply": 0
+    },
+    {
+     "buy_price": 3945,
+     "category": "Machinery",
+     "commodity": "Thermal Cooling Units",
+     "demand": 1,
+     "sell_price": 3848,
+     "supply": 4682
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Titanium",
+     "demand": 8942,
+     "sell_price": 5216,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Tobacco",
+     "demand": 3417,
+     "sell_price": 5737,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Unoccupied Escape Pod",
+     "demand": 63,
+     "sell_price": 4081,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Uranium",
+     "demand": 38589,
+     "sell_price": 8197,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Water",
+     "demand": 38159,
+     "sell_price": 564,
+     "supply": 0
+    },
+    {
+     "buy_price": 748,
+     "category": "Machinery",
+     "commodity": "Water Purifiers",
+     "demand": 1,
+     "sell_price": 677,
+     "supply": 36918
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Wine",
+     "demand": 5237,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Wreckage Components",
+     "demand": 315,
+     "sell_price": 8949,
+     "supply": 0
+    }
+   ]
+  },
+  {
+   "name": "Lomas Orbiter",
+   "system_name": "Wolf 359",
+   "market_id": 128155384,
+   "distance": 4.00561129854109,
+   "is_planetary": false,
+   "type": "Orbis Starport",
+   "system_x": 3.875,
+   "system_y": 6.46875,
+   "system_z": -1.90625,
+   "market_updated_at": "2026-08-05 22:48:34+00",
+   "market": [
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Advanced Medicines",
+     "demand": 1912,
+     "sell_price": 1847,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Agronomic Treatment",
+     "demand": 0,
+     "sell_price": 5742,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Algae",
+     "demand": 9242,
+     "sell_price": 713,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Aluminium",
+     "demand": 5931,
+     "sell_price": 3108,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Animal Meat",
+     "demand": 566,
+     "sell_price": 2016,
+     "supply": 0
+    },
+    {
+     "buy_price": 403,
+     "category": "Machinery",
+     "commodity": "Atmospheric Processors",
+     "demand": 1,
+     "sell_price": 376,
+     "supply": 3375
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Auto-Fabricators",
+     "demand": 4107,
+     "sell_price": 4854,
+     "supply": 0
+    },
+    {
+     "buy_price": 521,
+     "category": "Medicines",
+     "commodity": "Basic Medicines",
+     "demand": 1,
+     "sell_price": 472,
+     "supply": 2
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Beer",
+     "demand": 11225,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Beryllium",
+     "demand": 1132,
+     "sell_price": 41338,
+     "supply": 0
+    },
+    {
+     "buy_price": 79,
+     "category": "Waste",
+     "commodity": "Biowaste",
+     "demand": 1,
+     "sell_price": 48,
+     "supply": 1022
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Black Box",
+     "demand": 0,
+     "sell_price": 29800,
+     "supply": 0
+    },
+    {
+     "buy_price": 2478,
+     "category": "Machinery",
+     "commodity": "Building Fabricators",
+     "demand": 1,
+     "sell_price": 2414,
+     "supply": 78
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "CMM Composite",
+     "demand": 4298,
+     "sell_price": 6845,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Ceramic Composites",
+     "demand": 153260,
+     "sell_price": 2009,
+     "supply": 0
+    },
+    {
+     "buy_price": 638,
+     "category": "Consumer Items",
+     "commodity": "Clothing",
+     "demand": 1,
+     "sell_price": 579,
+     "supply": 3021
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Cobalt",
+     "demand": 8004,
+     "sell_price": 14506,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Coffee",
+     "demand": 1204,
+     "sell_price": 2016,
+     "supply": 0
+    },
+    {
+     "buy_price": 609,
+     "category": "Technology",
+     "commodity": "Computer Components",
+     "demand": 1,
+     "sell_price": 570,
+     "supply": 184
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Conductive Fabrics",
+     "demand": 35134,
+     "sell_price": 2443,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Consumer Technology",
+     "demand": 102,
+     "sell_price": 7318,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Copper",
+     "demand": 62160,
+     "sell_price": 1046,
+     "supply": 0
+    },
+    {
+     "buy_price": 2190,
+     "category": "Machinery",
+     "commodity": "Crop Harvesters",
+     "demand": 1,
+     "sell_price": 2133,
+     "supply": 2384
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Damaged Escape Pod",
+     "demand": 0,
+     "sell_price": 16083,
+     "supply": 0
+    },
+    {
+     "buy_price": 649,
+     "category": "Consumer Items",
+     "commodity": "Domestic Appliances",
+     "demand": 1,
+     "sell_price": 608,
+     "supply": 1812
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Emergency Power Cells",
+     "demand": 1239,
+     "sell_price": 2760,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fish",
+     "demand": 2993,
+     "sell_price": 1010,
+     "supply": 0
+    },
+    {
+     "buy_price": 138,
+     "category": "Foods",
+     "commodity": "Food Cartridges",
+     "demand": 1,
+     "sell_price": 90,
+     "supply": 1548
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fruit and Vegetables",
+     "demand": 4291,
+     "sell_price": 907,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gallium",
+     "demand": 10924,
+     "sell_price": 26919,
+     "supply": 0
+    },
+    {
+     "buy_price": 2103,
+     "category": "Machinery",
+     "commodity": "Geological Equipment",
+     "demand": 1,
+     "sell_price": 2047,
+     "supply": 5104
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gold",
+     "demand": 0,
+     "sell_price": 54779,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Grain",
+     "demand": 10206,
+     "sell_price": 782,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "H.E. Suits",
+     "demand": 29156,
+     "sell_price": 860,
+     "supply": 0
+    },
+    {
+     "buy_price": 1824,
+     "category": "Machinery",
+     "commodity": "HN Shock Mount",
+     "demand": 1,
+     "sell_price": 1776,
+     "supply": 1965
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Haematite",
+     "demand": 11090,
+     "sell_price": 9712,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Hostages",
+     "demand": 15,
+     "sell_price": 34594,
+     "supply": 0
+    },
+    {
+     "buy_price": 126,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Fuel",
+     "demand": 1,
+     "sell_price": 120,
+     "supply": 5341
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Peroxide",
+     "demand": 67662,
+     "sell_price": 3190,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Indium",
+     "demand": 406,
+     "sell_price": 23481,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Insulating Membrane",
+     "demand": 2685,
+     "sell_price": 11855,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Leather",
+     "demand": 80186,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Liquid oxygen",
+     "demand": 36437,
+     "sell_price": 2340,
+     "supply": 0
+    },
+    {
+     "buy_price": 748,
+     "category": "Legal Drugs",
+     "commodity": "Liquor",
+     "demand": 1,
+     "sell_price": 714,
+     "supply": 298
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Lithium",
+     "demand": 26156,
+     "sell_price": 2452,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Low Temperature Diamonds",
+     "demand": 0,
+     "sell_price": 155575,
+     "supply": 0
+    },
+    {
+     "buy_price": 3814,
+     "category": "Machinery",
+     "commodity": "Marine Equipment",
+     "demand": 1,
+     "sell_price": 3722,
+     "supply": 14441
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Micro Controllers",
+     "demand": 1148,
+     "sell_price": 6452,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Micro-weave Cooling Hoses",
+     "demand": 14606,
+     "sell_price": 1929,
+     "supply": 0
+    },
+    {
+     "buy_price": 1024,
+     "category": "Machinery",
+     "commodity": "Mineral Extractors",
+     "demand": 1,
+     "sell_price": 977,
+     "supply": 4902
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Natural Fabrics",
+     "demand": 65354,
+     "sell_price": 1303,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Non-Lethal Weapons",
+     "demand": 575,
+     "sell_price": 2404,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Occupied Escape Pod",
+     "demand": 0,
+     "sell_price": 29275,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Osmium",
+     "demand": 989,
+     "sell_price": 193908,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Painite",
+     "demand": 0,
+     "sell_price": 51992,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Palladium",
+     "demand": 954,
+     "sell_price": 59296,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Performance Enhancers",
+     "demand": 310,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Personal Effects",
+     "demand": 15,
+     "sell_price": 9527,
+     "supply": 0
+    },
+    {
+     "buy_price": 4131,
+     "category": "Weapons",
+     "commodity": "Personal Weapons",
+     "demand": 1,
+     "sell_price": 4031,
+     "supply": 9
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Platinum",
+     "demand": 0,
+     "sell_price": 181319,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Polymers",
+     "demand": 221520,
+     "sell_price": 1263,
+     "supply": 0
+    },
+    {
+     "buy_price": 2640,
+     "category": "Machinery",
+     "commodity": "Power Generators",
+     "demand": 1,
+     "sell_price": 2573,
+     "supply": 1994
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Praseodymium",
+     "demand": 8665,
+     "sell_price": 8711,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Progenitor Cells",
+     "demand": 78,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Reactive Armour",
+     "demand": 530,
+     "sell_price": 2666,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Robotics",
+     "demand": 14145,
+     "sell_price": 3031,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Samarium",
+     "demand": 5491,
+     "sell_price": 36449,
+     "supply": 0
+    },
+    {
+     "buy_price": 226,
+     "category": "Waste",
+     "commodity": "Scrap",
+     "demand": 1,
+     "sell_price": 189,
+     "supply": 7517
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Semiconductors",
+     "demand": 211896,
+     "sell_price": 1741,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Silver",
+     "demand": 273,
+     "sell_price": 48656,
+     "supply": 0
+    },
+    {
+     "buy_price": 1058,
+     "category": "Machinery",
+     "commodity": "Skimmer Components",
+     "demand": 1,
+     "sell_price": 1013,
+     "supply": 213
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Steel",
+     "demand": 3940,
+     "sell_price": 4915,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Superconductors",
+     "demand": 20399,
+     "sell_price": 7793,
+     "supply": 0
+    },
+    {
+     "buy_price": 1221,
+     "category": "Consumer Items",
+     "commodity": "Survival Equipment",
+     "demand": 1,
+     "sell_price": 1143,
+     "supply": 105
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Synthetic Fabrics",
+     "demand": 101870,
+     "sell_price": 1467,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Synthetic Meat",
+     "demand": 2824,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Tantalum",
+     "demand": 16117,
+     "sell_price": 15241,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Tea",
+     "demand": 656,
+     "sell_price": 2209,
+     "supply": 0
+    },
+    {
+     "buy_price": 3945,
+     "category": "Machinery",
+     "commodity": "Thermal Cooling Units",
+     "demand": 1,
+     "sell_price": 3848,
+     "supply": 51
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Titanium",
+     "demand": 3739,
+     "sell_price": 5216,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Tobacco",
+     "demand": 1428,
+     "sell_price": 5737,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Tritium",
+     "demand": 0,
+     "sell_price": 60783,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Unoccupied Escape Pod",
+     "demand": 27,
+     "sell_price": 4081,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Uranium",
+     "demand": 22277,
+     "sell_price": 8080,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Water",
+     "demand": 7975,
+     "sell_price": 564,
+     "supply": 0
+    },
+    {
+     "buy_price": 748,
+     "category": "Machinery",
+     "commodity": "Water Purifiers",
+     "demand": 1,
+     "sell_price": 677,
+     "supply": 471
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Wine",
+     "demand": 2192,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Wreckage Components",
+     "demand": 133,
+     "sell_price": 8949,
+     "supply": 0
+    }
+   ]
+  },
+  {
+   "name": "Cayley Enterprise",
+   "system_name": "Wolf 359",
+   "market_id": 3534964736,
+   "distance": 4.00561129854109,
+   "is_planetary": true,
+   "type": "Planetary Outpost",
+   "system_x": 3.875,
+   "system_y": 6.46875,
+   "system_z": -1.90625,
+   "market_updated_at": "2026-07-31 18:34:07+00",
+   "market": [
+    {
+     "buy_price": 1842,
+     "category": "Technology",
+     "commodity": "Advanced Catalysers",
+     "demand": 0,
+     "sell_price": 1841,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Advanced Medicines",
+     "demand": 1802,
+     "sell_price": 1847,
+     "supply": 0
+    },
+    {
+     "buy_price": 2588,
+     "category": "Foods",
+     "commodity": "Aepyornis Egg",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2587,
+     "supply": 0
+    },
+    {
+     "buy_price": 613,
+     "category": "Medicines",
+     "commodity": "Agri-Medicines",
+     "demand": 0,
+     "sell_price": 612,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Agronomic Treatment",
+     "demand": 0,
+     "sell_price": 5742,
+     "supply": 0
+    },
+    {
+     "buy_price": 1658,
+     "category": "Consumer Items",
+     "commodity": "Alacarakmo Skin Art",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1657,
+     "supply": 0
+    },
+    {
+     "buy_price": 2506,
+     "category": "Foods",
+     "commodity": "Albino Quechua Mammoth Meat",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2505,
+     "supply": 0
+    },
+    {
+     "buy_price": 106744,
+     "category": "Minerals",
+     "commodity": "Alexandrite",
+     "demand": 0,
+     "sell_price": 106738,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Algae",
+     "demand": 17413,
+     "sell_price": 713,
+     "supply": 0
+    },
+    {
+     "buy_price": 1062,
+     "category": "Consumer Items",
+     "commodity": "Altairian Skin",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1061,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Aluminium",
+     "demand": 5584,
+     "sell_price": 3108,
+     "supply": 0
+    },
+    {
+     "buy_price": 830,
+     "category": "Medicines",
+     "commodity": "Alya Body Soap",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 829,
+     "supply": 0
+    },
+    {
+     "buy_price": 11348,
+     "category": "Salvage",
+     "commodity": "Ancient Key",
+     "demand": 0,
+     "sell_price": 11347,
+     "supply": 0
+    },
+    {
+     "buy_price": 1135,
+     "category": "Consumer Items",
+     "commodity": "Anduliga Fire Works",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1134,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Animal Meat",
+     "demand": 533,
+     "sell_price": 2016,
+     "supply": 0
+    },
+    {
+     "buy_price": 338,
+     "category": "Technology",
+     "commodity": "Animal Monitors",
+     "demand": 0,
+     "sell_price": 337,
+     "supply": 0
+    },
+    {
+     "buy_price": 32308,
+     "category": "Salvage",
+     "commodity": "Anomaly Particles",
+     "demand": 0,
+     "sell_price": 32306,
+     "supply": 0
+    },
+    {
+     "buy_price": 159619,
+     "category": "Salvage",
+     "commodity": "Antique Jewellery",
+     "demand": 0,
+     "sell_price": 159611,
+     "supply": 0
+    },
+    {
+     "buy_price": 1970,
+     "category": "Foods",
+     "commodity": "Any Na Coffee",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1969,
+     "supply": 0
+    },
+    {
+     "buy_price": 3242,
+     "category": "Legal Drugs",
+     "commodity": "Apa Vietii",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3241,
+     "supply": 0
+    },
+    {
+     "buy_price": 405,
+     "category": "Technology",
+     "commodity": "Aquaponic Systems",
+     "demand": 0,
+     "sell_price": 404,
+     "supply": 0
+    },
+    {
+     "buy_price": 1390,
+     "category": "Foods",
+     "commodity": "Arouca Conventual Sweets",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1389,
+     "supply": 0
+    },
+    {
+     "buy_price": 4555,
+     "category": "Machinery",
+     "commodity": "Articulation Motors",
+     "demand": 0,
+     "sell_price": 4554,
+     "supply": 0
+    },
+    {
+     "buy_price": 6738,
+     "category": "Salvage",
+     "commodity": "Assault Plans",
+     "demand": 0,
+     "sell_price": 6737,
+     "supply": 0
+    },
+    {
+     "buy_price": 403,
+     "category": "Machinery",
+     "commodity": "Atmospheric Processors",
+     "demand": 1,
+     "sell_price": 376,
+     "supply": 3178
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Auto-Fabricators",
+     "demand": 3866,
+     "sell_price": 4854,
+     "supply": 0
+    },
+    {
+     "buy_price": 5777,
+     "category": "Technology",
+     "commodity": "Az Cancri Formula 42",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5776,
+     "supply": 0
+    },
+    {
+     "buy_price": 3768,
+     "category": "Foods",
+     "commodity": "Azure Milk",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3767,
+     "supply": 0
+    },
+    {
+     "buy_price": 813,
+     "category": "Foods",
+     "commodity": "Baked Greebles",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 812,
+     "supply": 0
+    },
+    {
+     "buy_price": 1237,
+     "category": "Foods",
+     "commodity": "Baltah'sine Vacuum Krill",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1236,
+     "supply": 0
+    },
+    {
+     "buy_price": 937,
+     "category": "Textiles",
+     "commodity": "Banki Amphibious Leather",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 936,
+     "supply": 0
+    },
+    {
+     "buy_price": 432,
+     "category": "Medicines",
+     "commodity": "Basic Medicines",
+     "demand": 1,
+     "sell_price": 392,
+     "supply": 2896
+    },
+    {
+     "buy_price": 1466,
+     "category": "Legal Drugs",
+     "commodity": "Bast Snake Gin",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1465,
+     "supply": 0
+    },
+    {
+     "buy_price": 5122,
+     "category": "Minerals",
+     "commodity": "Bauxite",
+     "demand": 0,
+     "sell_price": 5121,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Beer",
+     "demand": 10569,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 1322,
+     "category": "Textiles",
+     "commodity": "Belalans Ray Leather",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1321,
+     "supply": 0
+    },
+    {
+     "buy_price": 72225,
+     "category": "Minerals",
+     "commodity": "Benitoite",
+     "demand": 0,
+     "sell_price": 72221,
+     "supply": 0
+    },
+    {
+     "buy_price": 12995,
+     "category": "Minerals",
+     "commodity": "Bertrandite",
+     "demand": 0,
+     "sell_price": 12994,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Beryllium",
+     "demand": 3742,
+     "sell_price": 42772,
+     "supply": 0
+    },
+    {
+     "buy_price": 570,
+     "category": "Technology",
+     "commodity": "Bioreducing Lichen",
+     "demand": 0,
+     "sell_price": 569,
+     "supply": 0
+    },
+    {
+     "buy_price": 79,
+     "category": "Waste",
+     "commodity": "Biowaste",
+     "demand": 1,
+     "sell_price": 48,
+     "supply": 963
+    },
+    {
+     "buy_price": 1519,
+     "category": "Metals",
+     "commodity": "Bismuth",
+     "demand": 0,
+     "sell_price": 1518,
+     "supply": 0
+    },
+    {
+     "buy_price": 70903,
+     "category": "Salvage",
+     "commodity": "Bone Fragments",
+     "demand": 0,
+     "sell_price": 70899,
+     "supply": 0
+    },
+    {
+     "buy_price": 47960,
+     "category": "Minerals",
+     "commodity": "Bromellite",
+     "demand": 0,
+     "sell_price": 47957,
+     "supply": 0
+    },
+    {
+     "buy_price": 2135,
+     "category": "Consumer Items",
+     "commodity": "Buckyball Beer Mats",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2134,
+     "supply": 0
+    },
+    {
+     "buy_price": 2478,
+     "category": "Machinery",
+     "commodity": "Building Fabricators",
+     "demand": 1,
+     "sell_price": 2414,
+     "supply": 4601
+    },
+    {
+     "buy_price": 1094,
+     "category": "Legal Drugs",
+     "commodity": "Burnham Bile Distillate",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1093,
+     "supply": 0
+    },
+    {
+     "buy_price": 2315,
+     "category": "Foods",
+     "commodity": "CD-75 Kitten Brand Coffee",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2314,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "CMM Composite",
+     "demand": 10047,
+     "sell_price": 6845,
+     "supply": 0
+    },
+    {
+     "buy_price": 51076,
+     "category": "Salvage",
+     "commodity": "Caustic Tissue Sample",
+     "demand": 0,
+     "sell_price": 51073,
+     "supply": 0
+    },
+    {
+     "buy_price": 3090,
+     "category": "Legal Drugs",
+     "commodity": "Centauri Mega Gin",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3089,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Ceramic Composites",
+     "demand": 144313,
+     "sell_price": 2009,
+     "supply": 0
+    },
+    {
+     "buy_price": 1997,
+     "category": "Foods",
+     "commodity": "Ceremonial Heike Tea",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1996,
+     "supply": 0
+    },
+    {
+     "buy_price": 1870,
+     "category": "Foods",
+     "commodity": "Ceti Rabbits",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1869,
+     "supply": 0
+    },
+    {
+     "buy_price": 1792,
+     "category": "Textiles",
+     "commodity": "Chameleon Cloth",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1791,
+     "supply": 0
+    },
+    {
+     "buy_price": 1447,
+     "category": "Legal Drugs",
+     "commodity": "Chateau De Aegaeon",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1446,
+     "supply": 0
+    },
+    {
+     "buy_price": 17,
+     "category": "Waste",
+     "commodity": "Chemical Waste",
+     "demand": 0,
+     "sell_price": 16,
+     "supply": 0
+    },
+    {
+     "buy_price": 10156,
+     "category": "Metals",
+     "commodity": "Cherbones Blood Crystals",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 10155,
+     "supply": 0
+    },
+    {
+     "buy_price": 1175,
+     "category": "Foods",
+     "commodity": "Chi Eridani Marine Paste",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1174,
+     "supply": 0
+    },
+    {
+     "buy_price": 4410,
+     "category": "Technology",
+     "commodity": "Classified Experimental Equipment",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 4409,
+     "supply": 0
+    },
+    {
+     "buy_price": 643,
+     "category": "Consumer Items",
+     "commodity": "Clothing",
+     "demand": 1,
+     "sell_price": 583,
+     "supply": 282
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Cobalt",
+     "demand": 7538,
+     "sell_price": 14506,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Coffee",
+     "demand": 1133,
+     "sell_price": 2016,
+     "supply": 0
+    },
+    {
+     "buy_price": 3857,
+     "category": "Minerals",
+     "commodity": "Coltan",
+     "demand": 0,
+     "sell_price": 3856,
+     "supply": 0
+    },
+    {
+     "buy_price": 699,
+     "category": "Salvage",
+     "commodity": "Commercial Samples",
+     "demand": 0,
+     "sell_price": 698,
+     "supply": 0
+    },
+    {
+     "buy_price": 767,
+     "category": "Technology",
+     "commodity": "Computer Components",
+     "demand": 1,
+     "sell_price": 718,
+     "supply": 397
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Conductive Fabrics",
+     "demand": 33030,
+     "sell_price": 2443,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Consumer Technology",
+     "demand": 128,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Copper",
+     "demand": 133174,
+     "sell_price": 1154,
+     "supply": 0
+    },
+    {
+     "buy_price": 3652,
+     "category": "Foods",
+     "commodity": "Coquim Spongiform Victuals",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3651,
+     "supply": 0
+    },
+    {
+     "buy_price": 98025,
+     "category": "Salvage",
+     "commodity": "Coral Sap",
+     "demand": 0,
+     "sell_price": 98020,
+     "supply": 0
+    },
+    {
+     "buy_price": 2190,
+     "category": "Machinery",
+     "commodity": "Crop Harvesters",
+     "demand": 1,
+     "sell_price": 2133,
+     "supply": 2246
+    },
+    {
+     "buy_price": 15505,
+     "category": "Minerals",
+     "commodity": "Cryolite",
+     "demand": 0,
+     "sell_price": 15504,
+     "supply": 0
+    },
+    {
+     "buy_price": 5315,
+     "category": "Salvage",
+     "commodity": "Crystalline Spheres",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5314,
+     "supply": 0
+    },
+    {
+     "buy_price": 256,
+     "category": "Industrial Materials",
+     "commodity": "Curated Commodity Package",
+     "demand": 0,
+     "sell_price": 255,
+     "supply": 0
+    },
+    {
+     "buy_price": 70903,
+     "category": "Salvage",
+     "commodity": "Cyst Specimen",
+     "demand": 0,
+     "sell_price": 70899,
+     "supply": 0
+    },
+    {
+     "buy_price": 1545,
+     "category": "Textiles",
+     "commodity": "Damna Carapaces",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1544,
+     "supply": 0
+    },
+    {
+     "buy_price": 3994,
+     "category": "Salvage",
+     "commodity": "Data Core",
+     "demand": 0,
+     "sell_price": 3993,
+     "supply": 0
+    },
+    {
+     "buy_price": 1044,
+     "category": "Chemicals",
+     "commodity": "Delta Phoenicis Palms",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1043,
+     "supply": 0
+    },
+    {
+     "buy_price": 2112,
+     "category": "Foods",
+     "commodity": "Deuringas Truffles",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2111,
+     "supply": 0
+    },
+    {
+     "buy_price": 8660,
+     "category": "Salvage",
+     "commodity": "Diplomatic Bag",
+     "demand": 0,
+     "sell_price": 8659,
+     "supply": 0
+    },
+    {
+     "buy_price": 752,
+     "category": "Foods",
+     "commodity": "Diso Ma Corn",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 751,
+     "supply": 0
+    },
+    {
+     "buy_price": 643,
+     "category": "Consumer Items",
+     "commodity": "Domestic Appliances",
+     "demand": 1,
+     "sell_price": 602,
+     "supply": 133
+    },
+    {
+     "buy_price": 13002,
+     "category": "Consumer Items",
+     "commodity": "Duradrives",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 13001,
+     "supply": 0
+    },
+    {
+     "buy_price": 14840,
+     "category": "Salvage",
+     "commodity": "Earth Relics",
+     "demand": 0,
+     "sell_price": 14839,
+     "supply": 0
+    },
+    {
+     "buy_price": 1234,
+     "category": "Foods",
+     "commodity": "Eden Apples of Aerial",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1233,
+     "supply": 0
+    },
+    {
+     "buy_price": 1294,
+     "category": "Consumer Items",
+     "commodity": "Eleu Thermals",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1293,
+     "supply": 0
+    },
+    {
+     "buy_price": 2382,
+     "category": "Machinery",
+     "commodity": "Emergency Power Cells",
+     "demand": 1,
+     "sell_price": 2321,
+     "supply": 4
+    },
+    {
+     "buy_price": 4048,
+     "category": "Salvage",
+     "commodity": "Encrypted Correspondence",
+     "demand": 0,
+     "sell_price": 4047,
+     "supply": 0
+    },
+    {
+     "buy_price": 4163,
+     "category": "Salvage",
+     "commodity": "Encrypted Data Storage",
+     "demand": 0,
+     "sell_price": 4162,
+     "supply": 0
+    },
+    {
+     "buy_price": 1602,
+     "category": "Machinery",
+     "commodity": "Energy Grid Assembly",
+     "demand": 0,
+     "sell_price": 1601,
+     "supply": 0
+    },
+    {
+     "buy_price": 1850,
+     "category": "Legal Drugs",
+     "commodity": "Eranin Pearl Whisky",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1849,
+     "supply": 0
+    },
+    {
+     "buy_price": 2050,
+     "category": "Consumer Items",
+     "commodity": "Eshu Umbrellas",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2049,
+     "supply": 0
+    },
+    {
+     "buy_price": 2419,
+     "category": "Foods",
+     "commodity": "Esuseku Caviar",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2418,
+     "supply": 0
+    },
+    {
+     "buy_price": 3065,
+     "category": "Foods",
+     "commodity": "Ethgreze Tea Buds",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3064,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Evacuation Shelter",
+     "demand": 499,
+     "sell_price": 907,
+     "supply": 0
+    },
+    {
+     "buy_price": 1060,
+     "category": "Machinery",
+     "commodity": "Exhaust Manifold",
+     "demand": 0,
+     "sell_price": 1059,
+     "supply": 0
+    },
+    {
+     "buy_price": 227,
+     "category": "Chemicals",
+     "commodity": "Explosives",
+     "demand": 0,
+     "sell_price": 226,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fish",
+     "demand": 2819,
+     "sell_price": 1010,
+     "supply": 0
+    },
+    {
+     "buy_price": 124,
+     "category": "Foods",
+     "commodity": "Food Cartridges",
+     "demand": 1,
+     "sell_price": 81,
+     "supply": 16590
+    },
+    {
+     "buy_price": 7495,
+     "category": "Salvage",
+     "commodity": "Fossil Remnants",
+     "demand": 0,
+     "sell_price": 7494,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fruit and Vegetables",
+     "demand": 4043,
+     "sell_price": 907,
+     "supply": 0
+    },
+    {
+     "buy_price": 1238,
+     "category": "Foods",
+     "commodity": "Fujin Tea",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1237,
+     "supply": 0
+    },
+    {
+     "buy_price": 245,
+     "category": "Salvage",
+     "commodity": "Galactic Travel Guide",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 244,
+     "supply": 0
+    },
+    {
+     "buy_price": 8146,
+     "category": "Minerals",
+     "commodity": "Gallite",
+     "demand": 0,
+     "sell_price": 8145,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gallium",
+     "demand": 6066,
+     "sell_price": 26622,
+     "supply": 0
+    },
+    {
+     "buy_price": 1246,
+     "category": "Legal Drugs",
+     "commodity": "Geawen Dance Dust",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1245,
+     "supply": 0
+    },
+    {
+     "buy_price": 39325,
+     "category": "Salvage",
+     "commodity": "Gene Bank",
+     "demand": 0,
+     "sell_price": 39323,
+     "supply": 0
+    },
+    {
+     "buy_price": 2103,
+     "category": "Machinery",
+     "commodity": "Geological Equipment",
+     "demand": 1,
+     "sell_price": 2047,
+     "supply": 4694
+    },
+    {
+     "buy_price": 12487,
+     "category": "Salvage",
+     "commodity": "Geological Samples",
+     "demand": 0,
+     "sell_price": 12486,
+     "supply": 0
+    },
+    {
+     "buy_price": 821,
+     "category": "Legal Drugs",
+     "commodity": "Gerasian Gueuze Beer",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 820,
+     "supply": 0
+    },
+    {
+     "buy_price": 1950,
+     "category": "Foods",
+     "commodity": "Giant Irukama Snails",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1949,
+     "supply": 0
+    },
+    {
+     "buy_price": 5595,
+     "category": "Machinery",
+     "commodity": "Giant Verrix",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5594,
+     "supply": 0
+    },
+    {
+     "buy_price": 6158,
+     "category": "Weapons",
+     "commodity": "Gilya Signature Weapons",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 6157,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gold",
+     "demand": 0,
+     "sell_price": 55169,
+     "supply": 0
+    },
+    {
+     "buy_price": 1656,
+     "category": "Foods",
+     "commodity": "Goman Yaupon Coffee",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1655,
+     "supply": 0
+    },
+    {
+     "buy_price": 6673,
+     "category": "Minerals",
+     "commodity": "Goslarite",
+     "demand": 0,
+     "sell_price": 6672,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Grain",
+     "demand": 9611,
+     "sell_price": 782,
+     "supply": 0
+    },
+    {
+     "buy_price": 90590,
+     "category": "Minerals",
+     "commodity": "Grandidierite",
+     "demand": 0,
+     "sell_price": 90585,
+     "supply": 0
+    },
+    {
+     "buy_price": 6350,
+     "category": "Salvage",
+     "commodity": "Guardian Casket",
+     "demand": 0,
+     "sell_price": 6349,
+     "supply": 0
+    },
+    {
+     "buy_price": 6791,
+     "category": "Salvage",
+     "commodity": "Guardian Orb",
+     "demand": 0,
+     "sell_price": 6790,
+     "supply": 0
+    },
+    {
+     "buy_price": 10311,
+     "category": "Salvage",
+     "commodity": "Guardian Relic",
+     "demand": 0,
+     "sell_price": 10310,
+     "supply": 0
+    },
+    {
+     "buy_price": 6791,
+     "category": "Salvage",
+     "commodity": "Guardian Tablet",
+     "demand": 0,
+     "sell_price": 6790,
+     "supply": 0
+    },
+    {
+     "buy_price": 8327,
+     "category": "Salvage",
+     "commodity": "Guardian Totem",
+     "demand": 0,
+     "sell_price": 8326,
+     "supply": 0
+    },
+    {
+     "buy_price": 4720,
+     "category": "Salvage",
+     "commodity": "Guardian Urn",
+     "demand": 0,
+     "sell_price": 4719,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "H.E. Suits",
+     "demand": 27456,
+     "sell_price": 860,
+     "supply": 0
+    },
+    {
+     "buy_price": 2105,
+     "category": "Foods",
+     "commodity": "HIP 10175 Bush Meat",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2104,
+     "supply": 0
+    },
+    {
+     "buy_price": 1698,
+     "category": "Foods",
+     "commodity": "HIP Proto-Squid",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1697,
+     "supply": 0
+    },
+    {
+     "buy_price": 1824,
+     "category": "Machinery",
+     "commodity": "HN Shock Mount",
+     "demand": 1,
+     "sell_price": 1776,
+     "supply": 1850
+    },
+    {
+     "buy_price": 1053,
+     "category": "Foods",
+     "commodity": "HR 7221 Wheat",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1052,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Haematite",
+     "demand": 10440,
+     "sell_price": 9712,
+     "supply": 0
+    },
+    {
+     "buy_price": 1521,
+     "category": "Foods",
+     "commodity": "Haiden Black Brew",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1520,
+     "supply": 0
+    },
+    {
+     "buy_price": 4555,
+     "category": "Technology",
+     "commodity": "Hardware Diagnostic Sensor",
+     "demand": 0,
+     "sell_price": 4554,
+     "supply": 0
+    },
+    {
+     "buy_price": 3586,
+     "category": "Legal Drugs",
+     "commodity": "Harma Silver Sea Rum",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3585,
+     "supply": 0
+    },
+    {
+     "buy_price": 7968,
+     "category": "Consumer Items",
+     "commodity": "Havasupai Dream Catcher",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 7967,
+     "supply": 0
+    },
+    {
+     "buy_price": 1215,
+     "category": "Machinery",
+     "commodity": "Heatsink Interlink",
+     "demand": 0,
+     "sell_price": 1214,
+     "supply": 0
+    },
+    {
+     "buy_price": 3358,
+     "category": "Metals",
+     "commodity": "Helvetitj Pearls",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3357,
+     "supply": 0
+    },
+    {
+     "buy_price": 5667,
+     "category": "Weapons",
+     "commodity": "Holva Duelling Blades",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5666,
+     "supply": 0
+    },
+    {
+     "buy_price": 126,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Fuel",
+     "demand": 1,
+     "sell_price": 120,
+     "supply": 5029
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Peroxide",
+     "demand": 63715,
+     "sell_price": 3190,
+     "supply": 0
+    },
+    {
+     "buy_price": 22839,
+     "category": "Salvage",
+     "commodity": "Impure Spire Mineral",
+     "demand": 0,
+     "sell_price": 22837,
+     "supply": 0
+    },
+    {
+     "buy_price": 1470,
+     "category": "Legal Drugs",
+     "commodity": "Indi Bourbon",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1469,
+     "supply": 0
+    },
+    {
+     "buy_price": 7660,
+     "category": "Minerals",
+     "commodity": "Indite",
+     "demand": 0,
+     "sell_price": 7659,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Indium",
+     "demand": 3011,
+     "sell_price": 24941,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Insulating Membrane",
+     "demand": 6302,
+     "sell_price": 11855,
+     "supply": 0
+    },
+    {
+     "buy_price": 1394,
+     "category": "Machinery",
+     "commodity": "Ion Distributor",
+     "demand": 0,
+     "sell_price": 1393,
+     "supply": 0
+    },
+    {
+     "buy_price": 34196,
+     "category": "Minerals",
+     "commodity": "Jadeite",
+     "demand": 0,
+     "sell_price": 34194,
+     "supply": 0
+    },
+    {
+     "buy_price": 7126,
+     "category": "Consumer Items",
+     "commodity": "Jaques Quinentian Still",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 7125,
+     "supply": 0
+    },
+    {
+     "buy_price": 10274,
+     "category": "Consumer Items",
+     "commodity": "Jaradharre Puzzle Box",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 10273,
+     "supply": 0
+    },
+    {
+     "buy_price": 1550,
+     "category": "Foods",
+     "commodity": "Jaroua Rice",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1549,
+     "supply": 0
+    },
+    {
+     "buy_price": 1461,
+     "category": "Textiles",
+     "commodity": "Jotun Mookah",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1460,
+     "supply": 0
+    },
+    {
+     "buy_price": 992,
+     "category": "Medicines",
+     "commodity": "Kachirigin Filter Leeches",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 991,
+     "supply": 0
+    },
+    {
+     "buy_price": 5397,
+     "category": "Legal Drugs",
+     "commodity": "Kamitra Cigars",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5396,
+     "supply": 0
+    },
+    {
+     "buy_price": 2720,
+     "category": "Weapons",
+     "commodity": "Kamorin Historic Weapons",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2719,
+     "supply": 0
+    },
+    {
+     "buy_price": 4609,
+     "category": "Consumer Items",
+     "commodity": "Karetii Couture",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 4608,
+     "supply": 0
+    },
+    {
+     "buy_price": 1319,
+     "category": "Foods",
+     "commodity": "Karsuki Locusts",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1318,
+     "supply": 0
+    },
+    {
+     "buy_price": 6245,
+     "category": "Consumer Items",
+     "commodity": "Kinago Violins",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 6244,
+     "supply": 0
+    },
+    {
+     "buy_price": 1173,
+     "category": "Legal Drugs",
+     "commodity": "Kongga Ale",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1172,
+     "supply": 0
+    },
+    {
+     "buy_price": 752,
+     "category": "Chemicals",
+     "commodity": "Koro Kung Pellets",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 751,
+     "supply": 0
+    },
+    {
+     "buy_price": 754,
+     "category": "Foods",
+     "commodity": "LTT Hyper Sweet",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 753,
+     "supply": 0
+    },
+    {
+     "buy_price": 3243,
+     "category": "Technology",
+     "commodity": "Land Enrichment Systems",
+     "demand": 0,
+     "sell_price": 3242,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Landmines",
+     "demand": 2138,
+     "sell_price": 5111,
+     "supply": 0
+    },
+    {
+     "buy_price": 6072,
+     "category": "Metals",
+     "commodity": "Lanthanum",
+     "demand": 0,
+     "sell_price": 6071,
+     "supply": 0
+    },
+    {
+     "buy_price": 226027,
+     "category": "Salvage",
+     "commodity": "Large Survey Data Cache",
+     "demand": 0,
+     "sell_price": 226015,
+     "supply": 0
+    },
+    {
+     "buy_price": 3413,
+     "category": "Legal Drugs",
+     "commodity": "Lavian Brandy",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3412,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Leather",
+     "demand": 100654,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 19191,
+     "category": "Consumer Items",
+     "commodity": "Leathery Eggs",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 19190,
+     "supply": 0
+    },
+    {
+     "buy_price": 835,
+     "category": "Legal Drugs",
+     "commodity": "Leestian Evil Juice",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 1701,
+     "category": "Minerals",
+     "commodity": "Lepidolite",
+     "demand": 0,
+     "sell_price": 1700,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Liquid oxygen",
+     "demand": 34249,
+     "sell_price": 2340,
+     "supply": 0
+    },
+    {
+     "buy_price": 744,
+     "category": "Legal Drugs",
+     "commodity": "Liquor",
+     "demand": 1,
+     "sell_price": 709,
+     "supply": 566
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Lithium",
+     "demand": 50586,
+     "sell_price": 2452,
+     "supply": 0
+    },
+    {
+     "buy_price": 3243,
+     "category": "Minerals",
+     "commodity": "Lithium Hydroxide",
+     "demand": 0,
+     "sell_price": 3242,
+     "supply": 0
+    },
+    {
+     "buy_price": 1614,
+     "category": "Foods",
+     "commodity": "Live Hecate Sea Worms",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1613,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Low Temperature Diamonds",
+     "demand": 35,
+     "sell_price": 231772,
+     "supply": 0
+    },
+    {
+     "buy_price": 1222,
+     "category": "Legal Drugs",
+     "commodity": "Lucan Onionhead",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1221,
+     "supply": 0
+    },
+    {
+     "buy_price": 699,
+     "category": "Machinery",
+     "commodity": "Magnetic Emitter Coil",
+     "demand": 0,
+     "sell_price": 698,
+     "supply": 0
+    },
+    {
+     "buy_price": 3839,
+     "category": "Machinery",
+     "commodity": "Marine Equipment",
+     "demand": 1,
+     "sell_price": 3746,
+     "supply": 13214
+    },
+    {
+     "buy_price": 1535,
+     "category": "Foods",
+     "commodity": "Mechucos High Tea",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1534,
+     "supply": 0
+    },
+    {
+     "buy_price": 1083,
+     "category": "Chemicals",
+     "commodity": "Medb Starlube",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1082,
+     "supply": 0
+    },
+    {
+     "buy_price": 1842,
+     "category": "Technology",
+     "commodity": "Medical Diagnostic Equipment",
+     "demand": 0,
+     "sell_price": 1841,
+     "supply": 0
+    },
+    {
+     "buy_price": 163344,
+     "category": "Industrial Materials",
+     "commodity": "Meta-Alloys",
+     "demand": 0,
+     "sell_price": 163335,
+     "supply": 0
+    },
+    {
+     "buy_price": 431,
+     "category": "Minerals",
+     "commodity": "Methane Clathrate",
+     "demand": 0,
+     "sell_price": 430,
+     "supply": 0
+    },
+    {
+     "buy_price": 1352,
+     "category": "Minerals",
+     "commodity": "Methanol Monohydrate Crystals",
+     "demand": 0,
+     "sell_price": 1351,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Micro Controllers",
+     "demand": 1081,
+     "sell_price": 6452,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Micro-weave Cooling Hoses",
+     "demand": 34388,
+     "sell_price": 1929,
+     "supply": 0
+    },
+    {
+     "buy_price": 84,
+     "category": "Machinery",
+     "commodity": "Microbial Furnaces",
+     "demand": 0,
+     "sell_price": 83,
+     "supply": 0
+    },
+    {
+     "buy_price": 1484,
+     "category": "Textiles",
+     "commodity": "Military Grade Fabrics",
+     "demand": 0,
+     "sell_price": 1483,
+     "supply": 0
+    },
+    {
+     "buy_price": 1024,
+     "category": "Machinery",
+     "commodity": "Mineral Extractors",
+     "demand": 1,
+     "sell_price": 977,
+     "supply": 4612
+    },
+    {
+     "buy_price": 143,
+     "category": "Chemicals",
+     "commodity": "Mineral Oil",
+     "demand": 0,
+     "sell_price": 142,
+     "supply": 0
+    },
+    {
+     "buy_price": 1127,
+     "category": "Machinery",
+     "commodity": "Modular Terminals",
+     "demand": 0,
+     "sell_price": 1126,
+     "supply": 0
+    },
+    {
+     "buy_price": 46109,
+     "category": "Minerals",
+     "commodity": "Moissanite",
+     "demand": 0,
+     "sell_price": 46106,
+     "supply": 0
+    },
+    {
+     "buy_price": 2614,
+     "category": "Foods",
+     "commodity": "Mokojing Beast Feast",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2613,
+     "supply": 0
+    },
+    {
+     "buy_price": 22839,
+     "category": "Salvage",
+     "commodity": "Mollusc Brain Tissue",
+     "demand": 0,
+     "sell_price": 22837,
+     "supply": 0
+    },
+    {
+     "buy_price": 3462,
+     "category": "Salvage",
+     "commodity": "Mollusc Fluid",
+     "demand": 0,
+     "sell_price": 3461,
+     "supply": 0
+    },
+    {
+     "buy_price": 12223,
+     "category": "Salvage",
+     "commodity": "Mollusc Membrane",
+     "demand": 0,
+     "sell_price": 12222,
+     "supply": 0
+    },
+    {
+     "buy_price": 22839,
+     "category": "Salvage",
+     "commodity": "Mollusc Mycelium",
+     "demand": 0,
+     "sell_price": 22837,
+     "supply": 0
+    },
+    {
+     "buy_price": 11433,
+     "category": "Salvage",
+     "commodity": "Mollusc Soft Tissue",
+     "demand": 0,
+     "sell_price": 11432,
+     "supply": 0
+    },
+    {
+     "buy_price": 3462,
+     "category": "Salvage",
+     "commodity": "Mollusc Spores",
+     "demand": 0,
+     "sell_price": 3461,
+     "supply": 0
+    },
+    {
+     "buy_price": 1898,
+     "category": "Consumer Items",
+     "commodity": "Momus Bog Spaniel",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1897,
+     "supply": 0
+    },
+    {
+     "buy_price": 368428,
+     "category": "Minerals",
+     "commodity": "Monazite",
+     "demand": 0,
+     "sell_price": 368409,
+     "supply": 0
+    },
+    {
+     "buy_price": 980,
+     "category": "Foods",
+     "commodity": "Mukusubii Chitin-os",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 979,
+     "supply": 0
+    },
+    {
+     "buy_price": 2135,
+     "category": "Foods",
+     "commodity": "Mulachi Giant Fungus",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2134,
+     "supply": 0
+    },
+    {
+     "buy_price": 5962,
+     "category": "Technology",
+     "commodity": "Muon Imager",
+     "demand": 1,
+     "sell_price": 5892,
+     "supply": 42
+    },
+    {
+     "buy_price": 138445,
+     "category": "Minerals",
+     "commodity": "Musgravite",
+     "demand": 0,
+     "sell_price": 138438,
+     "supply": 0
+    },
+    {
+     "buy_price": 13973,
+     "category": "Salvage",
+     "commodity": "Mysterious Idol",
+     "demand": 0,
+     "sell_price": 13972,
+     "supply": 0
+    },
+    {
+     "buy_price": 1060,
+     "category": "Technology",
+     "commodity": "Nanobreakers",
+     "demand": 0,
+     "sell_price": 1059,
+     "supply": 0
+    },
+    {
+     "buy_price": 2227,
+     "category": "Medicines",
+     "commodity": "Nanomedicines",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2226,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Natural Fabrics",
+     "demand": 410155,
+     "sell_price": 1303,
+     "supply": 0
+    },
+    {
+     "buy_price": 3462,
+     "category": "Industrial Materials",
+     "commodity": "Neofabric Insulation",
+     "demand": 0,
+     "sell_price": 3461,
+     "supply": 0
+    },
+    {
+     "buy_price": 1314,
+     "category": "Foods",
+     "commodity": "Neritus Berries",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1313,
+     "supply": 0
+    },
+    {
+     "buy_price": 12738,
+     "category": "Metals",
+     "commodity": "Ngadandari Fire Opals",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 12737,
+     "supply": 0
+    },
+    {
+     "buy_price": 1658,
+     "category": "Consumer Items",
+     "commodity": "Nguna Modern Antiques",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1657,
+     "supply": 0
+    },
+    {
+     "buy_price": 1240,
+     "category": "Consumer Items",
+     "commodity": "Njangari Saddles",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1239,
+     "supply": 0
+    },
+    {
+     "buy_price": 1149,
+     "category": "Machinery",
+     "commodity": "Non Euclidian Exotanks",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1148,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Non-Lethal Weapons",
+     "demand": 542,
+     "sell_price": 2405,
+     "supply": 0
+    },
+    {
+     "buy_price": 1397,
+     "category": "Foods",
+     "commodity": "Ochoeng Chillies",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1396,
+     "supply": 0
+    },
+    {
+     "buy_price": 1071,
+     "category": "Legal Drugs",
+     "commodity": "Onionhead Beta Strain",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1070,
+     "supply": 0
+    },
+    {
+     "buy_price": 2155,
+     "category": "Legal Drugs",
+     "commodity": "Onionhead Gamma Strain",
+     "demand": 0,
+     "sell_price": 2154,
+     "supply": 0
+    },
+    {
+     "buy_price": 3934,
+     "category": "Consumer Items",
+     "commodity": "Ophiuch Exino Artefacts",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 3933,
+     "supply": 0
+    },
+    {
+     "buy_price": 70903,
+     "category": "Salvage",
+     "commodity": "Organ Sample",
+     "demand": 0,
+     "sell_price": 70899,
+     "supply": 0
+    },
+    {
+     "buy_price": 945,
+     "category": "Foods",
+     "commodity": "Orrerian Vicious Brew",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 944,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Osmium",
+     "demand": 931,
+     "sell_price": 193908,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Minerals",
+     "commodity": "Painite",
+     "demand": 0,
+     "sell_price": 51992,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Palladium",
+     "demand": 1086,
+     "sell_price": 59409,
+     "supply": 0
+    },
+    {
+     "buy_price": 1887,
+     "category": "Medicines",
+     "commodity": "Pantaa Prayer Sticks",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1886,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Performance Enhancers",
+     "demand": 293,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 9950,
+     "category": "Salvage",
+     "commodity": "Personal Gifts",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 9949,
+     "supply": 0
+    },
+    {
+     "buy_price": 4006,
+     "category": "Weapons",
+     "commodity": "Personal Weapons",
+     "demand": 1,
+     "sell_price": 3910,
+     "supply": 25
+    },
+    {
+     "buy_price": 136,
+     "category": "Chemicals",
+     "commodity": "Pesticides",
+     "demand": 0,
+     "sell_price": 135,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Platinum",
+     "demand": 71,
+     "sell_price": 220986,
+     "supply": 0
+    },
+    {
+     "buy_price": 11985,
+     "category": "Metals",
+     "commodity": "Platinum Alloy",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 11984,
+     "supply": 0
+    },
+    {
+     "buy_price": 2605,
+     "category": "Salvage",
+     "commodity": "Pod Core Tissue",
+     "demand": 0,
+     "sell_price": 2604,
+     "supply": 0
+    },
+    {
+     "buy_price": 8561,
+     "category": "Salvage",
+     "commodity": "Pod Dead Tissue",
+     "demand": 0,
+     "sell_price": 8560,
+     "supply": 0
+    },
+    {
+     "buy_price": 18673,
+     "category": "Salvage",
+     "commodity": "Pod Mesoglea",
+     "demand": 0,
+     "sell_price": 18672,
+     "supply": 0
+    },
+    {
+     "buy_price": 4265,
+     "category": "Salvage",
+     "commodity": "Pod Outer Tissue",
+     "demand": 0,
+     "sell_price": 4264,
+     "supply": 0
+    },
+    {
+     "buy_price": 37360,
+     "category": "Salvage",
+     "commodity": "Pod Shell Tissue",
+     "demand": 0,
+     "sell_price": 37358,
+     "supply": 0
+    },
+    {
+     "buy_price": 19968,
+     "category": "Salvage",
+     "commodity": "Pod Surface Tissue",
+     "demand": 0,
+     "sell_price": 19967,
+     "supply": 0
+    },
+    {
+     "buy_price": 8010,
+     "category": "Salvage",
+     "commodity": "Pod Tissue",
+     "demand": 0,
+     "sell_price": 8009,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Polymers",
+     "demand": 280528,
+     "sell_price": 1263,
+     "supply": 0
+    },
+    {
+     "buy_price": 752,
+     "category": "Machinery",
+     "commodity": "Power Converter",
+     "demand": 0,
+     "sell_price": 751,
+     "supply": 0
+    },
+    {
+     "buy_price": 2640,
+     "category": "Machinery",
+     "commodity": "Power Generators",
+     "demand": 1,
+     "sell_price": 2573,
+     "supply": 1877
+    },
+    {
+     "buy_price": 1310,
+     "category": "Machinery",
+     "commodity": "Power Transfer Bus",
+     "demand": 0,
+     "sell_price": 1309,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Praseodymium",
+     "demand": 8160,
+     "sell_price": 8711,
+     "supply": 0
+    },
+    {
+     "buy_price": 139461,
+     "category": "Salvage",
+     "commodity": "Precious Gems",
+     "demand": 0,
+     "sell_price": 139454,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Progenitor Cells",
+     "demand": 81,
+     "sell_price": 7428,
+     "supply": 0
+    },
+    {
+     "buy_price": 22839,
+     "category": "Salvage",
+     "commodity": "Protective Membrane Scrap",
+     "demand": 0,
+     "sell_price": 22837,
+     "supply": 0
+    },
+    {
+     "buy_price": 14112,
+     "category": "Minerals",
+     "commodity": "Pyrophyllite",
+     "demand": 0,
+     "sell_price": 14111,
+     "supply": 0
+    },
+    {
+     "buy_price": 984,
+     "category": "Machinery",
+     "commodity": "Radiation Baffle",
+     "demand": 0,
+     "sell_price": 983,
+     "supply": 0
+    },
+    {
+     "buy_price": 1301,
+     "category": "Consumer Items",
+     "commodity": "Rajukru Multi-Stoves",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1300,
+     "supply": 0
+    },
+    {
+     "buy_price": 1234,
+     "category": "Textiles",
+     "commodity": "Rapa Bao Snake Skins",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1233,
+     "supply": 0
+    },
+    {
+     "buy_price": 30824,
+     "category": "Salvage",
+     "commodity": "Rare Artwork",
+     "demand": 0,
+     "sell_price": 30822,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Reactive Armour",
+     "demand": 499,
+     "sell_price": 2666,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Reinforced Mounting Plate",
+     "demand": 1567,
+     "sell_price": 3120,
+     "supply": 0
+    },
+    {
+     "buy_price": 4142,
+     "category": "Technology",
+     "commodity": "Resonating Separators",
+     "demand": 0,
+     "sell_price": 4141,
+     "supply": 0
+    },
+    {
+     "buy_price": 134075,
+     "category": "Minerals",
+     "commodity": "Rhodplumsite",
+     "demand": 0,
+     "sell_price": 134068,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Robotics",
+     "demand": 13321,
+     "sell_price": 3031,
+     "supply": 0
+    },
+    {
+     "buy_price": 4,
+     "category": "Chemicals",
+     "commodity": "Rockforth Fertiliser",
+     "demand": 0,
+     "sell_price": 3,
+     "supply": 0
+    },
+    {
+     "buy_price": 5053,
+     "category": "Legal Drugs",
+     "commodity": "Rusani Old Smokey",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5052,
+     "supply": 0
+    },
+    {
+     "buy_price": 4856,
+     "category": "Minerals",
+     "commodity": "Rutile",
+     "demand": 0,
+     "sell_price": 4855,
+     "supply": 0
+    },
+    {
+     "buy_price": 49428,
+     "category": "Salvage",
+     "commodity": "SAP 8 Core Container",
+     "demand": 0,
+     "sell_price": 49425,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Samarium",
+     "demand": 5191,
+     "sell_price": 36449,
+     "supply": 0
+    },
+    {
+     "buy_price": 1132,
+     "category": "Foods",
+     "commodity": "Sanuma Decorative Meat",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1131,
+     "supply": 0
+    },
+    {
+     "buy_price": 1695,
+     "category": "Legal Drugs",
+     "commodity": "Saxon Wine",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1694,
+     "supply": 0
+    },
+    {
+     "buy_price": 68903,
+     "category": "Salvage",
+     "commodity": "Scientific Research",
+     "demand": 0,
+     "sell_price": 68899,
+     "supply": 0
+    },
+    {
+     "buy_price": 22437,
+     "category": "Salvage",
+     "commodity": "Scientific Samples",
+     "demand": 0,
+     "sell_price": 22435,
+     "supply": 0
+    },
+    {
+     "buy_price": 226,
+     "category": "Waste",
+     "commodity": "Scrap",
+     "demand": 1,
+     "sell_price": 189,
+     "supply": 7079
+    },
+    {
+     "buy_price": 121271,
+     "category": "Salvage",
+     "commodity": "Semi-Refined Spire Mineral",
+     "demand": 0,
+     "sell_price": 121264,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Semiconductors",
+     "demand": 199453,
+     "sell_price": 1741,
+     "supply": 0
+    },
+    {
+     "buy_price": 82816,
+     "category": "Minerals",
+     "commodity": "Serendibite",
+     "demand": 0,
+     "sell_price": 82811,
+     "supply": 0
+    },
+    {
+     "buy_price": 1750,
+     "category": "Consumer Items",
+     "commodity": "Shan's Charis Orchid",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1749,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Silver",
+     "demand": 2223,
+     "sell_price": 49242,
+     "supply": 0
+    },
+    {
+     "buy_price": 1008,
+     "category": "Machinery",
+     "commodity": "Skimmer Components",
+     "demand": 1,
+     "sell_price": 965,
+     "supply": 198
+    },
+    {
+     "buy_price": 41114,
+     "category": "Salvage",
+     "commodity": "Small Survey Data Cache",
+     "demand": 0,
+     "sell_price": 41111,
+     "supply": 0
+    },
+    {
+     "buy_price": 13602,
+     "category": "Consumer Items",
+     "commodity": "Soontill Relics",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 13601,
+     "supply": 0
+    },
+    {
+     "buy_price": 12738,
+     "category": "Metals",
+     "commodity": "Sothis Crystalline Gold",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 12737,
+     "supply": 0
+    },
+    {
+     "buy_price": 6072,
+     "category": "Salvage",
+     "commodity": "Space Pioneer Relics",
+     "demand": 0,
+     "sell_price": 6071,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Steel",
+     "demand": 3710,
+     "sell_price": 4915,
+     "supply": 0
+    },
+    {
+     "buy_price": 1183,
+     "category": "Technology",
+     "commodity": "Structural Regulators",
+     "demand": 0,
+     "sell_price": 1182,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Industrial Materials",
+     "commodity": "Superconductors",
+     "demand": 19211,
+     "sell_price": 7793,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Surface Stabilisers",
+     "demand": 29776,
+     "sell_price": 1384,
+     "supply": 0
+    },
+    {
+     "buy_price": 1074,
+     "category": "Consumer Items",
+     "commodity": "Survival Equipment",
+     "demand": 1,
+     "sell_price": 1005,
+     "supply": 1342
+    },
+    {
+     "buy_price": 0,
+     "category": "Textiles",
+     "commodity": "Synthetic Fabrics",
+     "demand": 146642,
+     "sell_price": 1467,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Synthetic Meat",
+     "demand": 2661,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 4555,
+     "category": "Chemicals",
+     "commodity": "Synthetic Reagents",
+     "demand": 0,
+     "sell_price": 4554,
+     "supply": 0
+    },
+    {
+     "buy_price": 43423,
+     "category": "Minerals",
+     "commodity": "Taaffeite",
+     "demand": 0,
+     "sell_price": 43420,
+     "supply": 0
+    },
+    {
+     "buy_price": 4423,
+     "category": "Salvage",
+     "commodity": "Tactical Data",
+     "demand": 0,
+     "sell_price": 4422,
+     "supply": 0
+    },
+    {
+     "buy_price": 1886,
+     "category": "Foods",
+     "commodity": "Tanmark Tranquil Tea",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1885,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Tantalum",
+     "demand": 9987,
+     "sell_price": 15241,
+     "supply": 0
+    },
+    {
+     "buy_price": 1190,
+     "category": "Consumer Items",
+     "commodity": "Tauri Chimes",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1189,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Tea",
+     "demand": 619,
+     "sell_price": 2209,
+     "supply": 0
+    },
+    {
+     "buy_price": 1602,
+     "category": "Technology",
+     "commodity": "Telemetry Suite",
+     "demand": 0,
+     "sell_price": 1601,
+     "supply": 0
+    },
+    {
+     "buy_price": 2466,
+     "category": "Metals",
+     "commodity": "Thallium",
+     "demand": 0,
+     "sell_price": 2465,
+     "supply": 0
+    },
+    {
+     "buy_price": 52873,
+     "category": "Salvage",
+     "commodity": "Thargoid Basilisk Tissue Sample",
+     "demand": 0,
+     "sell_price": 52870,
+     "supply": 0
+    },
+    {
+     "buy_price": 37360,
+     "category": "Salvage",
+     "commodity": "Thargoid Biological Matter",
+     "demand": 0,
+     "sell_price": 37358,
+     "supply": 0
+    },
+    {
+     "buy_price": 45722,
+     "category": "Salvage",
+     "commodity": "Thargoid Cyclops Tissue Sample",
+     "demand": 0,
+     "sell_price": 45719,
+     "supply": 0
+    },
+    {
+     "buy_price": 52873,
+     "category": "Salvage",
+     "commodity": "Thargoid Glaive Tissue Sample",
+     "demand": 0,
+     "sell_price": 52870,
+     "supply": 0
+    },
+    {
+     "buy_price": 104867,
+     "category": "Salvage",
+     "commodity": "Thargoid Heart",
+     "demand": 0,
+     "sell_price": 104861,
+     "supply": 0
+    },
+    {
+     "buy_price": 80066,
+     "category": "Salvage",
+     "commodity": "Thargoid Hydra Tissue Sample",
+     "demand": 0,
+     "sell_price": 80061,
+     "supply": 0
+    },
+    {
+     "buy_price": 37360,
+     "category": "Salvage",
+     "commodity": "Thargoid Link",
+     "demand": 0,
+     "sell_price": 37358,
+     "supply": 0
+    },
+    {
+     "buy_price": 60502,
+     "category": "Salvage",
+     "commodity": "Thargoid Medusa Tissue Sample",
+     "demand": 0,
+     "sell_price": 60498,
+     "supply": 0
+    },
+    {
+     "buy_price": 74300,
+     "category": "Salvage",
+     "commodity": "Thargoid Orthrus Tissue Sample",
+     "demand": 0,
+     "sell_price": 74296,
+     "supply": 0
+    },
+    {
+     "buy_price": 345589,
+     "category": "Salvage",
+     "commodity": "Thargoid Probe",
+     "demand": 0,
+     "sell_price": 345571,
+     "supply": 0
+    },
+    {
+     "buy_price": 22839,
+     "category": "Salvage",
+     "commodity": "Thargoid Resin",
+     "demand": 0,
+     "sell_price": 22837,
+     "supply": 0
+    },
+    {
+     "buy_price": 16153,
+     "category": "Salvage",
+     "commodity": "Thargoid Scout Tissue Sample",
+     "demand": 0,
+     "sell_price": 16152,
+     "supply": 0
+    },
+    {
+     "buy_price": 52873,
+     "category": "Salvage",
+     "commodity": "Thargoid Scythe Tissue Sample",
+     "demand": 0,
+     "sell_price": 52870,
+     "supply": 0
+    },
+    {
+     "buy_price": 235449,
+     "category": "Salvage",
+     "commodity": "Thargoid Sensor",
+     "demand": 0,
+     "sell_price": 235437,
+     "supply": 0
+    },
+    {
+     "buy_price": 28242,
+     "category": "Salvage",
+     "commodity": "Thargoid Technology Samples",
+     "demand": 0,
+     "sell_price": 28240,
+     "supply": 0
+    },
+    {
+     "buy_price": 1128,
+     "category": "Consumer Items",
+     "commodity": "The Hutton Mug",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1127,
+     "supply": 0
+    },
+    {
+     "buy_price": 6965,
+     "category": "Medicines",
+     "commodity": "The Waters of Shintara",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 6964,
+     "supply": 0
+    },
+    {
+     "buy_price": 3945,
+     "category": "Machinery",
+     "commodity": "Thermal Cooling Units",
+     "demand": 1,
+     "sell_price": 3848,
+     "supply": 1748
+    },
+    {
+     "buy_price": 8010,
+     "category": "Metals",
+     "commodity": "Thorium",
+     "demand": 0,
+     "sell_price": 8009,
+     "supply": 0
+    },
+    {
+     "buy_price": 1294,
+     "category": "Legal Drugs",
+     "commodity": "Thrutis Cream",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1293,
+     "supply": 0
+    },
+    {
+     "buy_price": 1084,
+     "category": "Textiles",
+     "commodity": "Tiegfries Synth Silk",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1083,
+     "supply": 0
+    },
+    {
+     "buy_price": 3003,
+     "category": "Salvage",
+     "commodity": "Time Capsule",
+     "demand": 0,
+     "sell_price": 3002,
+     "supply": 0
+    },
+    {
+     "buy_price": 1439,
+     "category": "Consumer Items",
+     "commodity": "Tiolce Waste2Paste Units",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1438,
+     "supply": 0
+    },
+    {
+     "buy_price": 390174,
+     "category": "Salvage",
+     "commodity": "Titan Deep Tissue Sample",
+     "demand": 0,
+     "sell_price": 390154,
+     "supply": 0
+    },
+    {
+     "buy_price": 276727,
+     "category": "Salvage",
+     "commodity": "Titan Drive Component",
+     "demand": 0,
+     "sell_price": 276713,
+     "supply": 0
+    },
+    {
+     "buy_price": 476638,
+     "category": "Salvage",
+     "commodity": "Titan Maw Deep Tissue Sample",
+     "demand": 0,
+     "sell_price": 476614,
+     "supply": 0
+    },
+    {
+     "buy_price": 209538,
+     "category": "Salvage",
+     "commodity": "Titan Maw Partial Tissue Sample",
+     "demand": 0,
+     "sell_price": 209527,
+     "supply": 0
+    },
+    {
+     "buy_price": 317630,
+     "category": "Salvage",
+     "commodity": "Titan Maw Tissue Sample",
+     "demand": 0,
+     "sell_price": 317614,
+     "supply": 0
+    },
+    {
+     "buy_price": 104867,
+     "category": "Salvage",
+     "commodity": "Titan Partial Tissue Sample",
+     "demand": 0,
+     "sell_price": 104861,
+     "supply": 0
+    },
+    {
+     "buy_price": 210277,
+     "category": "Salvage",
+     "commodity": "Titan Tissue Sample",
+     "demand": 0,
+     "sell_price": 210266,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Titanium",
+     "demand": 3522,
+     "sell_price": 5217,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Tobacco",
+     "demand": 1344,
+     "sell_price": 5737,
+     "supply": 0
+    },
+    {
+     "buy_price": 1200,
+     "category": "Chemicals",
+     "commodity": "Toxandji Virocide",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1199,
+     "supply": 0
+    },
+    {
+     "buy_price": 45320,
+     "category": "Chemicals",
+     "commodity": "Tritium",
+     "demand": 0,
+     "sell_price": 45317,
+     "supply": 0
+    },
+    {
+     "buy_price": 15297,
+     "category": "Consumer Items",
+     "commodity": "Ultra-Compact Processor Prototypes",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 15296,
+     "supply": 0
+    },
+    {
+     "buy_price": 4447,
+     "category": "Salvage",
+     "commodity": "Unclassified Relic",
+     "demand": 0,
+     "sell_price": 4446,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Unoccupied Escape Pod",
+     "demand": 26,
+     "sell_price": 4081,
+     "supply": 0
+    },
+    {
+     "buy_price": 2442,
+     "category": "Salvage",
+     "commodity": "Unstable Data Core",
+     "demand": 0,
+     "sell_price": 2441,
+     "supply": 0
+    },
+    {
+     "buy_price": 1689,
+     "category": "Minerals",
+     "commodity": "Uraninite",
+     "demand": 0,
+     "sell_price": 1688,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Uranium",
+     "demand": 12374,
+     "sell_price": 7905,
+     "supply": 0
+    },
+    {
+     "buy_price": 1204,
+     "category": "Foods",
+     "commodity": "Uszaian Tree Grub",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1203,
+     "supply": 0
+    },
+    {
+     "buy_price": 2004,
+     "category": "Foods",
+     "commodity": "Utgaroar Millennial Eggs",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2003,
+     "supply": 0
+    },
+    {
+     "buy_price": 7126,
+     "category": "Consumer Items",
+     "commodity": "Uzumoku Low-G Wings",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 7125,
+     "supply": 0
+    },
+    {
+     "buy_price": 874,
+     "category": "Medicines",
+     "commodity": "V Herculis Body Rub",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 873,
+     "supply": 0
+    },
+    {
+     "buy_price": 1234,
+     "category": "Textiles",
+     "commodity": "Vanayequi Ceratomorpha Fur",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1233,
+     "supply": 0
+    },
+    {
+     "buy_price": 2368,
+     "category": "Medicines",
+     "commodity": "Vega Slimweed",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2367,
+     "supply": 0
+    },
+    {
+     "buy_price": 5740,
+     "category": "Consumer Items",
+     "commodity": "Vidavantian Lace",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5739,
+     "supply": 0
+    },
+    {
+     "buy_price": 2349,
+     "category": "Foods",
+     "commodity": "Void Extract Coffee",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 2348,
+     "supply": 0
+    },
+    {
+     "buy_price": 53031,
+     "category": "Minerals",
+     "commodity": "Void Opal",
+     "demand": 0,
+     "sell_price": 53028,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Water",
+     "demand": 15019,
+     "sell_price": 564,
+     "supply": 0
+    },
+    {
+     "buy_price": 748,
+     "category": "Machinery",
+     "commodity": "Water Purifiers",
+     "demand": 1,
+     "sell_price": 677,
+     "supply": 12083
+    },
+    {
+     "buy_price": 756,
+     "category": "Foods",
+     "commodity": "Wheemete Wheat Cakes",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 755,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Wine",
+     "demand": 2063,
+     "sell_price": 834,
+     "supply": 0
+    },
+    {
+     "buy_price": 4143,
+     "category": "Foods",
+     "commodity": "Witchhaul Kobe Beef",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 4142,
+     "supply": 0
+    },
+    {
+     "buy_price": 1594,
+     "category": "Machinery",
+     "commodity": "Wulpa Hyperbore Systems",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1593,
+     "supply": 0
+    },
+    {
+     "buy_price": 1065,
+     "category": "Legal Drugs",
+     "commodity": "Wuthielo Ku Froth",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 1064,
+     "supply": 0
+    },
+    {
+     "buy_price": 4108,
+     "category": "Technology",
+     "commodity": "Xihe Biomorphic Companions",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 4107,
+     "supply": 0
+    },
+    {
+     "buy_price": 5259,
+     "category": "Legal Drugs",
+     "commodity": "Yaso Kondi Leaf",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 5258,
+     "supply": 0
+    },
+    {
+     "buy_price": 794,
+     "category": "Consumer Items",
+     "commodity": "Zeessze Ant Grub Glue",
+     "demand": 0,
+     "is_rare": true,
+     "sell_price": 793,
+     "supply": 0
+    }
+   ]
+  },
+  {
+   "name": "Amis Installation",
+   "system_name": "Duamta",
+   "market_id": 3534631680,
+   "distance": 4.1875,
+   "is_planetary": true,
+   "type": "Planetary Outpost",
+   "system_x": 2.1875,
+   "system_y": 6.625,
+   "system_z": -7.0,
+   "market_updated_at": "2026-07-20 20:38:28+00",
+   "market": [
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Advanced Medicines",
+     "demand": 386,
+     "sell_price": 1136,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Agronomic Treatment",
+     "demand": 4,
+     "sell_price": 3156,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Animal Meat",
+     "demand": 350,
+     "sell_price": 1286,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Basic Medicines",
+     "demand": 82,
+     "sell_price": 443,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Beer",
+     "demand": 875,
+     "sell_price": 175,
+     "supply": 0
+    },
+    {
+     "buy_price": 98,
+     "category": "Waste",
+     "commodity": "Biowaste",
+     "demand": 1,
+     "sell_price": 59,
+     "supply": 44
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Black Box",
+     "demand": 145,
+     "sell_price": 30726,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Building Fabricators",
+     "demand": 188,
+     "sell_price": 2142,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Clothing",
+     "demand": 4254,
+     "sell_price": 720,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Coffee",
+     "demand": 88,
+     "sell_price": 1442,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Consumer Technology",
+     "demand": 176,
+     "sell_price": 6561,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Damaged Escape Pod",
+     "demand": 145,
+     "sell_price": 16696,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Domestic Appliances",
+     "demand": 1034,
+     "sell_price": 837,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Evacuation Shelter",
+     "demand": 14,
+     "sell_price": 443,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fish",
+     "demand": 978,
+     "sell_price": 403,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Food Cartridges",
+     "demand": 66,
+     "sell_price": 268,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fruit and Vegetables",
+     "demand": 316,
+     "sell_price": 315,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Geological Equipment",
+     "demand": 116,
+     "sell_price": 1766,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gold",
+     "demand": 58,
+     "sell_price": 50096,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Grain",
+     "demand": 2107,
+     "sell_price": 207,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Hostages",
+     "demand": 145,
+     "sell_price": 34304,
+     "supply": 0
+    },
+    {
+     "buy_price": 98,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Fuel",
+     "demand": 1,
+     "sell_price": 94,
+     "supply": 95
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Liquor",
+     "demand": 104,
+     "sell_price": 624,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Non-Lethal Weapons",
+     "demand": 20,
+     "sell_price": 1933,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Occupied Escape Pod",
+     "demand": 145,
+     "sell_price": 30068,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Palladium",
+     "demand": 174,
+     "sell_price": 53565,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Performance Enhancers",
+     "demand": 45,
+     "sell_price": 6804,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Personal Effects",
+     "demand": 145,
+     "sell_price": 9375,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Platinum",
+     "demand": 116,
+     "sell_price": 52820,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Power Generators",
+     "demand": 174,
+     "sell_price": 2285,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Progenitor Cells",
+     "demand": 11,
+     "sell_price": 6804,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Reactive Armour",
+     "demand": 53,
+     "sell_price": 2180,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Silver",
+     "demand": 102,
+     "sell_price": 39705,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Skimmer Components",
+     "demand": 12,
+     "sell_price": 1091,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Structural Regulators",
+     "demand": 33,
+     "sell_price": 1933,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Surface Stabilisers",
+     "demand": 3015,
+     "sell_price": 527,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Survival Equipment",
+     "demand": 4,
+     "sell_price": 680,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Synthetic Meat",
+     "demand": 204,
+     "sell_price": 252,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Tea",
+     "demand": 318,
+     "sell_price": 1459,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Thermal Cooling Units",
+     "demand": 130,
+     "sell_price": 3612,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Tobacco",
+     "demand": 129,
+     "sell_price": 4705,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Unoccupied Escape Pod",
+     "demand": 145,
+     "sell_price": 3975,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Water",
+     "demand": 477,
+     "sell_price": 124,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Water Purifiers",
+     "demand": 534,
+     "sell_price": 300,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Wine",
+     "demand": 699,
+     "sell_price": 252,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Wreckage Components",
+     "demand": 15,
+     "sell_price": 8801,
+     "supply": 0
+    }
+   ]
+  },
+  {
+   "name": "Stuart Prospect",
+   "system_name": "Duamta",
+   "market_id": 3534632192,
+   "distance": 4.1875,
+   "is_planetary": true,
+   "type": "Planetary Outpost",
+   "system_x": 2.1875,
+   "system_y": 6.625,
+   "system_z": -7.0,
+   "market_updated_at": "2026-08-05 16:54:44+00",
+   "market": [
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Advanced Medicines",
+     "demand": 518,
+     "sell_price": 1136,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Agronomic Treatment",
+     "demand": 5,
+     "sell_price": 3156,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Animal Meat",
+     "demand": 469,
+     "sell_price": 1286,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Basic Medicines",
+     "demand": 109,
+     "sell_price": 315,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Beer",
+     "demand": 1173,
+     "sell_price": 175,
+     "supply": 0
+    },
+    {
+     "buy_price": 98,
+     "category": "Waste",
+     "commodity": "Biowaste",
+     "demand": 1,
+     "sell_price": 59,
+     "supply": 59
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Black Box",
+     "demand": 194,
+     "sell_price": 30726,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Building Fabricators",
+     "demand": 252,
+     "sell_price": 2142,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Clothing",
+     "demand": 5972,
+     "sell_price": 748,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Coffee",
+     "demand": 118,
+     "sell_price": 1286,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Consumer Technology",
+     "demand": 235,
+     "sell_price": 6561,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Damaged Escape Pod",
+     "demand": 194,
+     "sell_price": 16696,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Domestic Appliances",
+     "demand": 1547,
+     "sell_price": 896,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Evacuation Shelter",
+     "demand": 19,
+     "sell_price": 443,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fish",
+     "demand": 1310,
+     "sell_price": 403,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Food Cartridges",
+     "demand": 88,
+     "sell_price": 268,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Fruit and Vegetables",
+     "demand": 423,
+     "sell_price": 315,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Geological Equipment",
+     "demand": 155,
+     "sell_price": 1766,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Gold",
+     "demand": 0,
+     "sell_price": 50096,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Grain",
+     "demand": 2823,
+     "sell_price": 207,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Hostages",
+     "demand": 194,
+     "sell_price": 34304,
+     "supply": 0
+    },
+    {
+     "buy_price": 98,
+     "category": "Chemicals",
+     "commodity": "Hydrogen Fuel",
+     "demand": 1,
+     "sell_price": 94,
+     "supply": 128
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Liquor",
+     "demand": 140,
+     "sell_price": 624,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Non-Lethal Weapons",
+     "demand": 27,
+     "sell_price": 1933,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Occupied Escape Pod",
+     "demand": 194,
+     "sell_price": 30068,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Palladium",
+     "demand": 229,
+     "sell_price": 53554,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Performance Enhancers",
+     "demand": 60,
+     "sell_price": 6804,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Personal Effects",
+     "demand": 194,
+     "sell_price": 9375,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Platinum",
+     "demand": 156,
+     "sell_price": 52820,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Power Generators",
+     "demand": 233,
+     "sell_price": 2285,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Medicines",
+     "commodity": "Progenitor Cells",
+     "demand": 15,
+     "sell_price": 6804,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Weapons",
+     "commodity": "Reactive Armour",
+     "demand": 71,
+     "sell_price": 2180,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Metals",
+     "commodity": "Silver",
+     "demand": 136,
+     "sell_price": 39705,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Skimmer Components",
+     "demand": 16,
+     "sell_price": 1091,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Technology",
+     "commodity": "Structural Regulators",
+     "demand": 44,
+     "sell_price": 1933,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Surface Stabilisers",
+     "demand": 4041,
+     "sell_price": 527,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Consumer Items",
+     "commodity": "Survival Equipment",
+     "demand": 5,
+     "sell_price": 671,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Synthetic Meat",
+     "demand": 274,
+     "sell_price": 252,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Foods",
+     "commodity": "Tea",
+     "demand": 544,
+     "sell_price": 1506,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Thermal Cooling Units",
+     "demand": 174,
+     "sell_price": 3612,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Tobacco",
+     "demand": 300,
+     "sell_price": 4904,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Unoccupied Escape Pod",
+     "demand": 194,
+     "sell_price": 3975,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Chemicals",
+     "commodity": "Water",
+     "demand": 310,
+     "sell_price": 124,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Machinery",
+     "commodity": "Water Purifiers",
+     "demand": 716,
+     "sell_price": 300,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Legal Drugs",
+     "commodity": "Wine",
+     "demand": 936,
+     "sell_price": 252,
+     "supply": 0
+    },
+    {
+     "buy_price": 0,
+     "category": "Salvage",
+     "commodity": "Wreckage Components",
+     "demand": 20,
+     "sell_price": 8801,
+     "supply": 0
+    }
+   ]
+  }
+ ]
+}

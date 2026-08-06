@@ -126,6 +126,36 @@ def show_ui_at_start() -> bool:
         return True
     return config.get_bool('ArchTrack_showUI')
 
+# --- Market import settings ---
+def import_radius() -> int:
+    import marketimport
+    if config.get('ArchTrack_importRadius') is None:
+        return marketimport.DEFAULT_RADIUS
+    return max(marketimport.MIN_RADIUS,
+               min(marketimport.MAX_RADIUS, config.get_int('ArchTrack_importRadius')))
+
+def import_orbital() -> bool:
+    if config.get('ArchTrack_importOrbital') is None:
+        return True
+    return config.get_bool('ArchTrack_importOrbital')
+
+def import_surface() -> bool:
+    if config.get('ArchTrack_importSurface') is None:
+        return True
+    return config.get_bool('ArchTrack_importSurface')
+
+def site_system() -> str:
+    """The system to search around: the shown site's, or wherever we are now."""
+    sites = load_facility_requirements()
+    if globals.ARCHITECT_GUI is not None and gui_exists():
+        shown = getattr(globals.ARCHITECT_GUI, "shown_station", None)
+        if shown and sites.get(shown, {}).get("System"):
+            return sites[shown]["System"]
+    for site in sites.values():
+        if site.get("System"):
+            return site["System"]
+    return globals.CURRENT_SYSTEM
+
 def save_gui_settings():
     logger.info("Saving settings.")
     config.set('ArchTrack_showUI', bool(globals.SHOW_UI_AT_START))

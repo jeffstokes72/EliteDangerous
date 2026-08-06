@@ -1,5 +1,7 @@
 import os
 import platform
+import threading
+import traceback
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
@@ -11,6 +13,7 @@ from config import config
 import globals
 from globals import logger
 import helpers
+import marketimport
 
 # --- Settings Hooks ---
 def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
@@ -108,6 +111,11 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
 
     text2_widget.config(state='disabled')
     text2_widget.grid(row=g_row, sticky="nsew", padx=5, pady=5)
+
+    # MARKET IMPORT FRAME ************************************************
+    import_frame = nb.Frame(upper_row, border=2, relief="groove")
+    import_frame.grid(row=1, column=2, sticky="nsew")
+    build_import_widgets(import_frame)
 
     # BUTTONS FRAME ************************************************
     but_frame = nb.Frame(pref_frame, border=2, relief="groove")
@@ -260,6 +268,155 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
 
 def open_url():
     webbrowser.open_new("https://github.com/kfpopeye/EliteDangerous")
+
+# --- Importing markets you have not visited ---
+import_status_label = None
+import_button = None
+import_running = False
+
+def build_import_widgets(frame):
+    global import_status_label, import_button
+
+    g_row = 0
+    nb.Label(frame, text="Import nearby markets:").grid(row=g_row, sticky="nw", padx=5)
+    g_row += 1
+
+    radius_row = nb.Frame(frame)
+    radius_row.grid(row=g_row, sticky="nw", padx=5, pady=2)
+    nb.Label(radius_row, text="Search within").pack(side=tk.LEFT)
+    radius_var = tk.IntVar(value=helpers.import_radius())
+    tk.Spinbox(radius_row, from_=marketimport.MIN_RADIUS, to=marketimport.MAX_RADIUS,
+               increment=5, width=4, textvariable=radius_var,
+               command=lambda: change_import_radius(radius_var)).pack(side=tk.LEFT, padx=4)
+    radius_var.trace_add("write", lambda *a: change_import_radius(radius_var))
+    nb.Label(radius_row, text=f"ly of the site (max {marketimport.MAX_RADIUS})").pack(side=tk.LEFT)
+    g_row += 1
+
+    orbital_var = tk.BooleanVar(value=helpers.import_orbital())
+    nb.Checkbutton(frame, text="Orbital markets", variable=orbital_var,
+                   command=lambda: config.set('ArchTrack_importOrbital', bool(orbital_var.get()))
+                   ).grid(row=g_row, sticky="nw", padx=5)
+    g_row += 1
+    surface_var = tk.BooleanVar(value=helpers.import_surface())
+    nb.Checkbutton(frame, text="Surface markets", variable=surface_var,
+                   command=lambda: config.set('ArchTrack_importSurface', bool(surface_var.get()))
+                   ).grid(row=g_row, sticky="nw", padx=5)
+    g_row += 1
+
+    import_button = nb.Button(frame, text="Import market data now", command=start_import)
+    import_button.grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row += 1
+
+    import_status_label = nb.Label(frame, text=import_hint(), wraplength=320, justify="left")
+    import_status_label.grid(row=g_row, sticky="nw", padx=5)
+    g_row += 1
+
+    notes = tk.Text(frame, height=8, width=44, wrap='word', font=('Verdana', 9), border=0)
+    notes.insert(tk.END, "Fills in the Pref Market column for markets you have not docked "
+                         "at yet, using prices other commanders have reported to EDDN, "
+                         "via spansh.co.uk.\n\n"
+                         "It reads the markets nearest your construction site first and "
+                         "stops after "
+                         f"{marketimport.MAX_PAGES * marketimport.PAGE_SIZE}, so close to "
+                         "the bubble you get the nearest ones rather than every one in "
+                         "range. Out in colonisation space nobody has visited most markets "
+                         "recently, so expect prices to be months old; anything over a "
+                         "year old is ignored. Docking somewhere always replaces the "
+                         "imported price with what you saw.")
+    notes.config(state='disabled')
+    notes.grid(row=g_row, sticky="nsew", padx=5, pady=5)
+    if import_running:
+        import_button.config(state="disabled")
+
+def import_hint():
+    system = helpers.site_system()
+    if not system:
+        return ("No construction site system known yet. Dock at your site once, then "
+                "come back.")
+    return f"Ready. Will search around {system}."
+
+def change_import_radius(var):
+    try:
+        radius = int(var.get())
+    except (tk.TclError, ValueError):
+        return
+    radius = max(marketimport.MIN_RADIUS, min(marketimport.MAX_RADIUS, radius))
+    config.set('ArchTrack_importRadius', radius)
+
+def set_import_status(text):
+    #the settings dialog may well have been closed while the import ran
+    if import_status_label is not None:
+        try:
+            if import_status_label.winfo_exists():
+                import_status_label.config(text=text)
+        except tk.TclError:
+            pass
+
+def enable_import_button(enabled):
+    if import_button is not None:
+        try:
+            if import_button.winfo_exists():
+                import_button.config(state="normal" if enabled else "disabled")
+        except tk.TclError:
+            pass
+
+def start_import():
+    global import_running
+
+    if import_running:
+        return
+    wait = marketimport.seconds_until_allowed()
+    if wait:
+        set_import_status(f"Just did that. Try again in {wait} seconds.")
+        return
+
+    system = helpers.site_system()
+    radius = helpers.import_radius()
+    orbital = helpers.import_orbital()
+    surface = helpers.import_surface()
+
+    import_running = True
+    enable_import_button(False)
+    set_import_status("Asking Spansh...")
+
+    thread = threading.Thread(target=run_import, name="ArchTrack-import",
+                              args=(system, radius, orbital, surface), daemon=True)
+    thread.start()
+
+def run_import(system, radius, orbital, surface):
+    """Runs on a worker thread; everything it reports goes back through the main one."""
+    global import_running
+    try:
+        summary = marketimport.import_markets(system, radius, orbital, surface,
+                                              progress=lambda t: on_main_thread(set_import_status, t))
+        message = str(summary)
+    except marketimport.ImportError_ as e:
+        message = str(e)
+        logger.error("Market import failed: %s", e)
+    except Exception as e:
+        message = f"Market import failed: {e}"
+        logger.error("Market import failed: %s", e)
+        logger.error("Traceback:\n%s", traceback.format_exc())
+    finally:
+        import_running = False
+
+    on_main_thread(finish_import, message)
+
+def on_main_thread(fn, *args):
+    root = globals.EDMC_ROOT
+    if root is None:
+        fn(*args)
+        return
+    try:
+        root.after(0, fn, *args)
+    except (tk.TclError, RuntimeError):
+        pass
+
+def finish_import(message):
+    set_import_status(message)
+    enable_import_button(True)
+    if helpers.gui_exists() and globals.SITE_LOCATION:
+        globals.ARCHITECT_GUI.refresh()
 
 def slider_changed(lbl, val):
     val = int(float(val))

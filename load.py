@@ -99,6 +99,9 @@ def plugin_stop():
 # --- Data Hooks ---
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     try:
+        if system:
+            globals.CURRENT_SYSTEM = system
+
         if "StarPos" in entry:
             globals.CURRENT_LOCATION = tuple(entry["StarPos"])
             logger.info("Set current location to: %s", globals.CURRENT_LOCATION)
@@ -130,7 +133,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             logger.info("Ship state: Docked at site: %s", station)
             resources = entry.get("ResourcesRequired", [])
             mid = entry.get("MarketID")
-            helpers.save_facility_requirements(resources, station, mid)
+            helpers.save_facility_requirements(resources, station, mid, system)
             if not globals.SITE_LOCATION: #reinitialize if no construction sites existed
                 if helpers.gui_exists():
                     globals.ARCHITECT_GUI.destroy()

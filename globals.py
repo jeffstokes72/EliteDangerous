@@ -29,6 +29,7 @@ class MARKET_MODE(Enum):
     Closest = 1
     Alternate = 2
 CURRENT_LOCATION = None
+CURRENT_SYSTEM = None
 SITE_LOCATION = None
 class STATION_TYPE(Enum):
     Unknown = 0

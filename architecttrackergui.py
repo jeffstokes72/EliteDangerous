@@ -358,6 +358,13 @@ class ArchitectTrackerGUI(tk.Toplevel):
         # Bind click for canvas (anywhere)
         self.canvas.bind("<Button-1>", self.on_canvas_click)
 
+    @property
+    def shown_station(self):
+        """Full name of the site on display, or None when showing -All-."""
+        if not self.has_table:
+            return None
+        return self.station_map.get(self.station_var.get())
+
     def _on_change_station_var(self, *args):
         if self.station_var.get() == '-All-':
             self.deleteStation.config(state="disabled")

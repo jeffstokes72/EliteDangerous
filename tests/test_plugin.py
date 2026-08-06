@@ -13,6 +13,8 @@ import os
 import sys
 import tempfile
 import unittest
+import urllib.error
+from datetime import datetime, timedelta, timezone
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 PLUGIN_DIR = os.path.dirname(TESTS_DIR)
@@ -37,7 +39,9 @@ except Exception as exc:  # pragma: no cover - depends on the machine
 import globals as g
 import helpers
 import load
+import marketimport
 import preferences
+from commodities import commodity_key
 from config import config
 from fleetcarriercargotracker import FleetCarrierCargoTracker, cargo_key
 from tooltip import Tooltip
@@ -201,8 +205,10 @@ class TestMarketLibrary(PluginTestCase):
     STEEL = "$steel_name;"
 
     def market(self, price=4000):
+        # a station always pays less than it charges, hence the spread
         return {"StationName": "Jameson Memorial", "MarketID": 128666762,
-                "Items": [{"Name": self.STEEL, "Stock": 500, "SellPrice": price}]}
+                "Items": [{"Name": self.STEEL, "Stock": 500,
+                           "BuyPrice": price, "SellPrice": price - 100}]}
 
     def site(self, location, price=9000):
         return {"Site Alpha": {"Location": location, "ID": 3700001,
@@ -278,11 +284,21 @@ class TestMarketLibrary(PluginTestCase):
 
     def test_market_stock_only_lists_what_is_in_stock(self):
         self.write_json(g.MARKET_JSON, {"StationName": "X", "MarketID": 1, "Items": [
-            {"Name": self.STEEL, "Stock": 10, "SellPrice": 1},
-            {"Name": "$gold_name;", "Stock": 0, "SellPrice": 1}]})
+            {"Name": self.STEEL, "Stock": 10, "BuyPrice": 1},
+            {"Name": "$gold_name;", "Stock": 0, "BuyPrice": 1}]})
         stock = helpers.load_market_stock()
         self.assertTrue(helpers.is_market_selling(self.STEEL, stock))
         self.assertFalse(helpers.is_market_selling("$gold_name;", stock))
+
+    def test_the_price_recorded_is_what_the_commander_pays(self):
+        """BuyPrice, not SellPrice, which is what the station would pay us."""
+        self.write_json(g.SAVE_FILE, self.site(location=[1.0, 2.0, 3.0]))
+        self.write_json(g.MARKET_JSON, self.market(price=4000))
+        helpers.load_facility_requirements()
+        g.CURRENT_LOCATION = (10.0, 20.0, 30.0)
+        helpers.update_market_library()
+        entry = helpers.get_market_library()["Commodities"][self.STEEL]["CheapMarkets"]["Orbital"]
+        self.assertEqual(entry["Price"], 4000)
 
 
 class TestSettings(PluginTestCase):
@@ -539,6 +555,357 @@ class TestTrackerWindow(PluginTestCase):
                             style.lookup("TLabel", "background"))
 
 
+class TestCommodityNames(unittest.TestCase):
+    def test_every_spelling_reaches_one_key(self):
+        for spelling in ("$cmmcomposite_name;", "cmmcomposite", "CMM Composite",
+                         "  CMM  Composite ".replace("  ", " ").strip()):
+            self.assertEqual(commodity_key(spelling), "cmmcomposite", spelling)
+
+    def test_commodities_whose_display_name_cannot_be_derived(self):
+        # these four genuinely differ between the journal and everyone else
+        self.assertEqual(commodity_key("$agriculturalmedicines_name;"),
+                         commodity_key("Agri-Medicines"))
+        self.assertEqual(commodity_key("$heliostaticfurnaces_name;"),
+                         commodity_key("Microbial Furnaces"))
+        self.assertEqual(commodity_key("$hazardousenvironmentsuits_name;"),
+                         commodity_key("H.E. Suits"))
+        self.assertEqual(commodity_key("$mutomimager_name;"), commodity_key("Muon Imager"))
+
+    def test_every_construction_commodity_has_a_key(self):
+        with open(os.path.join(PLUGIN_DIR, "commodity_list.txt"), encoding="utf-8") as f:
+            names = [line.strip() for line in f if line.strip()]
+        self.assertTrue(all(commodity_key(n) for n in names))
+
+    def test_nothing_and_junk(self):
+        self.assertEqual(commodity_key(None), "")
+        self.assertEqual(commodity_key(""), "")
+
+
+class FakeSpansh:
+    """Serves the recorded Spansh response instead of going to the network."""
+
+    def __init__(self, pages, error=None):
+        self.pages = pages
+        self.error = error
+        self.requests = []
+
+    def __call__(self, request, timeout=None):
+        self.requests.append({"url": request.full_url,
+                              "headers": dict(request.header_items()),
+                              "body": json.loads(request.data.decode())})
+        if self.error:
+            raise self.error
+        page = self.requests[-1]["body"]["page"]
+        payload = self.pages[page] if page < len(self.pages) else {"count": 0, "results": []}
+        return FakeResponse(json.dumps(payload).encode())
+
+
+class FakeResponse:
+    def __init__(self, raw):
+        self.raw = raw
+
+    def read(self):
+        return self.raw
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class TestMarketImport(PluginTestCase):
+    """Pulling in markets the commander has never docked at."""
+
+    SITE = "Orbital Construction Site: Vulcan Gate"
+    # the recorded response was captured on this day, so pin "now" to it and the
+    # tests keep meaning the same thing as real time moves on
+    NOW = datetime(2026, 8, 6, 12, 0, tzinfo=timezone.utc)
+
+    def setUp(self):
+        super().setUp()
+        with open(os.path.join(TESTS_DIR, "spansh_sample.json"), encoding="utf-8") as f:
+            self.sample = json.load(f)
+        marketimport._last_import_at = 0.0
+        self._real_urlopen = marketimport.urllib.request.urlopen
+
+    def tearDown(self):
+        marketimport.urllib.request.urlopen = self._real_urlopen
+        super().tearDown()
+
+    def serve(self, pages=None, error=None):
+        fake = FakeSpansh(pages if pages is not None else [self.sample], error)
+        marketimport.urllib.request.urlopen = fake
+        return fake
+
+    def save_site(self, needs=("$computercomponents_name;", "$biowaste_name;"),
+                  system="Vulcan", price=9000, provided=0):
+        self.write_json(g.SAVE_FILE, {self.SITE: {
+            "Location": [1.0, 2.0, 3.0], "System": system, "ID": 3700001,
+            "materials": {n: {"Name_Localised": n, "RequiredAmount": 1000,
+                              "ProvidedAmount": provided, "Price": price} for n in needs}}})
+        helpers.load_facility_requirements()
+
+    # --- what gets sent ---
+
+    def test_the_request_asks_for_what_we_want(self):
+        self.save_site()
+        fake = self.serve()
+        marketimport.import_markets("Vulcan", 30, True, True, now=self.NOW)
+
+        body = fake.requests[0]["body"]
+        self.assertEqual(body["reference_system"], "Vulcan")
+        self.assertEqual(body["filters"]["distance"], {"min": "0", "max": "30"})
+        self.assertEqual(body["sort"], [{"distance": {"direction": "asc"}}])
+        self.assertIs(body["filters"]["has_market"]["value"], True)
+        types = body["filters"]["type"]["value"]
+        self.assertIn("Coriolis Starport", types)
+        self.assertIn("Planetary Outpost", types)
+        # fleet carriers move, and construction depots are the sites themselves
+        self.assertNotIn("Drake-Class Carrier", types)
+        self.assertNotIn("Space Construction Depot", types)
+        self.assertIn("ArchitectTracker", fake.requests[0]["headers"].get("User-agent", ""))
+
+    def test_the_orbital_and_surface_toggles(self):
+        self.save_site()
+        for orbital, surface, expect_orbital, expect_surface in (
+                (True, False, True, False), (False, True, False, True), (True, True, True, True)):
+            fake = self.serve()
+            marketimport._last_import_at = 0.0
+            marketimport.import_markets("Vulcan", 25, orbital, surface, now=self.NOW)
+            types = fake.requests[0]["body"]["filters"]["type"]["value"]
+            self.assertEqual("Coriolis Starport" in types, expect_orbital)
+            self.assertEqual("Planetary Outpost" in types, expect_surface)
+
+    def test_the_radius_is_clamped(self):
+        self.save_site()
+        for asked, sent in ((1, "5"), (25, "25"), (50, "50"), (5000, "50")):
+            fake = self.serve()
+            marketimport._last_import_at = 0.0
+            marketimport.import_markets("Vulcan", asked, True, True, now=self.NOW)
+            self.assertEqual(fake.requests[0]["body"]["filters"]["distance"]["max"], sent)
+
+    # --- what comes back ---
+
+    def test_prices_land_in_the_market_library(self):
+        self.save_site()
+        self.serve()
+        summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+
+        self.assertGreater(summary.markets_used, 0)
+        self.assertGreater(summary.prices, 0)
+        lib = helpers.get_market_library()
+        cheap = lib["Commodities"]["$computercomponents_name;"]["CheapMarkets"]
+        # Powell High is the cheapest orbital supplier of that in the sample
+        station = helpers.get_market_by_station_id(lib, cheap["Orbital"]["StationID"])
+        self.assertEqual(station["StationName"], "Powell High")
+        self.assertEqual(cheap["Orbital"]["Price"], 607)
+
+        source = next(s for s in self.sample["results"] if s["name"] == "Powell High")
+        self.assertEqual(station["Location"],
+                         [source["system_x"], source["system_y"], source["system_z"]])
+        self.assertEqual(station["Type"], "Orbital")
+        self.assertEqual(station["StationID"], source["market_id"])
+
+    def test_only_commodities_a_site_still_needs_are_imported(self):
+        self.save_site(needs=("$computercomponents_name;",))
+        self.serve()
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertEqual(list(helpers.get_market_library()["Commodities"]),
+                         ["$computercomponents_name;"])
+
+    def test_commodities_already_delivered_are_skipped(self):
+        self.save_site(needs=("$computercomponents_name;",), provided=1000)
+        self.serve()
+        with self.assertRaises(marketimport.ImportError_):
+            marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+
+    def test_the_pref_market_column_can_then_answer(self):
+        self.save_site()
+        self.serve()
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        name = helpers.get_prefMarket_name("$computercomponents_name;")
+        self.assertIn(name.lstrip("*"), {s["name"] for s in self.sample["results"]})
+
+    def test_the_summary_says_how_old_the_data_is(self):
+        self.save_site(needs=("$computercomponents_name;",))
+        page = json.loads(json.dumps(self.sample))
+        for station in page["results"]:
+            station["market_updated_at"] = "2026-02-01 00:00:00+00"  # ~six months old
+        self.serve([page])
+        summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertGreater(summary.oldest_days, 180)
+        self.assertIn("oldest reported", str(summary))
+
+    def test_markets_that_stock_nothing_we_need(self):
+        self.save_site(needs=("$steel_name;",))  # the sample has no steel in supply
+        page = json.loads(json.dumps(self.sample))
+        for station in page["results"]:
+            station["market"] = [row for row in (station.get("market") or [])
+                                 if commodity_key(row["commodity"]) != "steel"]
+        self.serve([page])
+        summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertEqual(summary.prices, 0)
+        self.assertIn("none of them stock", str(summary))
+
+    def test_stale_markets_are_left_out(self):
+        self.save_site(needs=("$basicmedicines_name;",))
+        self.serve()
+        summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertGreater(summary.markets_stale, 0)
+        stale = [s for s in self.sample["results"]
+                 if marketimport.is_stale(s, self.NOW)]
+        lib = helpers.get_market_library()
+        for station in stale:
+            self.assertIsNone(helpers.get_market_by_station_id(lib, station["market_id"]))
+
+    def test_a_commodity_with_no_supply_is_not_a_price(self):
+        self.save_site(needs=("$computercomponents_name;",))
+        page = json.loads(json.dumps(self.sample))
+        for station in page["results"]:
+            for row in station.get("market") or []:
+                row["supply"] = 0
+        self.serve([page])
+        summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertEqual(summary.prices, 0)
+        self.assertEqual(helpers.get_market_library()["Commodities"], {})
+
+    def test_imported_and_visited_markets_compete_on_the_same_terms(self):
+        """A visited market that is cheaper must win over an imported one."""
+        self.save_site(needs=("$computercomponents_name;",))
+        self.serve()
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+
+        g.CURRENT_LOCATION = (1.0, 2.0, 3.0)
+        g.DOCKED_STATION_TYPE = g.STATION_TYPE.Orbital
+        self.write_json(g.MARKET_JSON, {
+            "StationName": "Bargain Basement", "MarketID": 42,
+            "Items": [{"Name": "$computercomponents_name;", "Stock": 500,
+                       "BuyPrice": 100, "SellPrice": 90}]})
+        helpers.update_market_library()
+
+        lib = helpers.get_market_library()
+        cheap = lib["Commodities"]["$computercomponents_name;"]["CheapMarkets"]["Orbital"]
+        self.assertEqual(cheap["Price"], 100)
+        self.assertEqual(helpers.get_market_by_station_id(lib, cheap["StationID"])["StationName"],
+                         "Bargain Basement")
+
+    # --- paging and limits ---
+
+    def test_it_stops_when_a_page_is_short(self):
+        self.save_site()
+        fake = self.serve([self.sample])
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertEqual(len(fake.requests), 1)
+
+    def test_it_stops_at_the_page_ceiling(self):
+        self.save_site()
+        full = {"count": 9999,
+                "results": self.sample["results"] * (marketimport.PAGE_SIZE // 8 + 1)}
+        full["results"] = full["results"][:marketimport.PAGE_SIZE]
+        fake = self.serve([full] * (marketimport.MAX_PAGES + 3))
+        summary = marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertEqual(len(fake.requests), marketimport.MAX_PAGES)
+        self.assertTrue(summary.truncated)
+        self.assertIn("Nearest", str(summary))
+
+    def test_it_will_not_hammer_spansh(self):
+        self.save_site()
+        self.serve()
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertGreater(marketimport.seconds_until_allowed(), 0)
+
+    # --- being told what went wrong ---
+
+    def test_no_system_known(self):
+        self.save_site()
+        with self.assertRaises(marketimport.ImportError_) as caught:
+            marketimport.import_markets(None, 25, True, True)
+        self.assertIn("system", str(caught.exception).lower())
+
+    def test_neither_market_type_chosen(self):
+        self.save_site()
+        with self.assertRaises(marketimport.ImportError_):
+            marketimport.import_markets("Vulcan", 25, False, False)
+
+    def test_no_construction_sites(self):
+        self.write_json(g.SAVE_FILE, {})
+        with self.assertRaises(marketimport.ImportError_):
+            marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+
+    def test_a_system_spansh_does_not_know(self):
+        self.save_site()
+        self.serve(error=urllib.error.HTTPError("u", 502, "Bad Gateway", {}, None))
+        with self.assertRaises(marketimport.ImportError_) as caught:
+            marketimport.import_markets("Nowhere", 25, True, True)
+        self.assertIn("Nowhere", str(caught.exception))
+
+    def test_the_network_being_down(self):
+        self.save_site()
+        self.serve(error=urllib.error.URLError("no route to host"))
+        with self.assertRaises(marketimport.ImportError_) as caught:
+            marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertIn("Spansh", str(caught.exception))
+
+    def test_nothing_is_written_when_the_search_fails(self):
+        self.save_site()
+        self.serve(error=urllib.error.URLError("down"))
+        with self.assertRaises(marketimport.ImportError_):
+            marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        self.assertFalse(os.path.exists(g.MARKET_LIB_PATH))
+
+    # --- where to search from ---
+
+    def test_the_site_system_is_remembered(self):
+        g.CURRENT_SYSTEM = "Vulcan"
+        helpers.save_facility_requirements(
+            [{"Name": "$steel_name;", "Name_Localised": "Steel", "RequiredAmount": 10,
+              "ProvidedAmount": 0, "Payment": 900}], self.SITE, 3700001, "Vulcan")
+        self.assertEqual(helpers.site_system(), "Vulcan")
+
+    def test_falls_back_to_where_the_commander_is(self):
+        self.write_json(g.SAVE_FILE, {})
+        g.CURRENT_SYSTEM = "Somewhere Else"
+        self.assertEqual(helpers.site_system(), "Somewhere Else")
+
+    def test_a_site_saved_before_1_7_has_no_system(self):
+        self.write_json(g.SAVE_FILE, {self.SITE: {
+            "Location": [1.0, 2.0, 3.0], "ID": 3700001, "materials": {}}})
+        g.CURRENT_SYSTEM = None
+        self.assertIsNone(helpers.site_system())
+
+
+class TestStaleness(unittest.TestCase):
+    NOW = datetime(2026, 8, 6, 12, 0, tzinfo=timezone.utc)
+
+    def test_recent_and_ancient(self):
+        self.assertFalse(marketimport.is_stale({"market_updated_at": "2026-08-05 21:42:43+00"},
+                                               self.NOW))
+        self.assertTrue(marketimport.is_stale({"market_updated_at": "2025-03-06 10:00:00+00"},
+                                              self.NOW))
+
+    def test_right_on_the_boundary(self):
+        cutoff = self.NOW - timedelta(days=marketimport.STALE_AFTER_DAYS)
+        just_inside = (cutoff + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S+00")
+        just_outside = (cutoff - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S+00")
+        self.assertFalse(marketimport.is_stale({"market_updated_at": just_inside}, self.NOW))
+        self.assertTrue(marketimport.is_stale({"market_updated_at": just_outside}, self.NOW))
+
+    def test_a_timestamp_we_cannot_read(self):
+        self.assertFalse(marketimport.is_stale({"market_updated_at": "last tuesday"}, self.NOW))
+        self.assertFalse(marketimport.is_stale({}, self.NOW))
+
+    def test_frontier_data_is_kept(self):
+        """Out where people colonise, the median market was last reported months
+        ago. Dropping those would empty the column exactly where it is needed."""
+        for months in (3, 6, 9, 11):
+            when = self.NOW - timedelta(days=30 * months)
+            station = {"market_updated_at": when.strftime("%Y-%m-%d %H:%M:%S+00")}
+            self.assertFalse(marketimport.is_stale(station, self.NOW),
+                             f"{months} month old data should still be used")
+
+
 class TestAWholeSession(PluginTestCase):
     """Drive the plugin through a realistic sequence of journal events."""
 
@@ -558,7 +925,7 @@ class TestAWholeSession(PluginTestCase):
     def write_market(self, station, market_id, price):
         self.write_json(g.MARKET_JSON, {
             "StationName": station, "MarketID": market_id,
-            "Items": [{"Name": n, "Stock": 900, "SellPrice": price}
+            "Items": [{"Name": n, "Stock": 900, "BuyPrice": price, "SellPrice": price - 100}
                       for n, _, _ in self.MATERIALS]})
 
     def play(self, station, entry, docked=True):
