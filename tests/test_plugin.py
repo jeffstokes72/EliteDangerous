@@ -463,6 +463,18 @@ class TestTrackerWindow(PluginTestCase):
         self.assertEqual(len(rows), 2)  # one commodity plus the totals row
         self.assertEqual(window.tree.item(rows[0])["values"][:4], ["Steel", 100, 10, 90])
 
+    def test_a_column_renamed_before_the_table_existed_is_used_when_it_is_built(self):
+        window = self.open_window()
+        self.assertFalse(window.has_table)
+        preferences.on_column_rename("Shortfall", "Still to buy")
+
+        self.save_a_site()
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window.refresh()
+        ROOT.update()
+        self.assertEqual(window.tree.heading("Shortfall")["text"], "Still to buy")
+        self.assertEqual(helpers.load_column_names()[-1], "Still to buy")
+
     def test_the_table_reverts_to_the_message_when_the_last_site_goes(self):
         self.save_a_site()
         g.SITE_LOCATION = [1.0, 2.0, 3.0]
