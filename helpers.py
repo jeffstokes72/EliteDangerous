@@ -174,8 +174,7 @@ def get_current_location_from_journal():
         return None
     latest_journal = max(journal_files, key=lambda f: os.path.getmtime(os.path.join(journal_dir, f)))
     try:
-        # Journals are UTF-8 whatever the system encoding is, and are large enough
-        # that it is worth walking backwards instead of reading the whole thing.
+        # Journals are UTF-8 whatever the system encoding happens to be
         with open(os.path.join(journal_dir, latest_journal), "r", encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
     except OSError as e:

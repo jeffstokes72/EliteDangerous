@@ -370,6 +370,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
     def clear_frame(self):
         for widget in self.winfo_children():
             widget.destroy()
+        #the tooltip belongs to the canvas that just went with them
+        self.canvas_tooltip = None
 
     def refresh(self):
         # Load new data

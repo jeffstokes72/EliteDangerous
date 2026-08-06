@@ -475,6 +475,24 @@ class TestTrackerWindow(PluginTestCase):
         self.assertEqual(window.tree.heading("Shortfall")["text"], "Still to buy")
         self.assertEqual(helpers.load_column_names()[-1], "Still to buy")
 
+    def test_the_pause_tooltip_follows_the_rebuilt_canvas(self):
+        self.save_a_site()
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        first_canvas = window.canvas
+        self.assertIs(window.canvas_tooltip.widget, first_canvas)
+
+        # losing the last site and getting a new one rebuilds every widget
+        self.write_json(g.SAVE_FILE, {})
+        window.refresh()
+        self.save_a_site()
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window.refresh()
+        ROOT.update()
+
+        self.assertIsNot(window.canvas, first_canvas)
+        self.assertIs(window.canvas_tooltip.widget, window.canvas)
+
     def test_the_table_reverts_to_the_message_when_the_last_site_goes(self):
         self.save_a_site()
         g.SITE_LOCATION = [1.0, 2.0, 3.0]
