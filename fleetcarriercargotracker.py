@@ -2,8 +2,26 @@ import os
 import json
 import binascii
 
+import globals
 from globals import logger
-from globals import CARRIER_FILE
+
+def cargo_key(name):
+    """One spelling for a commodity, whichever source it came from.
+
+    The journal uses internal names like "$cmmcomposite_name;" or "cmmcomposite",
+    while the carrier CAPI uses display-ish names such as "CMM Composite". Both
+    have to land on the same key or the carrier column reads zero.
+    """
+    if not name:
+        return ""
+    key = str(name).strip().lower()
+    if key.startswith("$"):
+        key = key[1:]
+    if key.endswith("_name;"):
+        key = key[:-len("_name;")]
+    for ch in (" ", "-", "_", "'", "."):
+        key = key.replace(ch, "")
+    return key
 
 # --- Fleet Carrier Cargo Tracker ---
 class FleetCarrierCargoTracker:
@@ -24,7 +42,7 @@ class FleetCarrierCargoTracker:
         newcargo = {}
         for item in cargo_items:
             try:
-                name = item.get("commodity")
+                name = cargo_key(item.get("commodity"))
                 qty = item.get("qty", 0)
                 if not name:
                     logger.warning("Missing commodity name in cargo item: %s. Skipping it.", item)
@@ -35,7 +53,6 @@ class FleetCarrierCargoTracker:
                 logger.error("Error updating fleet carrier cargo from CAPI: %s", e)
                 continue
 
-        self.commodities.clear()
         self.commodities = newcargo
 
         carrier_info = data.get("name", {})
@@ -46,7 +63,7 @@ class FleetCarrierCargoTracker:
 
     def apply_transfer_event(self, transfers):
         for transfer in transfers:
-            name = transfer.get("Type").capitalize()
+            name = cargo_key(transfer.get("Type"))
             qty = transfer.get("Count", 0)
             direction = transfer.get("Direction")
             if not name or qty <= 0 or direction not in ("tocarrier", "toship"):
@@ -54,26 +71,37 @@ class FleetCarrierCargoTracker:
             current = self.commodities.get(name, 0)
             if direction == "tocarrier":
                 self.commodities[name] = current + qty
-                logger.info("Transfered: %s x %s to carrier", name, qty)
+                logger.info("Transferred: %s x %s to carrier", name, qty)
             else:
                 self.commodities[name] = max(0, current - qty)
-                logger.info("Transfered: %s x %s to starship", name, qty)
+                logger.info("Transferred: %s x %s to starship", name, qty)
         self.save()
 
     def apply_market_purchase(self, eventData):
-        name = eventData.get("Type").capitalize()
+        name = cargo_key(eventData.get("Type"))
         qty = eventData.get("Count", 0)
+        if not name or qty <= 0:
+            return
         current = self.commodities.get(name, 0)
         self.commodities[name] = max(0, current - qty)
-        logger.info("Puchased: %s x %s from carrier", name, qty)
+        logger.info("Purchased: %s x %s from carrier", name, qty)
+        self.save()
+
+    def apply_market_sale(self, eventData):
+        name = cargo_key(eventData.get("Type"))
+        qty = eventData.get("Count", 0)
+        if not name or qty <= 0:
+            return
+        self.commodities[name] = self.commodities.get(name, 0) + qty
+        logger.info("Sold: %s x %s to carrier", name, qty)
         self.save()
 
     def get_quantity(self, commodity_name):
-        return self.commodities.get(commodity_name.capitalize(), 0)
+        return self.commodities.get(cargo_key(commodity_name), 0)
 
     def save(self):
         try:
-            with open(CARRIER_FILE, "w", encoding="utf-8") as f:
+            with open(globals.CARRIER_FILE, "w", encoding="utf-8") as f:
                 json.dump({
                     "carrier_name": self.carrier_name,
                     "callsign": self.callsign,
@@ -83,14 +111,20 @@ class FleetCarrierCargoTracker:
             logger.error("Error saving fleet carrier cargo: %s", e)
 
     def load(self):
-        if not os.path.exists(CARRIER_FILE):
+        if not os.path.exists(globals.CARRIER_FILE):
             return
         try:
-            with open(CARRIER_FILE, "r", encoding="utf-8") as f:
+            with open(globals.CARRIER_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 self.carrier_name = data.get("carrier_name", "")
                 self.callsign = data.get("callsign", "")
-                self.commodities = data.get("commodities", {})
+                #re-key anything written before the names were normalised
+                stored = data.get("commodities", {}) or {}
+                self.commodities = {}
+                for name, qty in stored.items():
+                    key = cargo_key(name)
+                    if key:
+                        self.commodities[key] = self.commodities.get(key, 0) + qty
         except Exception as e:
             logger.error("Error loading fleet carrier cargo: %s", e)
             
