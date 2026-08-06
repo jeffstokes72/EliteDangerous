@@ -344,10 +344,12 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.canvas.create_polygon(7, 5, 7, 20, 20, 13, fill=fg, outline="black", tags="canvas_button")
             tooltip_text = "Press to pause\ncarrier updates."
 
-        # Attach tooltip to the canvas itself (not individual items)
-        if hasattr(self, "canvas_tooltip") and self.canvas_tooltip:
-            self.canvas_tooltip._hide()
-        self.canvas_tooltip = Tooltip(self.canvas, tooltip_text, follow_mouse=True)
+        # Attach tooltip to the canvas itself (not individual items). draw_canvas runs
+        # on every refresh, so reuse it rather than binding another one each time.
+        if self.canvas_tooltip:
+            self.canvas_tooltip.set_text(tooltip_text)
+        else:
+            self.canvas_tooltip = Tooltip(self.canvas, tooltip_text, follow_mouse=True)
 
         # Bind hover for rectangle color
         self.canvas.tag_bind("canvas_button", "<Enter>", lambda e: self.canvas.itemconfig(self.rect_id, fill=active_bg))
