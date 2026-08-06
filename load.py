@@ -10,28 +10,19 @@ Git: https://github.com/kfpopeye/EliteDangerous
 License: GNU GENERAL PUBLIC LICENSE Version 2
 """
 
-import json
 import os
 import platform
-import logging
-from logging.handlers import TimedRotatingFileHandler
 import tkinter as tk
-from contextlib import suppress
-import binascii
 from theme import theme
-from enum import Enum
 import traceback
 import semantic_version
 
 from companion import CAPIData
-from config import appname, appversion, config
+from config import appversion, config
 import myNotebook as nb
 
 import globals
 from globals import logger
-import fleetcarriercargotracker
-import tooltip
-import architecttrackergui
 import preferences
 import helpers
 
@@ -48,50 +39,35 @@ def plugin_start3(plugin_dir):
             # From 5.0.0-beta1 it's a function, returning semantic_version.Version
             core_version = appversion()
         # Yes, just blow up if config.appverison is neither str nor callable
-        logger.info(f'Core EDMarketConnector version: {core_version}')
+        logger.info('Core EDMarketConnector version: %s', core_version)
         logger.info('OS: %s', platform.system())
+        if platform.system() == "Linux":
+            logger.info('Flatpak: %s', helpers.is_flatpak())
 
         globals.COMMODITY_FILE = os.path.join(plugin_dir, globals.COMMODITY_FILE)
-        
-        if not os.path.exists(globals.ED_SAVE_PATH):
-            if config.get('ArchTrack_EDSaveDir') is not None:
-                globals.ED_SAVE_PATH = config.get_str('ArchTrack_EDSaveDir')
-            else:
-                from tkinter import filedialog
-                path = filedialog.askdirectory(title="Select Elite Dangerous Journal Folder")
-                if path:
-                    globals.ED_SAVE_PATH = path
-                    config.set('ArchTrack_EDSaveDir', str(globals.ED_SAVE_PATH))
-                    logger.info(f'Found the ED journal directory: {globals.ED_SAVE_PATH}')
-                else:
-                    logger.error(f'Could not find the ED journal directory: {globals.ED_SAVE_PATH}')
-                    from tkinter import messagebox
-                    messagebox.showerror("Error", "Cannot continue without the Elite Dangerous journal files.")
-                    plugin_stop()
-        else:
-            logger.info(f'Found the ED journal directory: {globals.ED_SAVE_PATH}')
-            
-        globals.MARKET_JSON = os.path.join(globals.ED_SAVE_PATH, 'Market.json')
-        globals.CARGO_JSON = os.path.join(globals.ED_SAVE_PATH, 'Cargo.json')
+
+        if not helpers.resolve_journal_dir():
+            return "ArchitectTracker"
+
         globals.CURRENT_LOCATION = helpers.get_current_location_from_journal()
             
         if not os.path.exists(globals.USER_DIR):
-            logger.error(f'Could not find the user directory: {globals.USER_DIR}')
+            logger.error('Could not find the user directory: %s', globals.USER_DIR)
         else:
-            logger.info(f'Found the user directory: {globals.USER_DIR}')
+            logger.info('Found the user directory: %s', globals.USER_DIR)
 
         if config.get('ArchTrack_fcapimode') is None:
             fcapi_mode = "First then pause"
             config.set('ArchTrack_fcapimode', fcapi_mode)
-            logger.info(f"fcapi_mode not found using default settings.")
+            logger.info("fcapi_mode not found using default settings.")
         else:
             fcapi_mode = config.get_str('ArchTrack_fcapimode')
 
         if fcapi_mode == "Only when unpaused":
             globals.FCAPI_PAUSED = True
-            logger.info(f'Fleet carrier API paused.')
+            logger.info('Fleet carrier API paused.')
             
-        globals.SHOW_UI_AT_START = config.get_bool('ArchTrack_showUI')
+        globals.SHOW_UI_AT_START = helpers.show_ui_at_start()
         if globals.SHOW_UI_AT_START:
             helpers.show_gui()
         return "ArchitectTracker"
@@ -113,6 +89,7 @@ def plugin_app(parent: tk.Frame) -> tk.Frame:
     return globals.EDMCframe
 
 def plugin_stop():
+    helpers.save_gui_settings()
     if helpers.gui_exists():
         globals.AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         globals.ARCHITECT_GUI.destroy()
@@ -167,7 +144,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             if station == None:
                 return
             # do not register my fleet carrier as a market
-            if not station == globals.CARRIER_TRACKER.callsign:
+            if not (globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign):
                 globals.SHIP_STATE = globals.SHIP_MODE.DockedAtMarket
                 logger.info("Ship state: Docked at market: %s", station)
                 helpers.update_market_library()
@@ -175,6 +152,10 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         elif event == "MarketBuy":
             if globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign:
                 globals.CARRIER_TRACKER.apply_market_purchase(entry)
+
+        elif event == "MarketSell":
+            if globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign:
+                globals.CARRIER_TRACKER.apply_market_sale(entry)
 
         elif event == "CargoTransfer":
             transfers = entry.get("Transfers", [])
@@ -217,7 +198,7 @@ def capi_fleetcarrier(data: CAPIData):
     if config.get('ArchTrack_fcapimode') is None:
         fcapi_mode = "First then pause"
         config.set('ArchTrack_fcapimode', fcapi_mode)
-        logger.info(f"fcapi_mode not found using default settings.")
+        logger.info("fcapi_mode not found using default settings.")
     else:
         fcapi_mode = config.get_str('ArchTrack_fcapimode')
 
@@ -226,7 +207,7 @@ def capi_fleetcarrier(data: CAPIData):
         globals.CARRIER_TRACKER.update(data)
         if fcapi_mode == "First then pause":
             globals.FCAPI_PAUSED = True
-            logger.info(f'Fleet carrier API paused.')
+            logger.info('Fleet carrier API paused.')
         if globals.SITE_LOCATION: #only refresh if we have construction sites to show
             globals.ARCHITECT_GUI.refresh()
             

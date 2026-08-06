@@ -5,10 +5,42 @@ from typing import Union
 import traceback
 import tkinter as tk
 
-from config import appname, appversion, config
+from config import config
 
 import globals
 from globals import logger
+
+# --- Journal directory ---
+def resolve_journal_dir():
+    """Settle on a journal directory, asking the user only if we cannot find one."""
+    chosen = config.get_str('ArchTrack_EDSaveDir')
+    if chosen and os.path.isdir(chosen):
+        logger.info('Using the ED journal directory chosen in settings: %s', chosen)
+        return globals.set_journal_dir(chosen)
+    if chosen:
+        logger.warning('The ED journal directory chosen in settings is gone: %s', chosen)
+
+    if globals.ED_SAVE_PATH:
+        logger.info('Found the ED journal directory: %s', globals.ED_SAVE_PATH)
+        return globals.ED_SAVE_PATH
+
+    logger.warning('Could not find the ED journal directory, asking the commander.')
+    from tkinter import filedialog
+    path = filedialog.askdirectory(title="Select Elite Dangerous Journal Folder")
+    if path and os.path.isdir(path):
+        config.set('ArchTrack_EDSaveDir', str(path))
+        logger.info('Commander chose the ED journal directory: %s', path)
+        return globals.set_journal_dir(path)
+
+    logger.error('No ED journal directory available. Tracking is disabled.')
+    from tkinter import messagebox
+    messagebox.showerror(
+        "Architect Tracker",
+        "Cannot find the Elite Dangerous journal files.\n\n"
+        "Set the journal folder in EDMC's File > Settings > Configuration tab, "
+        "then restart EDMC."
+    )
+    return None
 
 # is the tracker window currently open?
 def gui_exists() -> bool:
@@ -118,20 +150,30 @@ def is_station_complete(materials):
     return all(info["ProvidedAmount"] >= info["RequiredAmount"] for info in materials.values())
     
 def get_current_location_from_journal():
-    journal_dir = os.path.dirname(globals.CARGO_JSON)
-    if not os.path.exists(journal_dir):
+    if not globals.ED_SAVE_PATH or not os.path.isdir(globals.ED_SAVE_PATH):
         return None
+    journal_dir = globals.ED_SAVE_PATH
     journal_files = [f for f in os.listdir(journal_dir) if f.startswith("Journal.") and f.endswith(".log")]
     if not journal_files:
         return None
     latest_journal = max(journal_files, key=lambda f: os.path.getmtime(os.path.join(journal_dir, f)))
-    with open(os.path.join(journal_dir, latest_journal), "r") as f:
-        for line in reversed(f.readlines()):
-            if '"StarPos"' in line:
+    try:
+        # Journals are UTF-8 whatever the system encoding is, and are large enough
+        # that it is worth walking backwards instead of reading the whole thing.
+        with open(os.path.join(journal_dir, latest_journal), "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+    except OSError as e:
+        logger.error("Could not read journal %s: %s", latest_journal, e)
+        return None
+    for line in reversed(lines):
+        if '"StarPos"' in line:
+            try:
                 data = json.loads(line)
-                if "StarPos" in data:
-                    logger.info("Found current location in journal.")
-                    return tuple(data["StarPos"])
+            except json.JSONDecodeError:
+                continue
+            if "StarPos" in data:
+                logger.info("Found current location in journal.")
+                return tuple(data["StarPos"])
     return None
 
 def save_facility_requirements(resources, station_name, mID):
@@ -220,7 +262,7 @@ def is_facility(station):
 
 # load cargo for currently piloted ship
 def load_starship_cargo_data():
-    if not os.path.exists(globals.CARGO_JSON):
+    if not globals.CARGO_JSON or not os.path.exists(globals.CARGO_JSON):
         return []
     try:
         with open(globals.CARGO_JSON, "r", encoding="utf-8") as f:
