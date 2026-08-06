@@ -20,10 +20,21 @@ Settings Window
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
-1. Download a zip file of the latest release <a href="https://github.com/kfpopeye/EliteDangerous/archive/refs/tags/v1.6.zip">here</a> or by clicking the "Releases" link to the right and then selecting the latest release shown.
-2. Create a directory called "ArchitectTracker" (make sure there are no spaces) in the the ED: Marketplace Connector plugins folder.
-3. Extract the downloaded zip file into this directory. Make sure no subdirectories are created. All files should appear directly inside the "ArchitectTracker" directory.
-4. Start EDMC.
+Quit EDMC first. The plugin folder must contain `load.py` directly — not inside a nested zip folder. If `load.py` is one level too deep, EDMC will not load the plugin correctly.
+
+**Plugins folder locations**
+- Linux (normal install): `~/.local/share/EDMarketConnector/plugins/`
+- Linux (Flatpak): `~/.var/app/io.edcd.EDMarketConnector/data/EDMarketConnector/plugins/`
+- Windows: `%LOCALAPPDATA%\EDMarketConnector\plugins\`
+- macOS: `~/Library/Application Support/EDMarketConnector/plugins/`
+
+1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker 2.0</a> (`ArchitectTracker-2.0.zip`).
+2. Create a directory called `ArchitectTracker` (no spaces) in EDMC's plugins folder.
+3. Extract the zip **into** that directory. After install you must have:
+   `.../plugins/ArchitectTracker/load.py`
+4. Start EDMC. File → Settings should show an **ArchitectTracker** tab.
+
+Your construction sites and market library stay in `~/.config/ArchitectTracker/` (or the equivalent on Windows/macOS) and are not touched by reinstalling the plugin.
 
 ### Usage
 + When you land at a construction site the plugin will (after a few moments) list all the commodities and amounts required, provided and needed. You can switch between sites from the dropdown list in the upper left or the ">" button. The window will resize itself to fit all the commodities.
@@ -102,3 +113,4 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + Added : Import market data for markets you have not visited, from spansh.co.uk. Set a search radius and whether you want orbital or surface markets in the settings tab. Prices are now recorded as what you pay for a commodity rather than what the market would pay you for it.
 + 2026/06/11 : [Version 1.6] Major bug fixes for Linux users. Special thanks to Commanders PatientNr0, mgrzegor, Fasgort and LiamtheLion879
  for taking time to report bugs and work with me to fix them. Added log viewer to settings tab which should helppeople report bugs.
++ 2026/08/06 : [Version 2.0] Fork release with Linux journal discovery (Steam/Proton/Flatpak/Snap), crash fixes when the tracker window is closed, BuyPrice preferred-market tracking, Spansh nearby-market import, settings persistence with the window closed, and a fix so the EDMC settings tab no longer vanishes when opening Architect Tracker preferences.

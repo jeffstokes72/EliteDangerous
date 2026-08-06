@@ -1,4 +1,4 @@
-__version__ = "1.6"
+__version__ = "2.0"
 
 """
 Displays commodities required, provided and needed when you land at a construction site,
@@ -6,7 +6,7 @@ market or fleet carrier and tracks cargo in your fleet carrier and starship.
 
 Author: CMDR kfpopeye and ChatGPT
 Date: 2025-04-08
-Git: https://github.com/kfpopeye/EliteDangerous
+Git: https://github.com/jeffstokes72/EliteDangerous
 License: GNU GENERAL PUBLIC LICENSE Version 2
 """
 
