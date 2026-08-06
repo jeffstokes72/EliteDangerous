@@ -4,24 +4,7 @@ import binascii
 
 import globals
 from globals import logger
-
-def cargo_key(name):
-    """One spelling for a commodity, whichever source it came from.
-
-    The journal uses internal names like "$cmmcomposite_name;" or "cmmcomposite",
-    while the carrier CAPI uses display-ish names such as "CMM Composite". Both
-    have to land on the same key or the carrier column reads zero.
-    """
-    if not name:
-        return ""
-    key = str(name).strip().lower()
-    if key.startswith("$"):
-        key = key[1:]
-    if key.endswith("_name;"):
-        key = key[:-len("_name;")]
-    for ch in (" ", "-", "_", "'", "."):
-        key = key.replace(ch, "")
-    return key
+from commodities import commodity_key as cargo_key
 
 # --- Fleet Carrier Cargo Tracker ---
 class FleetCarrierCargoTracker:
