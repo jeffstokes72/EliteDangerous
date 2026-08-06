@@ -133,14 +133,17 @@ def save_gui_settings():
         logger.error(f"Error saving GUI settings: {e}")
 
 def compare_material_to_list(materials):
-    global COMMODITIES
-    
     for name in materials:
         if name and not isItemConstructionCommodity(name):
             logger.warning("%s not found in commodity list, adding it.", name)
-            with open(globals.COMMODITY_FILE, "a", encoding="utf-8") as f:
-                f.write(name + "\n")
+            if COMMODITIES is not None:
                 COMMODITIES.append(name)
+            try:
+                # The list lives beside the plugin, which may be read only.
+                with open(globals.COMMODITY_FILE, "a", encoding="utf-8") as f:
+                    f.write(name + "\n")
+            except OSError as e:
+                logger.warning("Could not add %s to the commodity list: %s", name, e)
 
 # --- Helpers ---
 def calculate_distance(x1: Union[int, float], y1: Union[int, float], z1: Union[int, float], x2: Union[int, float], y2: Union[int, float], z2: Union[int, float]):
@@ -336,7 +339,8 @@ def get_market_by_station_id(data, station_id):
     return None
 
 def ensure_market_exists(market_lib, station_name, station_id):
-    if get_market_by_station_id(market_lib, station_id) is None:
+    market = get_market_by_station_id(market_lib, station_id)
+    if market is None:
         market_lib["Markets"].append({
             "StationName": station_name,
             "Location": globals.CURRENT_LOCATION,
@@ -344,21 +348,41 @@ def ensure_market_exists(market_lib, station_name, station_id):
             "Type": globals.DOCKED_STATION_TYPE.name
         })
         logger.debug("Adding new market: %s", station_name)
+    elif not market.get("Location") and globals.CURRENT_LOCATION:
+        #recorded before we knew where we were, so fill it in now
+        market["Location"] = globals.CURRENT_LOCATION
+        logger.debug("Filled in the location of market: %s", station_name)
 
 def get_market_library():
     # Load existing persistent dictionary if available or create default
+    market_lib = None
     if os.path.exists(globals.MARKET_LIB_PATH):
-        with open(globals.MARKET_LIB_PATH, "r", encoding="utf-8") as f:
-            market_lib = json.load(f)
-    else:
+        try:
+            with open(globals.MARKET_LIB_PATH, "r", encoding="utf-8") as f:
+                market_lib = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            logger.error("Market library is unreadable, starting a new one: %s", e)
+    if not isinstance(market_lib, dict):
         market_lib = {}
-        market_lib.setdefault("Commodities", {})
-        market_lib.setdefault("Markets", [])
+    # An older or half written file may be missing either section.
+    if not isinstance(market_lib.get("Commodities"), dict):
+        market_lib["Commodities"] = {}
+    if not isinstance(market_lib.get("Markets"), list):
+        market_lib["Markets"] = []
     return market_lib
+
+# distance from a market to the construction site, or infinity if either is unknown
+def distance_to_site(market_lib, station_id):
+    if not globals.SITE_LOCATION:
+        return float("inf")
+    market = get_market_by_station_id(market_lib, station_id)
+    if not market or not market.get("Location"):
+        return float("inf")
+    return calculate_distance(*market["Location"], *globals.SITE_LOCATION)
 
 #a list of the cheapest and closest markets that are selling an item
 def update_market_library() -> None:
-    if not os.path.exists(globals.MARKET_JSON):
+    if not globals.MARKET_JSON or not os.path.exists(globals.MARKET_JSON):
         logger.warning("Market data file does not exist: %s", globals.MARKET_JSON)
         return
 
@@ -394,7 +418,8 @@ def update_market_library() -> None:
                 m_price = item.get("SellPrice")
 
                 if item_name and isItemConstructionCommodity(item_name):
-                    not_selling_list.remove(item_name)
+                    if item_name in not_selling_list:
+                        not_selling_list.remove(item_name)
                     commodity = market_lib["Commodities"].setdefault(item_name, {})
 
                     if isItemBelowConstructionCost(item_name, m_price):
@@ -416,8 +441,7 @@ def update_market_library() -> None:
                         close_markets = commodity.setdefault("ClosestMarkets", {})
                         close_entry = close_markets.get(globals.DOCKED_STATION_TYPE.name)
                         if close_entry:
-                            m = get_market_by_station_id(market_lib, close_entry["StationID"])
-                            existing_distance = calculate_distance(*m["Location"], *globals.SITE_LOCATION)
+                            existing_distance = distance_to_site(market_lib, close_entry["StationID"])
                         else:
                             existing_distance = float("inf")
                         if globals.CURRENT_LOCATION and globals.SITE_LOCATION:
@@ -447,8 +471,7 @@ def update_market_library() -> None:
                             continue
 
                         if alt_entry:
-                            m = get_market_by_station_id(market_lib, alt_entry["StationID"])
-                            existing_distance = calculate_distance(*m["Location"], *globals.SITE_LOCATION)
+                            existing_distance = distance_to_site(market_lib, alt_entry["StationID"])
                         else:
                             existing_distance = float("inf")
                         if globals.CURRENT_LOCATION and globals.SITE_LOCATION:
@@ -566,20 +589,27 @@ def remove_from_old_market_library(station_name):
         return
 
     # otherwise save cleaned data
-    with open(old_library, "w") as f:
+    with open(old_library, "w", encoding="utf-8") as f:
         json.dump(market_lib, f, indent=2)
 
     logger.info("Matching stations removed and file updated.")
     
-def get_old_prefMarket_name(material): #see if pre v1.3 market library has an entry
+def get_legacy_market_library(): #the pre v1.3 library, kept until it has been drained
+    old_library = os.path.join(globals.USER_DIR, "market_library.json")
+    if not os.path.exists(old_library):
+        return {}
     try:
-        # Load existing persistent dictionary if available
-        old_library = os.path.join(globals.USER_DIR, "market_library.json")
-        if os.path.exists(old_library):
-            with open(old_library, "r", encoding="utf-8") as f:
-                market_lib = json.load(f)
-        else:
-            return ""
+        with open(old_library, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        logger.error("Could not read the old market library: %s", e)
+        return {}
+    return data if isinstance(data, dict) else {}
+
+def get_old_prefMarket_name(material, market_lib=None): #see if pre v1.3 market library has an entry
+    try:
+        if market_lib is None:
+            market_lib = get_legacy_market_library()
 
         resource = market_lib.get(material)
         if not resource:
@@ -608,12 +638,16 @@ def get_old_prefMarket_name(material): #see if pre v1.3 market library has an en
     
     return "Old Err"
 
-def get_prefMarket_name(material):
+def get_prefMarket_name(material, market_lib=None, legacy_lib=None):
+    """Name of the market to buy `material` from. Callers rendering a whole table
+    should load the libraries once and pass them in rather than paying for a
+    re-read of both JSON files per row."""
     try:
-        market_lib = get_market_library()
+        if market_lib is None:
+            market_lib = get_market_library()
         resource = market_lib["Commodities"].get(material)
         if not resource:
-            return get_old_prefMarket_name(material)
+            return get_old_prefMarket_name(material, legacy_lib)
 
         pref = getPreferedMarket()
         if pref == globals.MARKET_MODE.Cheapest:
@@ -626,28 +660,27 @@ def get_prefMarket_name(material):
         if not markets:
             markets = resource.get("AlternateMarkets")
             if not markets:
-                return get_old_prefMarket_name(material)
-        
-        if getPreferedType() == globals.STATION_TYPE.Orbital:
-            m = markets.get(globals.STATION_TYPE.Orbital.name)
-            if not m:
-                m = markets.get(globals.STATION_TYPE.Surface.name)
-                if m:
-                    #return non-prefered type as marked alternate
-                    return "*" + get_market_by_station_id(market_lib, m["StationID"]).get("StationName")
-            if not m:
-                return get_old_prefMarket_name(material)
-        else:
-            m = markets.get(globals.STATION_TYPE.Surface.name)
-            if not m:
-                m = markets.get(globals.STATION_TYPE.Orbital.name)
-                if m:
-                    #return non-prefered type as marked alternate
-                    return "*" + get_market_by_station_id(market_lib, m["StationID"]).get("StationName")
-            if not m:
-                return get_old_prefMarket_name(material)
+                return get_old_prefMarket_name(material, legacy_lib)
 
-        return get_market_by_station_id(market_lib, m["StationID"]).get("StationName")
+        if getPreferedType() == globals.STATION_TYPE.Orbital:
+            preferred, fallback = globals.STATION_TYPE.Orbital, globals.STATION_TYPE.Surface
+        else:
+            preferred, fallback = globals.STATION_TYPE.Surface, globals.STATION_TYPE.Orbital
+
+        m = markets.get(preferred.name)
+        if m:
+            prefix = ""
+        else:
+            m = markets.get(fallback.name)
+            prefix = "*"  #mark the non-prefered type
+        if not m:
+            return get_old_prefMarket_name(material, legacy_lib)
+
+        station = get_market_by_station_id(market_lib, m["StationID"])
+        if not station or not station.get("StationName"):
+            #the market was dropped from the library, fall back to whatever we used to know
+            return get_old_prefMarket_name(material, legacy_lib)
+        return prefix + station["StationName"]
 
     except json.JSONDecodeError as e:
         logger.error("JSON decode error: %s", e)
@@ -657,20 +690,22 @@ def get_prefMarket_name(material):
 
     return "Error"
 
-def is_market_selling(material) -> bool:
-    # Load market data from EDMC
-    with open(globals.MARKET_JSON, "r", encoding="utf-8") as f:
-        market = json.load(f)
+def load_market_stock() -> set:
+    """Names of everything the market we are docked at currently has in stock."""
+    if not globals.MARKET_JSON or not os.path.exists(globals.MARKET_JSON):
+        return set()
+    try:
+        with open(globals.MARKET_JSON, "r", encoding="utf-8") as f:
+            market = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        logger.error("Error loading market data: %s", e)
+        return set()
+    return {item.get("Name") for item in market.get("Items", []) if item.get("Stock", 0) > 0}
 
-    # Load market info
-    station_name = market.get("StationName")
-    items = market.get("Items", [])
-
-    for item in items:
-        if material == item.get("Name"):
-            if item and item.get("Stock", 0) > 0: #if item is for sale
-                return True
-    return False
+def is_market_selling(material, stock=None) -> bool:
+    if stock is None:
+        stock = load_market_stock()
+    return material in stock
 
 # --- Plugin Hooks ---
 def show_gui():

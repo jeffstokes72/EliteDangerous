@@ -425,6 +425,12 @@ class ArchitectTrackerGUI(tk.Toplevel):
         # Create lookup for cargo items
         cargo_lookup = {i.get('Name'): i for i in cargo_items}
 
+        # Read these once for the whole table instead of once per row
+        market_lib = helpers.get_market_library()
+        legacy_lib = helpers.get_legacy_market_library()
+        market_stock = (helpers.load_market_stock()
+                        if globals.SHIP_STATE == globals.SHIP_MODE.DockedAtMarket else set())
+
         # Set the alternating row and highlight colours
         if self.theme == "Dark Mode":
             if self.trans_bg:
@@ -461,11 +467,11 @@ class ArchitectTrackerGUI(tk.Toplevel):
             locName = vals['Name_Localised']
             need = req - prov
 
-            pref_market = helpers.get_prefMarket_name(mat)
+            pref_market = helpers.get_prefMarket_name(mat, market_lib, legacy_lib)
 
-            # Get fleet carrier and ship cargo quantities
-            #TODO: change these to use $_name; (can't till EDMC updates cargo and fc)
-            fc_qty = globals.CARRIER_TRACKER.get_quantity(safeMat)
+            # Get fleet carrier and ship cargo quantities. Cargo.json still uses the
+            # bare internal name, the carrier tracker normalises whatever it is given.
+            fc_qty = globals.CARRIER_TRACKER.get_quantity(mat)
             ship_qty = cargo_lookup.get(safeMat, {}).get('Count', 0)
 
             # Calculate shortage
@@ -476,7 +482,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             tags = [row_tag]
 
             if globals.SHIP_STATE == globals.SHIP_MODE.DockedAtMarket:
-                for_sale = helpers.is_market_selling(mat)
+                for_sale = helpers.is_market_selling(mat, market_stock)
                 if for_sale and short > 0:
                     tags.append('highlightedrow')
             elif globals.SHIP_STATE == globals.SHIP_MODE.DockedAtFC:
