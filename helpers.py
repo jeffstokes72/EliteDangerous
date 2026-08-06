@@ -739,7 +739,21 @@ def toggle_gui():
         globals.AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         globals.ARCHITECT_GUI.destroy()
 
+#widgets the commander types into, where a hotkey would eat the keystroke
+TYPING_WIDGETS = ("Entry", "TEntry", "Text", "TCombobox", "Spinbox", "TSpinbox", "Listbox")
+
+def is_typing_widget(widget) -> bool:
+    try:
+        return widget.winfo_class() in TYPING_WIDGETS
+    except Exception:
+        return False
+
 def on_key_press(event):
+    # These are bound with bind_all so Voice Attack can reach them, which means we
+    # also see keystrokes meant for EDMC's own fields and for our settings tab.
+    if is_typing_widget(getattr(event, "widget", None)):
+        return
+
     if event.char == 't':
        toggle_gui()
        return
