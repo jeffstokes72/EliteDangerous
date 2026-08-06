@@ -1,7 +1,5 @@
-import platform
 import tkinter as tk
 from tkinter import ttk
-from tkinter import filedialog
 
 import globals
 from globals import logger
@@ -28,7 +26,8 @@ class LogViewerGUI(tk.Toplevel):
         self.log_display.delete(1.0, tk.END)  # Clear previous log entries
         
         try:
-            with open(globals.LOG_FILE, 'r') as file:
+            #the log is written as UTF-8, so do not let the system encoding decide
+            with open(globals.LOG_FILE, 'r', encoding='utf-8', errors='replace') as file:
                 for line in file:
                     if keyword in line and (level == 'All' or level in line):
                         self.log_display.insert(tk.END, line)
@@ -76,7 +75,7 @@ class LogViewerGUI(tk.Toplevel):
         self.status_label.pack()
 
         # Open log file button
-        open_button = open_button = ttk.Button(
+        open_button = ttk.Button(
             self,
             text="Copy Log to Clipboard",
             command=self.copy_logs_to_clipboard

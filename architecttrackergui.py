@@ -1,9 +1,8 @@
+import json
 import platform
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
-from typing import Optional
-import traceback
 
 from config import config
 
@@ -24,9 +23,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         super().__init__(parent)
         self.title("Architect Tracker")
         self.geometry("800x600")
-        self.configure(bg=self.bgBlack)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.column_visibility, self.hide_provided, self.theme, self.column_names, self.trans_bg, self.win_top, self.opac_amount = helpers.load_gui_settings()
+        self.has_table = False
 
         self.setAlpha(self.opac_amount)
         self.setStayOnTop(self.win_top)
@@ -133,19 +132,85 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.tree.configure(height=num_items)
         self.update_idletasks()
 
+    # ttk themes are process wide, so switching to one for our own window also
+    # restyles EDMC. Remember what EDMC was using and hand it back on the way out.
+    edmc_theme = None
+
+    def _use_theme(self, name):
+        if ArchitectTrackerGUI.edmc_theme is None:
+            ArchitectTrackerGUI.edmc_theme = self.style.theme_use()
+        if name and self.style.theme_use() != name:
+            self.style.theme_use(name)
+
+    def _restore_edmc_theme(self):
+        if not ArchitectTrackerGUI.edmc_theme:
+            return
+        try:
+            style = ttk.Style()
+            if style.theme_use() != ArchitectTrackerGUI.edmc_theme:
+                style.theme_use(ArchitectTrackerGUI.edmc_theme)
+        except tk.TclError as e:
+            logger.warning("Could not restore the EDMC theme: %s", e)
+
+    def palette(self):
+        if self.theme == "Dark Mode":
+            return {
+                "bg": self.bgBlack, "fg": self.edOrange,
+                "tree_bg": self.bgBlack, "tree_fg": self.edOrange,
+                "sel_bg": self.bgBlack, "sel_fg": self.edBlue,
+                "field": self.bgBlack,
+            }
+        #Light Mode borrows whatever the host theme uses so it looks native
+        bg = self.style.lookup("TFrame", "background") or "#d9d9d9"
+        fg = self.style.lookup("TLabel", "foreground") or "black"
+        return {
+            "bg": bg, "fg": fg,
+            "tree_bg": self.style.lookup("Treeview", "background") or "#ffffff",
+            "tree_fg": self.style.lookup("Treeview", "foreground") or fg,
+            "sel_bg": self.style.lookup("Treeview", "background", ["selected"]) or "#4a6984",
+            "sel_fg": self.style.lookup("Treeview", "foreground", ["selected"]) or "#ffffff",
+            "field": self.style.lookup("TCombobox", "fieldbackground") or "#ffffff",
+        }
+
     def setStyle(self):
         logger.info("setStyle theme is: %s", self.theme)
 
-        self.style = ttk.Style()
+        self.style = ttk.Style(self)
         if self.theme == "Dark Mode":
-            self.style.theme_use("clam")
-            self.style.configure("ArchTrack.Treeview.Heading",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange)
-            self.style.configure("ArchTrack.TButton",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange,
-                                    padding=(6, 2))
+            # The native Windows and macOS themes ignore background colours, so the
+            # dark look needs clam. Light Mode puts EDMC's own theme back.
+            self._use_theme("clam")
+        else:
+            self._restore_edmc_theme()
+
+        c = self.palette()
+        self.configure(bg=c["bg"])
+
+        # Everything below is namespaced under ArchTrack so no other plugin, and
+        # none of EDMC's own widgets, pick up these colours.
+        self.style.configure("ArchTrack.TFrame", background=c["bg"])
+        self.style.configure("ArchTrack.TLabel", background=c["bg"], foreground=c["fg"])
+        self.style.configure("ArchTrack.TButton", background=c["bg"], foreground=c["fg"], padding=(6, 2))
+        self.style.configure("ArchTrack.Treeview.Heading", background=c["bg"], foreground=c["fg"])
+        self.style.configure("ArchTrack.Treeview",
+                             background=c["tree_bg"],
+                             foreground=c["tree_fg"],
+                             fieldbackground=c["tree_bg"],
+                             rowheight=24,
+                             selectbackground=c["sel_bg"])
+        self.style.configure("ArchTrack.TCombobox",
+                             background=c["bg"], foreground=c["fg"],
+                             selectbackground=c["bg"], arrowcolor=c["fg"])
+        self.style.map("ArchTrack.TButton",
+                       foreground=[("disabled", c["bg"])],
+                       background=[("disabled", "#7d7d7d")])
+        self.style.map("ArchTrack.Treeview", foreground=[("selected", c["sel_fg"])])
+        self.style.map("ArchTrack.TCombobox",
+                       fieldbackground=[('readonly', c["field"])],
+                       background=[('readonly', c["bg"])])
+
+        if self.theme == "Dark Mode":
+            #clam only, these options do not exist in the native themes
             self.style.configure("ArchTrack.Vertical.TScrollbar",
                                     gripcount=0,
                                     background=ArchitectTrackerGUI.bgBlack,  # Dark background for the scrollbar
@@ -156,46 +221,25 @@ class ArchitectTrackerGUI(tk.Toplevel):
                                     sliderrelief="flat",
                                     thickness=12,  # Scrollbar thickness
                                     arrowcolor=ArchitectTrackerGUI.edOrange)  # Color for the arrows
-            self.style.configure("ArchTrack.Treeview",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange,
-                                    rowheight=24,
-                                    selectbackground=ArchitectTrackerGUI.bgBlack)
-            self.style.configure("ArchTrack.TCombobox",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange,
-                                    selectbackground=ArchitectTrackerGUI.bgBlack,
-                                    arrowcolor=ArchitectTrackerGUI.edOrange)            
-            self.style.configure("ArchTrack.TFrame",
-                                    background=ArchitectTrackerGUI.bgBlack)
-            self.style.configure("ArchTrack.TLabel",
-                                    background=ArchitectTrackerGUI.bgBlack,
-                                    foreground=ArchitectTrackerGUI.edOrange)
-            self.style.map("ArchTrack.TButton",
-               foreground=[("disabled", ArchitectTrackerGUI.bgBlack)],  # Color for disabled text
-               background=[("disabled", "#7d7d7d")])  # Color for disabled background
-            self.style.map("ArchTrack.Treeview", foreground=[("selected", ArchitectTrackerGUI.edBlue)])
-            self.style.map("ArchTrack.TCombobox",
-                                fieldbackground=[('readonly', ArchitectTrackerGUI.bgBlack)], # Background color of the entry field
-                                background=[('readonly', ArchitectTrackerGUI.bgBlack)]) # Background color of the dropdown list
-        elif self.theme == "Light Mode":
-            self.style.theme_use("default")  # Use default theme
-            self.style.configure("Treeview", rowheight=24)
+
+    def destroy(self):
+        self._restore_edmc_theme()
+        super().destroy()
 
     def _build_info_widgets(self):
+        self.has_table = False
         frame = ttk.Frame(self, padding=10, style="ArchTrack.TFrame")
         frame.pack(fill=tk.BOTH, expand=True)
         ttk.Label(frame, text="Construction site data not found!",
-                  background=self.bgBlack,
-                  foreground=self.edOrange).grid(row=0, column=0, sticky="nsew", padx=10)
+                  style="ArchTrack.TLabel").grid(row=0, column=0, sticky="nsew", padx=10)
         ttk.Label(frame,
                   text="Visit a construction site and the required commodities will automatically be displayed.",
-                  background=self.bgBlack,
-                  foreground=self.edOrange).grid(row=1, column=0, sticky="nsew", padx=10)
+                  style="ArchTrack.TLabel").grid(row=1, column=0, sticky="nsew", padx=10)
         self.update_idletasks()
         self.geometry(f"{self.winfo_reqwidth()}x{self.winfo_reqheight()}")
 
     def _build_widgets(self):
+        self.has_table = True
         frame = ttk.Frame(self, padding=8, style="ArchTrack.TFrame")
         frame.pack(fill=tk.BOTH, expand=True)
 
@@ -300,10 +344,12 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.canvas.create_polygon(7, 5, 7, 20, 20, 13, fill=fg, outline="black", tags="canvas_button")
             tooltip_text = "Press to pause\ncarrier updates."
 
-        # Attach tooltip to the canvas itself (not individual items)
-        if hasattr(self, "canvas_tooltip") and self.canvas_tooltip:
-            self.canvas_tooltip._hide()
-        self.canvas_tooltip = Tooltip(self.canvas, tooltip_text, follow_mouse=True)
+        # Attach tooltip to the canvas itself (not individual items). draw_canvas runs
+        # on every refresh, so reuse it rather than binding another one each time.
+        if self.canvas_tooltip:
+            self.canvas_tooltip.set_text(tooltip_text)
+        else:
+            self.canvas_tooltip = Tooltip(self.canvas, tooltip_text, follow_mouse=True)
 
         # Bind hover for rectangle color
         self.canvas.tag_bind("canvas_button", "<Enter>", lambda e: self.canvas.itemconfig(self.rect_id, fill=active_bg))
@@ -311,6 +357,13 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
         # Bind click for canvas (anywhere)
         self.canvas.bind("<Button-1>", self.on_canvas_click)
+
+    @property
+    def shown_station(self):
+        """Full name of the site on display, or None when showing -All-."""
+        if not self.has_table:
+            return None
+        return self.station_map.get(self.station_var.get())
 
     def _on_change_station_var(self, *args):
         if self.station_var.get() == '-All-':
@@ -324,18 +377,27 @@ class ArchitectTrackerGUI(tk.Toplevel):
     def clear_frame(self):
         for widget in self.winfo_children():
             widget.destroy()
+        #the tooltip belongs to the canvas that just went with them
+        self.canvas_tooltip = None
 
     def refresh(self):
-        # Remember the currently selected station name
-        current_selection = self.station_var.get()
-
         # Load new data
         data = helpers.load_facility_requirements()
         if data == {}:
-            self.clear_frame()
-            self._build_info_widgets()
+            if self.has_table:
+                self.clear_frame()
+                self._build_info_widgets()
             globals.SITE_LOCATION = None
             return
+
+        # The window is showing the "no sites yet" message and now has something to
+        # show, so it needs the table building before anything can be put in it.
+        if not self.has_table:
+            self.clear_frame()
+            self._build_widgets()
+
+        # Remember the currently selected station name
+        current_selection = self.station_var.get()
         self.data = data
 
         # Prepare data for display
@@ -347,11 +409,20 @@ class ArchitectTrackerGUI(tk.Toplevel):
             )
             for full in data
         ]
-        self.station_map = {name: full for name, full in display}
+        #two sites can shorten to the same name, so keep the dropdown 1:1 with the data
+        self.station_map = {}
+        values = []
+        for name, full in display:
+            unique = name
+            suffix = 2
+            while unique in self.station_map:
+                unique = f"{name} ({suffix})"
+                suffix += 1
+            self.station_map[unique] = full
+            values.append(unique)
         self.station_map['-All-'] = None
 
         # Update dropdown
-        values = [name for name, _ in display]
         if len(values) > 1:
             values.insert(0, '-All-')
         self.dropdown['values'] = values
@@ -425,6 +496,12 @@ class ArchitectTrackerGUI(tk.Toplevel):
         # Create lookup for cargo items
         cargo_lookup = {i.get('Name'): i for i in cargo_items}
 
+        # Read these once for the whole table instead of once per row
+        market_lib = helpers.get_market_library()
+        legacy_lib = helpers.get_legacy_market_library()
+        market_stock = (helpers.load_market_stock()
+                        if globals.SHIP_STATE == globals.SHIP_MODE.DockedAtMarket else set())
+
         # Set the alternating row and highlight colours
         if self.theme == "Dark Mode":
             if self.trans_bg:
@@ -461,11 +538,11 @@ class ArchitectTrackerGUI(tk.Toplevel):
             locName = vals['Name_Localised']
             need = req - prov
 
-            pref_market = helpers.get_prefMarket_name(mat)
+            pref_market = helpers.get_prefMarket_name(mat, market_lib, legacy_lib)
 
-            # Get fleet carrier and ship cargo quantities
-            #TODO: change these to use $_name; (can't till EDMC updates cargo and fc)
-            fc_qty = globals.CARRIER_TRACKER.get_quantity(safeMat)
+            # Get fleet carrier and ship cargo quantities. Cargo.json still uses the
+            # bare internal name, the carrier tracker normalises whatever it is given.
+            fc_qty = globals.CARRIER_TRACKER.get_quantity(mat)
             ship_qty = cargo_lookup.get(safeMat, {}).get('Count', 0)
 
             # Calculate shortage
@@ -476,7 +553,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             tags = [row_tag]
 
             if globals.SHIP_STATE == globals.SHIP_MODE.DockedAtMarket:
-                for_sale = helpers.is_market_selling(mat)
+                for_sale = helpers.is_market_selling(mat, market_stock)
                 if for_sale and short > 0:
                     tags.append('highlightedrow')
             elif globals.SHIP_STATE == globals.SHIP_MODE.DockedAtFC:
@@ -514,12 +591,15 @@ class ArchitectTrackerGUI(tk.Toplevel):
     def on_canvas_click(self, event):
         globals.FCAPI_PAUSED = not globals.FCAPI_PAUSED
         if globals.FCAPI_PAUSED:
-            logger.info(f'Fleet carrier API paused.')
+            logger.info('Fleet carrier API paused.')
         else:
-            logger.info(f'Fleet carrier API UNpaused.')
-        self.draw_canvas()
+            logger.info('Fleet carrier API UNpaused.')
+        if self.has_table:
+            self.draw_canvas()
 
     def on_next_station(self):
+        if not self.has_table:
+            return
         values = self.dropdown['values']
         if not values:
             logger.info("No stations to switch to.")
@@ -535,6 +615,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def on_prev_station(self):
+        if not self.has_table:
+            return
         values = self.dropdown['values']
         if not values:
             logger.info("No stations to switch to.")
@@ -550,6 +632,11 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def change_station(self, station):
+        if not self.has_table:
+            self.refresh()
+            if not self.has_table:
+                return
+
         short_name = (station.split(':', 1)[-1].strip() if ':' in station else
                         station.split(';', 1)[-1].strip() if ';' in station
                         else station)
@@ -573,15 +660,17 @@ class ArchitectTrackerGUI(tk.Toplevel):
             logger.info("Could not change to station: %s", short_name)
 
     def on_delete_station(self):
+        if not self.has_table:
+            return
         sel = self.station_var.get()
         station_name = self.station_map.get(sel)
-        if self.data.pop(station_name, None):
+        if station_name and self.data.pop(station_name, None):
             logger.info("Deleted station: %s", station_name)
         else:
             logger.info("Could not delete station: %s", station_name)
+            return
 
         try:
-            import json
             with open(globals.SAVE_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, indent=4)
         except Exception as e:
@@ -604,11 +693,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def refresh_columns(self):
+        if not self.has_table:
+            return
         visible_columns = [col for col, vis in self.column_visibility.items() if vis]
         self.tree["displaycolumns"] = visible_columns
-        """for col in visible_columns:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, width=100)"""
 
     def on_toggle_prefMarket(self):
         old = helpers.getPreferedMarket()
@@ -630,7 +718,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.refresh()
 
     def rename_column(self, c, v):
-        self.tree.heading(c, text=v)
-        cols = self.tree["columns"]
-        col_index = cols.index(c)
-        self.column_names[col_index] = v
+        cols = list(globals.DEFAULT_COLUMNS.keys())
+        if c not in cols:
+            return
+        self.column_names[cols.index(c)] = v
+        if self.has_table:
+            self.tree.heading(c, text=v)

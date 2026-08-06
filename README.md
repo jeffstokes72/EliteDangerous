@@ -44,6 +44,13 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
   - <b>O\S</b> - toggles between showing orbital or surface markets in the preferred market column. See "Preferred Markets" section below for more information.
   - <b>Pause</b> or <b>Unpause</b> - this button next to the Carrier name will pause or unpause updating the fleet carrier cargo quantities from Fdev's fleet carrier companion api. See section below.
 
+### Importing Nearby Markets
+- The "Pref Market" column only knows about markets you have personally docked at. The settings tab can fill in the rest: press "Import market data now" and the plugin looks up the markets around your construction site and adds their prices to the same list.
+- Set how far to look (5 to 50 ly, 25 by default) and whether you want orbital markets, surface markets or both. The search is measured from your construction site, not from wherever you happen to be.
+- The prices come from <a href="https://spansh.co.uk">spansh.co.uk</a>, which collects what other commanders report to EDDN. They are a donation funded community service, so the plugin only asks when you press the button, at most once a minute, and stops after the 200 markets nearest your site.
+- Out in colonisation space most markets have not been visited by anyone in months, so expect the prices to be older than the ones you collect yourself. The plugin tells you how old the oldest one was and ignores anything over a year. Docking at a market always replaces the imported price with what you actually saw.
+- Fleet carriers and megaships are left out on purpose because they move.
+
 ### Preferred Markets
 - The "Preferred Market" column displays markets you have found that sell construction commodities. The system name is not shown so it is suggested that you bookmark the stations.
 - Markets can be filtered using the $\Ly\Alt and O\S buttons at the top of the inteface. Filtering includes:
@@ -56,7 +63,7 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 
 ### Fleet Carrier Cargo Quantities
 - Information coming from the fleet carrier CAPI (fcapi) queries can often become unsyncronized with the actual amounts shown in the game. This causes Architect Tracker to sometimes display incorrect fleet carrier cargo quantities. As a work around, I have added a pause\unpause button next to the carrier name.
-- Transferring cargo to\from your starship or purchasing\selling commodities while docked at your fleet carrier are still tracked by Architect Tracker regardless.
+- Transferring cargo to\from your starship or buying\selling commodities at your own fleet carrier's market are still tracked by Architect Tracker regardless.
 - The pause\unpause button has 2 modes it can operate which can be set in the "Settings" of EDMC:
   - "First then pause" mode will accept the first fcapi query then ignore any others unless the pause button is clicked. This is the default mode. I have found that the first query is usually accurate if I haven't played for over an hour.
   - "Only when UNpaused" mode will accept all fcapi queries unless you pause them.
@@ -70,6 +77,9 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
   - The "O\S" button is bound to key "o".
   - The pause\unpause button is bound to "u".
   - Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
+  - These keys are ignored while you are typing in a text box, so renaming a column in the settings tab or filtering the log viewer will not trigger them.
+3. Linux: the plugin uses the journal folder EDMC is already watching. If EDMC has found your journals then so has the plugin, whether Elite is installed under Steam, Flatpak Steam, Snap Steam or on a second drive. If neither can find them, set the folder in EDMC's File > Settings > Configuration tab.
+4. Running the tests (only needed if you are changing the code): `python3 tests/test_plugin.py`, or `xvfb-run -a python3 tests/test_plugin.py` on a machine with no display. EDMC does not need to be installed.
 
 ### Notable Changes
 + 2025/04/12 : Added support for multiple construction sites. Sites are removed automaticly when they are completed.
@@ -89,5 +99,6 @@ https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854
 + 2026/02/23 : [Version 1.3] Added pause button for fleet carrier cargo, added totals row at bottom of list, delete site button is disabled when ALL sites are shown, smaller bug fixes.
 + 2026/03/20 : [Version 1.4] Added alternate and orbital\surface filtering to preferred markets. Renamed construction sites and markets will now be updated when you land on them the next time. Minor UI beautifications.
 + 2026/04/04 : [Version 1.5] Changed highlight rules when on fleet carrier. Now, if you have enough of a commodity on your starship to meet the needs of the construction site, the commodity will no longer be highlighted.
++ Added : Import market data for markets you have not visited, from spansh.co.uk. Set a search radius and whether you want orbital or surface markets in the settings tab. Prices are now recorded as what you pay for a commodity rather than what the market would pay you for it.
 + 2026/06/11 : [Version 1.6] Major bug fixes for Linux users. Special thanks to Commanders PatientNr0, mgrzegor, Fasgort and LiamtheLion879
  for taking time to report bugs and work with me to fix them. Added log viewer to settings tab which should helppeople report bugs.

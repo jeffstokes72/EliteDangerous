@@ -33,13 +33,26 @@ class Tooltip:
 
     # --------------------
 
+    def set_text(self, text):
+        """Change the wording without adding another set of bindings."""
+        self.text = text
+        self._hide()
+
+    # --------------------
+
     def _schedule(self):
         self._unschedule()
-        self.after_id = self.widget.after(self.delay, self._show)
+        try:
+            self.after_id = self.widget.after(self.delay, self._show)
+        except tk.TclError:
+            self.after_id = None
 
     def _unschedule(self):
         if self.after_id:
-            self.widget.after_cancel(self.after_id)
+            try:
+                self.widget.after_cancel(self.after_id)
+            except tk.TclError:
+                pass
             self.after_id = None
 
     # --------------------
@@ -94,5 +107,8 @@ class Tooltip:
 
     def _hide(self):
         if self.tooltip:
-            self.tooltip.destroy()
+            try:
+                self.tooltip.destroy()
+            except tk.TclError:
+                pass
             self.tooltip = None
