@@ -215,7 +215,23 @@ def capi_fleetcarrier(data: CAPIData):
             globals.ARCHITECT_GUI.refresh()
             
 def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
-    return preferences.pluginprefs(parent, cmdr, is_beta)
+    try:
+        return preferences.pluginprefs(parent, cmdr, is_beta)
+    except Exception as e:
+        # EDMC drops the whole settings tab if this raises; keep a stub so the
+        # tab still appears and the log explains what went wrong.
+        logger.error("Architect Tracker settings tab failed to build: %s", e)
+        logger.error("Traceback:\n%s", traceback.format_exc())
+        frame = nb.Frame(parent)
+        nb.Label(
+            frame,
+            text=("Architect Tracker settings failed to load. "
+                  "Open the log viewer from the plugin folder or "
+                  "~/.config/ArchitectTracker/EDMC_Architect_Log.txt"),
+            wraplength=400,
+            justify="left",
+        ).grid(row=1, column=0, sticky="nw", padx=5, pady=5)
+        return frame
 
 def prefs_changed(cmdr: str, is_beta: bool) -> None:
     helpers.save_gui_settings()

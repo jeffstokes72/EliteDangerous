@@ -281,15 +281,18 @@ def build_import_widgets(frame):
     nb.Label(frame, text="Import nearby markets:").grid(row=g_row, sticky="nw", padx=5)
     g_row += 1
 
+    # nb.Frame already grids a spacer child, so its children must use grid too.
     radius_row = nb.Frame(frame)
     radius_row.grid(row=g_row, sticky="nw", padx=5, pady=2)
-    nb.Label(radius_row, text="Search within").pack(side=tk.LEFT)
+    nb.Label(radius_row, text="Search within").grid(row=1, column=0, sticky="w")
     radius_var = tk.IntVar(value=helpers.import_radius())
     tk.Spinbox(radius_row, from_=marketimport.MIN_RADIUS, to=marketimport.MAX_RADIUS,
                increment=5, width=4, textvariable=radius_var,
-               command=lambda: change_import_radius(radius_var)).pack(side=tk.LEFT, padx=4)
+               command=lambda: change_import_radius(radius_var)).grid(
+                   row=1, column=1, sticky="w", padx=4)
     radius_var.trace_add("write", lambda *a: change_import_radius(radius_var))
-    nb.Label(radius_row, text=f"ly of the site (max {marketimport.MAX_RADIUS})").pack(side=tk.LEFT)
+    nb.Label(radius_row, text=f"ly of the site (max {marketimport.MAX_RADIUS})").grid(
+        row=1, column=2, sticky="w")
     g_row += 1
 
     orbital_var = tk.BooleanVar(value=helpers.import_orbital())

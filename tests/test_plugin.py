@@ -41,6 +41,7 @@ import helpers
 import load
 import marketimport
 import preferences
+import myNotebook as nb
 from commodities import commodity_key
 from config import config
 from fleetcarriercargotracker import FleetCarrierCargoTracker, cargo_key
@@ -346,6 +347,16 @@ class TestSettings(PluginTestCase):
         g.ARCHITECT_GUI = None
         preferences.on_column_rename("Needed", "Left")
         self.assertEqual(helpers.load_column_names()[3], "Left")
+
+    def test_settings_tab_builds_without_mixing_pack_and_grid(self):
+        # EDMC's nb.Frame grids a spacer on create; packing into it raises TclError
+        # and EDMC then omits the whole ArchitectTracker settings tab.
+        notebook = nb.Notebook(ROOT)
+        frame = preferences.pluginprefs(notebook, "TestCMDR", False)
+        self.assertIsNotNone(frame)
+        self.assertTrue(frame.winfo_exists())
+        frame.destroy()
+        notebook.destroy()
 
 
 class TestHotkeys(PluginTestCase):
