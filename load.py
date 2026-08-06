@@ -113,7 +113,7 @@ def plugin_app(parent: tk.Frame) -> tk.Frame:
     return globals.EDMCframe
 
 def plugin_stop():
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         globals.ARCHITECT_GUI.destroy()
     logger.info("Shutting down.")
@@ -155,12 +155,12 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             mid = entry.get("MarketID")
             helpers.save_facility_requirements(resources, station, mid)
             if not globals.SITE_LOCATION: #reinitialize if no construction sites existed
-                if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+                if helpers.gui_exists():
                     globals.ARCHITECT_GUI.destroy()
                 globals.SITE_LOCATION = globals.CURRENT_LOCATION
                 logger.info("Set site location to current location: %s", globals.SITE_LOCATION)
                 helpers.show_gui()
-            elif globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+            elif helpers.gui_exists():
                 globals.ARCHITECT_GUI.change_station(station)
 
         elif event == "Market":
@@ -202,7 +202,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             globals.DOCKED_STATION_TYPE = globals.STATION_TYPE.Unknown
             logger.info("Station type set to: %s", globals.DOCKED_STATION_TYPE.name)
 
-        if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists() and globals.SITE_LOCATION: #only refresh if we have construction sites to show
+        if helpers.gui_exists() and globals.SITE_LOCATION: #only refresh if we have construction sites to show
             globals.ARCHITECT_GUI.refresh()
 
     except Exception as e:
@@ -221,7 +221,7 @@ def capi_fleetcarrier(data: CAPIData):
     else:
         fcapi_mode = config.get_str('ArchTrack_fcapimode')
 
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         logger.info("Received fleet carrier CAPI data") #only OUR carrier, others are treated as markets
         globals.CARRIER_TRACKER.update(data)
         if fcapi_mode == "First then pause":

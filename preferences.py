@@ -266,17 +266,17 @@ def slider_changed(lbl, val):
     s = "Window Opacity = " + str(val) + "%"
     lbl.config(text=s)
     config.set('ArchTrack_opcamt', val)
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.ARCHITECT_GUI.setAlpha(val)
 
 def toggle_win_top(val):
     config.set('ArchTrack_wintop', bool(val))
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.ARCHITECT_GUI.setStayOnTop(bool(val))
 
 def toggle_trans_bg(val):
     config.set('ArchTrack_tbg', bool(val))
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.ARCHITECT_GUI.setTransparentBg(bool(val))
         globals.ARCHITECT_GUI.setStyle()
         globals.ARCHITECT_GUI.refresh()
@@ -322,31 +322,31 @@ def on_log_open():
     logviewer = LogViewerGUI(globals.EDMC_ROOT)
 
 def on_column_rename(c, v):
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.ARCHITECT_GUI.rename_column(c, v)
 
 def toggle_column(col, val):
     c = "ArchTrack_" + col.replace(" ", "_")
     config.set(c, val)
 
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.ARCHITECT_GUI.toggle_column(col, val)
 
 def toggle_hide_provided(val):
     config.set('ArchTrack_hide_Provided', bool(val))
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.ARCHITECT_GUI.toggle_hide_provided(val)
 
 def reset_Style(style):
     config.set('ArchTrack_theme', str(style))
-    if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+    if helpers.gui_exists():
         globals.ARCHITECT_GUI.reset_Style(style)
 
 def on_delete_markets():
     try:
         if os.path.exists(globals.MARKET_LIB_PATH):
             os.remove(globals.MARKET_LIB_PATH)
-            if globals.ARCHITECT_GUI and globals.ARCHITECT_GUI.winfo_exists():
+            if helpers.gui_exists():
                 globals.ARCHITECT_GUI.refresh()
         old_library = os.path.join(globals.USER_DIR, "market_library.json")
         if os.path.exists(old_library):

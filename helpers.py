@@ -84,7 +84,7 @@ def load_gui_settings():
 
 def save_gui_settings():
     logger.info(f"Saving settings.")
-    if not globals.ARCHITECT_GUI or not globals.ARCHITECT_GUI.winfo_exists():
+    if not gui_exists():
         return
     try:
         for col, vis in globals.ARCHITECT_GUI.column_visibility.items():
@@ -633,7 +633,7 @@ def is_market_selling(material) -> bool:
 # --- Plugin Hooks ---
 def show_gui():
     from architecttrackergui import ArchitectTrackerGUI
-    if not globals.ARCHITECT_GUI or not globals.ARCHITECT_GUI.winfo_exists():
+    if not gui_exists():
         globals.ARCHITECT_GUI = ArchitectTrackerGUI(globals.EDMC_ROOT)
     else:
         globals.ARCHITECT_GUI.lift()
@@ -642,7 +642,7 @@ def show_gui():
 
 def toggle_gui():
     from architecttrackergui import ArchitectTrackerGUI
-    if not globals.ARCHITECT_GUI or not globals.ARCHITECT_GUI.winfo_exists():
+    if not gui_exists():
         globals.AT_BUTTON.set("Hide Architect Tracker (tracking)")
         globals.ARCHITECT_GUI = ArchitectTrackerGUI(globals.EDMC_ROOT)
     else:
@@ -654,7 +654,7 @@ def on_key_press(event):
        toggle_gui()
        return
 
-    if not globals.ARCHITECT_GUI or not globals.ARCHITECT_GUI.winfo_exists() or not globals.SITE_LOCATION:
+    if not gui_exists() or not globals.SITE_LOCATION:
         return
 
     if event.char == '>':
