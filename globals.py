@@ -14,7 +14,8 @@ ARCHITECT_GUI = None
 EDMCframe: Optional[tk.Frame] = None
 AT_BUTTON: Optional[tk.StringVar] = tk.StringVar(value="Show Architect Tracker (tracking disabled)")
 DEFAULT_COLUMNS = {"Material": True, "Required": True, "Provided": True, "Needed": True,
-                   "Pref Market": True, "Carrier Qty": True, "Ship Qty": True, "Shortfall": True
+                   "Pref Market": True, "System": True, "Carrier Qty": True, "Ship Qty": True,
+                   "Shortfall": True
                   }
 SHOW_UI_AT_START = True
 class SHIP_MODE(Enum):

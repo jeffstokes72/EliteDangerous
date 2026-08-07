@@ -33,6 +33,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     column_description["Provided"] = "The total amount delivered to the construction site."
     column_description["Needed"] = "Required minus Provided"
     column_description["Pref Market"] = "The closest or cheapest market that has the commodity."
+    column_description["System"] = "The star system that preferred market is in."
     column_description["Carrier Qty"] = "The total amount you fleet carrier has."
     column_description["Ship Qty"] = "The total amount your starship has."
     column_description["Shortfall"] = "Needed minus Carrier Qty minus Ship Qty (or 0 if negative)"
@@ -259,6 +260,8 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, " - no highlighting is done.\n\n")
     text_widget.insert(tk.END, "Other\n", 'underline')
     text_widget.insert(tk.END, "Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.\n")
+    text_widget.insert(tk.END, "Ctrl+click or Shift+click", 'big')
+    text_widget.insert(tk.END, " a row to copy that preferred market's system name to the clipboard.\n")
 
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
@@ -306,6 +309,23 @@ def build_import_widgets(frame):
                    ).grid(row=g_row, sticky="nw", padx=5)
     g_row += 1
 
+    pad_row = nb.Frame(frame)
+    pad_row.grid(row=g_row, sticky="nw", padx=5, pady=2)
+    nb.Label(pad_row, text="Landing pads").grid(row=1, column=0, sticky="w")
+    pad_choices = list(marketimport.PAD_SIZE_LABELS.values())
+    pad_value_by_label = {label: value for value, label in marketimport.PAD_SIZE_LABELS.items()}
+    pad_label_by_value = dict(marketimport.PAD_SIZE_LABELS)
+    pad_var = tk.StringVar(value=pad_label_by_value.get(
+        helpers.import_pad_size(), marketimport.PAD_SIZE_LABELS[marketimport.DEFAULT_PAD_SIZE]))
+    pad_opt = ttk.Combobox(pad_row, textvariable=pad_var, state="readonly", width=18,
+                           values=pad_choices)
+    pad_opt.grid(row=1, column=1, sticky="w", padx=4)
+    pad_opt.bind("<<ComboboxSelected>>",
+                 lambda e: config.set('ArchTrack_importPadSize',
+                                      pad_value_by_label.get(pad_var.get(),
+                                                             marketimport.DEFAULT_PAD_SIZE)))
+    g_row += 1
+
     import_button = nb.Button(frame, text="Import market data now", command=start_import)
     import_button.grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row += 1
@@ -319,8 +339,9 @@ def build_import_widgets(frame):
         "Prices other commanders have reported to EDDN, by way of spansh.co.uk, for "
         "markets you have not docked at yet.\n\n"
         f"Reads the {marketimport.MAX_PAGES * marketimport.PAGE_SIZE} markets nearest "
-        "your site. Out in colonisation space most prices are months old; anything over "
-        "a year is ignored. Docking somewhere replaces the imported price with what "
+        "your site. Large pads only excludes outposts; Large and Medium keeps them. "
+        "Out in colonisation space most prices are months old; anything over a year "
+        "is ignored. Docking somewhere replaces the imported price with what "
         "you saw.")).grid(row=g_row, sticky="nw", padx=5, pady=(4, 5))
     if import_running:
         import_button.config(state="disabled")
@@ -371,21 +392,24 @@ def start_import():
     radius = helpers.import_radius()
     orbital = helpers.import_orbital()
     surface = helpers.import_surface()
+    pad_size = helpers.import_pad_size()
 
     import_running = True
     enable_import_button(False)
     set_import_status("Asking Spansh...")
 
     thread = threading.Thread(target=run_import, name="ArchTrack-import",
-                              args=(system, radius, orbital, surface), daemon=True)
+                              args=(system, radius, orbital, surface, pad_size), daemon=True)
     thread.start()
 
-def run_import(system, radius, orbital, surface):
+def run_import(system, radius, orbital, surface, pad_size=marketimport.DEFAULT_PAD_SIZE):
     """Runs on a worker thread; everything it reports goes back through the main one."""
     global import_running
     try:
-        summary = marketimport.import_markets(system, radius, orbital, surface,
-                                              progress=lambda t: on_main_thread(set_import_status, t))
+        summary = marketimport.import_markets(
+            system, radius, orbital, surface,
+            progress=lambda t: on_main_thread(set_import_status, t),
+            pad_size=pad_size)
         message = str(summary)
     except marketimport.ImportError_ as e:
         message = str(e)

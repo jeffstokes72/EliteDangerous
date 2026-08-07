@@ -300,12 +300,18 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.tree = ttk.Treeview(frame, columns=cols, show="headings", style="ArchTrack.Treeview")
         for idx, c in enumerate(cols):
             self.tree.heading(c, text=self.column_names[idx])
-            self.tree.column(c, anchor='w' if c == "Material" else 'center')
+            self.tree.column(c, anchor='w' if c in ("Material", "Pref Market", "System") else 'center')
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.tree.yview, style="ArchTrack.Vertical.TScrollbar")
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.grid(row=1, column=0, columnspan=7, sticky="nsew")
         scrollbar.grid(row=1, column=7, sticky="ns")
+
+        # Ctrl/Shift+click a row to copy that preferred market's system name.
+        self.tree.bind("<Control-Button-1>", self.on_copy_system_click)
+        self.tree.bind("<Shift-Button-1>", self.on_copy_system_click)
+        self._copy_feedback_after = None
+        self._market_label_before_copy = None
 
         # Make row 1 expandable
         frame.rowconfigure(1, weight=1)
@@ -313,6 +319,57 @@ class ArchitectTrackerGUI(tk.Toplevel):
             frame.columnconfigure(i, weight=1 if i < 7 else 0)
 
         self.refresh_columns()  # Ensure columns initial visibility
+
+    def on_copy_system_click(self, event):
+        """Ctrl+click or Shift+click copies the row's System value to the clipboard."""
+        row = self.tree.identify_row(event.y)
+        if not row:
+            return
+        system = self.tree.set(row, "System")
+        if not system:
+            return "break"
+        try:
+            self.clipboard_clear()
+            self.clipboard_append(system)
+            # Keep the selection available after the window loses focus (Tk quirk).
+            self.update_idletasks()
+        except tk.TclError as e:
+            logger.error("Could not copy system name to the clipboard: %s", e)
+            return "break"
+        logger.info("Copied system name to clipboard: %s", system)
+        self._flash_copied_system(system)
+        return "break"
+
+    def _flash_copied_system(self, system):
+        """Briefly confirm the copy in the Preferred Market label."""
+        if not getattr(self, "market_name_label", None):
+            return
+        try:
+            if not self.market_name_label.winfo_exists():
+                return
+        except tk.TclError:
+            return
+        if self._copy_feedback_after is not None:
+            try:
+                self.after_cancel(self._copy_feedback_after)
+            except (tk.TclError, ValueError):
+                pass
+            self._copy_feedback_after = None
+        else:
+            self._market_label_before_copy = self.market_name_label.cget("text")
+        self.market_name_label.config(text=f"Copied: {system}")
+        self._copy_feedback_after = self.after(2000, self._restore_market_label)
+
+    def _restore_market_label(self):
+        self._copy_feedback_after = None
+        if self._market_label_before_copy is None:
+            return
+        try:
+            if self.market_name_label.winfo_exists():
+                self.market_name_label.config(text=self._market_label_before_copy)
+        except tk.TclError:
+            pass
+        self._market_label_before_copy = None
 
     def draw_canvas(self):
         if self.theme == "Dark Mode":
@@ -375,6 +432,13 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.canvas.itemconfig("canvas_button", fill=color)
         
     def clear_frame(self):
+        if getattr(self, "_copy_feedback_after", None) is not None:
+            try:
+                self.after_cancel(self._copy_feedback_after)
+            except (tk.TclError, ValueError):
+                pass
+            self._copy_feedback_after = None
+            self._market_label_before_copy = None
         for widget in self.winfo_children():
             widget.destroy()
         #the tooltip belongs to the canvas that just went with them
@@ -539,6 +603,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             need = req - prov
 
             pref_market = helpers.get_prefMarket_name(mat, market_lib, legacy_lib)
+            pref_system = helpers.get_prefMarket_system(mat, market_lib, legacy_lib)
 
             # Get fleet carrier and ship cargo quantities. Cargo.json still uses the
             # bare internal name, the carrier tracker normalises whatever it is given.
@@ -565,7 +630,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
             # Insert row into the tree view
             self.tree.insert("", "end", values=(locName, req, prov, need, pref_market,
-                                               fc_qty, ship_qty, short), tags=tuple(tags))
+                                               pref_system, fc_qty, ship_qty, short),
+                             tags=tuple(tags))
 
             rows_index += 1
             req_total = req_total + req
@@ -581,8 +647,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
         total_row_tag = 'evenrow' if rows_index % 2 == 0 else 'oddrow'
         tags = (total_row_tag, 'totalsrow')
-        self.tree.insert("", "end", values=("Totals", req_total, prov_total, need_total, market_note,
-                                               fc_total, ship_total, short_total), tags=tuple(tags))
+        self.tree.insert("", "end", values=("Totals", req_total, prov_total, need_total,
+                                               market_note, "",
+                                               fc_total, ship_total, short_total), tags=tags)
 
     def on_close(self):
         globals.AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
