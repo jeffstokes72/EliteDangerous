@@ -260,6 +260,8 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, " - no highlighting is done.\n\n")
     text_widget.insert(tk.END, "Other\n", 'underline')
     text_widget.insert(tk.END, "Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.\n")
+    text_widget.insert(tk.END, "Ctrl+click or Shift+click", 'big')
+    text_widget.insert(tk.END, " a row to copy that preferred market's system name to the clipboard.\n")
 
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)

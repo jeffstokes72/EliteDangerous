@@ -95,6 +95,7 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 
 ### Preferred Markets
 - The "Preferred Market" column displays markets you have found that sell construction commodities. The matching **System** column shows which star system that station is in, so you can plot a route without bookmarking every station by name.
+- **Ctrl+click** or **Shift+click** a row to copy that System name to the clipboard (handy for the galaxy map search box). The Preferred Market label briefly shows `Copied: …` as confirmation.
 - Markets can be filtered using the $\Ly\Alt and O\S buttons at the top of the inteface. Filtering includes:
   - $ : the station that has the cheapest sell price that was below your construction sites buy price.
   - Ly : the station that is closest to your colony system whose sell price was below your construction sites buy price.
@@ -146,3 +147,4 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
  for taking time to report bugs and work with me to fix them. Added log viewer to settings tab which should helppeople report bugs.
 + 2026/08/06 : [Version 2.0] Fork release with Linux journal discovery (Steam/Proton/Flatpak/Snap), crash fixes when the tracker window is closed, BuyPrice preferred-market tracking, Spansh nearby-market import, settings persistence with the window closed, and a fix so the EDMC settings tab no longer vanishes when opening Architect Tracker preferences.
 + 2026/08/07 : Added a System column next to Pref Market, and an L / L&M landing-pad filter on the Spansh import panel.
++ 2026/08/07 : Ctrl+click or Shift+click a row to copy the System name to the clipboard.

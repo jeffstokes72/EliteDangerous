@@ -307,12 +307,69 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.tree.grid(row=1, column=0, columnspan=7, sticky="nsew")
         scrollbar.grid(row=1, column=7, sticky="ns")
 
+        # Ctrl/Shift+click a row to copy that preferred market's system name.
+        self.tree.bind("<Control-Button-1>", self.on_copy_system_click)
+        self.tree.bind("<Shift-Button-1>", self.on_copy_system_click)
+        self._copy_feedback_after = None
+        self._market_label_before_copy = None
+
         # Make row 1 expandable
         frame.rowconfigure(1, weight=1)
         for i in range(8):
             frame.columnconfigure(i, weight=1 if i < 7 else 0)
 
         self.refresh_columns()  # Ensure columns initial visibility
+
+    def on_copy_system_click(self, event):
+        """Ctrl+click or Shift+click copies the row's System value to the clipboard."""
+        row = self.tree.identify_row(event.y)
+        if not row:
+            return
+        system = self.tree.set(row, "System")
+        if not system:
+            return "break"
+        try:
+            self.clipboard_clear()
+            self.clipboard_append(system)
+            # Keep the selection available after the window loses focus (Tk quirk).
+            self.update_idletasks()
+        except tk.TclError as e:
+            logger.error("Could not copy system name to the clipboard: %s", e)
+            return "break"
+        logger.info("Copied system name to clipboard: %s", system)
+        self._flash_copied_system(system)
+        return "break"
+
+    def _flash_copied_system(self, system):
+        """Briefly confirm the copy in the Preferred Market label."""
+        if not getattr(self, "market_name_label", None):
+            return
+        try:
+            if not self.market_name_label.winfo_exists():
+                return
+        except tk.TclError:
+            return
+        if self._copy_feedback_after is not None:
+            try:
+                self.after_cancel(self._copy_feedback_after)
+            except (tk.TclError, ValueError):
+                pass
+            self._copy_feedback_after = None
+        else:
+            self._market_label_before_copy = self.market_name_label.cget("text")
+        self.market_name_label.config(text=f"Copied: {system}")
+        self._copy_feedback_after = self.after(2000, self._restore_market_label)
+
+    def _restore_market_label(self):
+        self._copy_feedback_after = None
+        if self._market_label_before_copy is None:
+            return
+        try:
+            if self.market_name_label.winfo_exists():
+                self.market_name_label.config(text=self._market_label_before_copy)
+        except tk.TclError:
+            pass
+        self._market_label_before_copy = None
 
     def draw_canvas(self):
         if self.theme == "Dark Mode":
@@ -375,6 +432,13 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.canvas.itemconfig("canvas_button", fill=color)
         
     def clear_frame(self):
+        if getattr(self, "_copy_feedback_after", None) is not None:
+            try:
+                self.after_cancel(self._copy_feedback_after)
+            except (tk.TclError, ValueError):
+                pass
+            self._copy_feedback_after = None
+            self._market_label_before_copy = None
         for widget in self.winfo_children():
             widget.destroy()
         #the tooltip belongs to the canvas that just went with them

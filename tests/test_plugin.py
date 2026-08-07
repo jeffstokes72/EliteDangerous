@@ -515,6 +515,40 @@ class TestTrackerWindow(PluginTestCase):
         self.assertEqual(len(rows), 2)  # one commodity plus the totals row
         self.assertEqual(window.tree.item(rows[0])["values"][:4], ["Steel", 100, 10, 90])
 
+    def test_ctrl_click_copies_the_system_name(self):
+        self.save_a_site()
+        self.write_json(g.MARKET_LIB_PATH, {
+            "Commodities": {"$steel_name;": {
+                "CheapMarkets": {"Orbital": {"Price": 2000, "StationID": 42}}}},
+            "Markets": [{"StationName": "Jameson Memorial", "System": "Shinrarta Dezhra",
+                         "Location": [1.0, 2.0, 3.0], "StationID": 42, "Type": "Orbital"}]})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(window.tree.set(row, "System"), "Shinrarta Dezhra")
+        bbox = window.tree.bbox(row)
+        self.assertTrue(bbox)
+        event = type("E", (), {"y": bbox[1] + bbox[3] // 2})()
+        result = window.on_copy_system_click(event)
+        self.assertEqual(result, "break")
+        self.assertEqual(window.clipboard_get(), "Shinrarta Dezhra")
+        self.assertIn("Copied: Shinrarta Dezhra", window.market_name_label.cget("text"))
+
+    def test_copy_ignores_empty_system_cells(self):
+        self.save_a_site()
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        row = window.tree.get_children()[0]  # no preferred market yet
+        self.assertEqual(window.tree.set(row, "System"), "")
+        bbox = window.tree.bbox(row)
+        event = type("E", (), {"y": bbox[1] + bbox[3] // 2})()
+        window.clipboard_clear()
+        window.clipboard_append("keep-me")
+        self.assertEqual(window.on_copy_system_click(event), "break")
+        self.assertEqual(window.clipboard_get(), "keep-me")
+
     def test_a_column_renamed_before_the_table_existed_is_used_when_it_is_built(self):
         window = self.open_window()
         self.assertFalse(window.has_table)
