@@ -300,7 +300,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.tree = ttk.Treeview(frame, columns=cols, show="headings", style="ArchTrack.Treeview")
         for idx, c in enumerate(cols):
             self.tree.heading(c, text=self.column_names[idx])
-            self.tree.column(c, anchor='w' if c == "Material" else 'center')
+            self.tree.column(c, anchor='w' if c in ("Material", "Pref Market", "System") else 'center')
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.tree.yview, style="ArchTrack.Vertical.TScrollbar")
         self.tree.configure(yscrollcommand=scrollbar.set)
@@ -539,6 +539,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             need = req - prov
 
             pref_market = helpers.get_prefMarket_name(mat, market_lib, legacy_lib)
+            pref_system = helpers.get_prefMarket_system(mat, market_lib, legacy_lib)
 
             # Get fleet carrier and ship cargo quantities. Cargo.json still uses the
             # bare internal name, the carrier tracker normalises whatever it is given.
@@ -565,7 +566,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
             # Insert row into the tree view
             self.tree.insert("", "end", values=(locName, req, prov, need, pref_market,
-                                               fc_qty, ship_qty, short), tags=tuple(tags))
+                                               pref_system, fc_qty, ship_qty, short),
+                             tags=tuple(tags))
 
             rows_index += 1
             req_total = req_total + req
@@ -581,8 +583,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
         total_row_tag = 'evenrow' if rows_index % 2 == 0 else 'oddrow'
         tags = (total_row_tag, 'totalsrow')
-        self.tree.insert("", "end", values=("Totals", req_total, prov_total, need_total, market_note,
-                                               fc_total, ship_total, short_total), tags=tuple(tags))
+        self.tree.insert("", "end", values=("Totals", req_total, prov_total, need_total,
+                                               market_note, "",
+                                               fc_total, ship_total, short_total), tags=tags)
 
     def on_close(self):
         globals.AT_BUTTON.set("Show Architect Tracker (tracking disabled)")

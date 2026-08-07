@@ -301,6 +301,18 @@ class TestMarketLibrary(PluginTestCase):
         entry = helpers.get_market_library()["Commodities"][self.STEEL]["CheapMarkets"]["Orbital"]
         self.assertEqual(entry["Price"], 4000)
 
+    def test_docking_records_the_system_name(self):
+        self.write_json(g.SAVE_FILE, self.site(location=[1.0, 2.0, 3.0]))
+        self.write_json(g.MARKET_JSON, self.market(price=4000))
+        helpers.load_facility_requirements()
+        g.CURRENT_LOCATION = (10.0, 20.0, 30.0)
+        g.CURRENT_SYSTEM = "Sol"
+        helpers.update_market_library()
+        station = helpers.get_market_by_station_id(
+            helpers.get_market_library(), 128666762)
+        self.assertEqual(station["System"], "Sol")
+        self.assertEqual(helpers.get_prefMarket_system(self.STEEL), "Sol")
+
 
 class TestSettings(PluginTestCase):
     def test_defaults_when_nothing_has_been_saved(self):
@@ -329,6 +341,19 @@ class TestSettings(PluginTestCase):
         self.assertEqual(len(names), len(g.DEFAULT_COLUMNS))
         self.assertEqual(names[:2], ["Material", "Required"])
         self.assertEqual(names[2], list(g.DEFAULT_COLUMNS)[2])
+
+    def test_pre_system_column_renames_are_kept(self):
+        # Eight names from before System was inserted after Pref Market.
+        config.set("ArchTrack_cols", [
+            "Material", "Required", "Provided", "Left", "Pref Market",
+            "FC", "Ship", "Still to buy"])
+        names = helpers.load_column_names()
+        self.assertEqual(len(names), len(g.DEFAULT_COLUMNS))
+        self.assertEqual(names[3], "Left")
+        self.assertEqual(names[5], "System")
+        self.assertEqual(names[6], "FC")
+        self.assertEqual(names[7], "Ship")
+        self.assertEqual(names[8], "Still to buy")
 
     def test_show_ui_at_start_defaults_to_true(self):
         self.assertTrue(helpers.show_ui_at_start())
@@ -688,6 +713,25 @@ class TestMarketImport(PluginTestCase):
             self.assertEqual("Coriolis Starport" in types, expect_orbital)
             self.assertEqual("Planetary Outpost" in types, expect_surface)
 
+    def test_pad_filter_helpers(self):
+        large = {"has_large_pad": True, "large_pads": 4, "medium_pads": 8}
+        medium = {"has_large_pad": False, "large_pads": 0, "medium_pads": 1}
+        small = {"has_large_pad": False, "large_pads": 0, "medium_pads": 0, "small_pads": 2}
+        unknown = {"name": "Old Dump"}
+        self.assertTrue(marketimport.fits_pad_filter(large, marketimport.PAD_LARGE))
+        self.assertFalse(marketimport.fits_pad_filter(medium, marketimport.PAD_LARGE))
+        self.assertTrue(marketimport.fits_pad_filter(large, marketimport.PAD_LARGE_MEDIUM))
+        self.assertTrue(marketimport.fits_pad_filter(medium, marketimport.PAD_LARGE_MEDIUM))
+        self.assertFalse(marketimport.fits_pad_filter(small, marketimport.PAD_LARGE_MEDIUM))
+        self.assertTrue(marketimport.fits_pad_filter(unknown, marketimport.PAD_LARGE_MEDIUM))
+
+    def test_import_pad_size_setting(self):
+        self.assertEqual(helpers.import_pad_size(), marketimport.PAD_LARGE_MEDIUM)
+        config.set("ArchTrack_importPadSize", marketimport.PAD_LARGE)
+        self.assertEqual(helpers.import_pad_size(), marketimport.PAD_LARGE)
+        config.set("ArchTrack_importPadSize", "nonsense")
+        self.assertEqual(helpers.import_pad_size(), marketimport.PAD_LARGE_MEDIUM)
+
     def test_the_radius_is_clamped(self):
         self.save_site()
         for asked, sent in ((1, "5"), (25, "25"), (50, "50"), (5000, "50")):
@@ -717,6 +761,41 @@ class TestMarketImport(PluginTestCase):
                          [source["system_x"], source["system_y"], source["system_z"]])
         self.assertEqual(station["Type"], "Orbital")
         self.assertEqual(station["StationID"], source["market_id"])
+        self.assertEqual(station["System"], source["system_name"])
+
+    def test_the_pad_filter_asks_spansh_for_large_only(self):
+        self.save_site()
+        fake = self.serve()
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW,
+                                    pad_size=marketimport.PAD_LARGE)
+        self.assertEqual(fake.requests[0]["body"]["filters"]["has_large_pad"],
+                         {"value": True})
+
+    def test_large_and_medium_does_not_send_the_large_pad_filter(self):
+        self.save_site()
+        fake = self.serve()
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW,
+                                    pad_size=marketimport.PAD_LARGE_MEDIUM)
+        self.assertNotIn("has_large_pad", fake.requests[0]["body"]["filters"])
+
+    def test_large_and_medium_skips_small_only_pads(self):
+        self.save_site()
+        page = json.loads(json.dumps(self.sample))
+        # Force a known supplier down to small pads only; L/M must drop it.
+        powell = next(s for s in page["results"] if s["name"] == "Powell High")
+        powell.update(has_large_pad=False, large_pads=0, medium_pads=0, small_pads=4)
+        self.serve([page])
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW,
+                                    pad_size=marketimport.PAD_LARGE_MEDIUM)
+        names = {m["StationName"] for m in helpers.get_market_library()["Markets"]}
+        self.assertNotIn("Powell High", names)
+
+    def test_the_system_column_can_then_answer(self):
+        self.save_site()
+        self.serve()
+        marketimport.import_markets("Vulcan", 25, True, True, now=self.NOW)
+        system = helpers.get_prefMarket_system("$computercomponents_name;")
+        self.assertEqual(system, "Wolf 359")
 
     def test_only_commodities_a_site_still_needs_are_imported(self):
         self.save_site(needs=("$computercomponents_name;",))

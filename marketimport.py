@@ -42,6 +42,16 @@ MIN_RADIUS = 5
 MAX_RADIUS = 50
 DEFAULT_RADIUS = 25
 
+# Landing pad filter for the Spansh query. Large ships need L; medium ships can
+# use L or M. Small-only pads are never useful for colonisation hauling.
+PAD_LARGE = "L"
+PAD_LARGE_MEDIUM = "L/M"
+DEFAULT_PAD_SIZE = PAD_LARGE_MEDIUM
+PAD_SIZE_LABELS = {
+    PAD_LARGE: "Large pads only",
+    PAD_LARGE_MEDIUM: "Large and Medium",
+}
+
 # Station types with a commodity market you can dock at and buy from. Fleet
 # carriers and megaships are deliberately absent because they relocate, and the
 # plugin tracks your own carrier separately. So are construction depots, which
@@ -80,14 +90,39 @@ def station_types(include_orbital, include_surface):
     return types
 
 
-def search_page(system, radius, types, page):
+def fits_pad_filter(station, pad_size):
+    """Whether a Spansh station record matches the commander's pad filter.
+
+    Large-only is enforced in the Spansh query via has_large_pad. L/M still
+    drops small-only pads client-side when pad counts are present; missing pad
+    fields (older dumps) are kept rather than discarding useful prices.
+    """
+    if pad_size == PAD_LARGE:
+        if "has_large_pad" in station:
+            return bool(station.get("has_large_pad"))
+        return (station.get("large_pads") or 0) > 0
+    # Large and Medium
+    large = station.get("large_pads")
+    medium = station.get("medium_pads")
+    if large is None and medium is None and "has_large_pad" not in station:
+        return True
+    return (large or 0) > 0 or (medium or 0) > 0 or bool(station.get("has_large_pad"))
+
+
+def search_page(system, radius, types, page, pad_size=DEFAULT_PAD_SIZE):
     """One page of stations around `system`, nearest first."""
+    filters = {
+        "distance": {"min": "0", "max": str(radius)},
+        "type": {"value": types},
+        "has_market": {"value": True},
+    }
+    # Spansh's has_large_pad filter is the reliable way to ask for L pads.
+    # There is no equivalent "has medium or large" filter, so L/M is filtered
+    # after the reply arrives.
+    if pad_size == PAD_LARGE:
+        filters["has_large_pad"] = {"value": True}
     payload = {
-        "filters": {
-            "distance": {"min": "0", "max": str(radius)},
-            "type": {"value": types},
-            "has_market": {"value": True},
-        },
+        "filters": filters,
         "sort": [{"distance": {"direction": "asc"}}],
         "size": PAGE_SIZE,
         "page": page,
@@ -189,7 +224,8 @@ def wanted_commodities():
     return wanted
 
 
-def import_markets(system, radius, include_orbital, include_surface, progress=None, now=None):
+def import_markets(system, radius, include_orbital, include_surface,
+                   progress=None, now=None, pad_size=DEFAULT_PAD_SIZE):
     """Pull nearby markets into the market library. Runs off the main thread."""
     global _last_import_at
     import helpers
@@ -200,6 +236,8 @@ def import_markets(system, radius, include_orbital, include_surface, progress=No
     types = station_types(include_orbital, include_surface)
     if not types:
         raise ImportError_("Choose orbital markets, surface markets, or both.")
+    if pad_size not in (PAD_LARGE, PAD_LARGE_MEDIUM):
+        pad_size = DEFAULT_PAD_SIZE
     radius = max(MIN_RADIUS, min(MAX_RADIUS, int(radius)))
 
     wanted = wanted_commodities()
@@ -212,7 +250,8 @@ def import_markets(system, radius, include_orbital, include_surface, progress=No
         if progress:
             progress(text)
 
-    report(f"Looking for markets within {radius} ly of {system}...")
+    pad_label = PAD_SIZE_LABELS.get(pad_size, pad_size)
+    report(f"Looking for {pad_label.lower()} markets within {radius} ly of {system}...")
 
     summary = Summary()
     market_lib = helpers.get_market_library()
@@ -222,7 +261,7 @@ def import_markets(system, radius, include_orbital, include_surface, progress=No
     for page in range(MAX_PAGES):
         if page:
             time.sleep(PAGE_PAUSE)
-        data, nbytes = search_page(system, radius, types, page)
+        data, nbytes = search_page(system, radius, types, page, pad_size=pad_size)
         summary.pages += 1
         summary.bytes += nbytes
         summary.total_available = data.get("count") or 0
@@ -234,6 +273,8 @@ def import_markets(system, radius, include_orbital, include_surface, progress=No
             market = station.get("market")
             if not market:
                 continue
+            if not fits_pad_filter(station, pad_size):
+                continue
             summary.markets_seen += 1
             if is_stale(station, now):
                 summary.markets_stale += 1
@@ -244,6 +285,7 @@ def import_markets(system, radius, include_orbital, include_surface, progress=No
             if None in location:
                 continue
             station_type = station_type_of(station)
+            system_name = station.get("system_name")
             used = False
             for row in market:
                 if row.get("supply", 0) <= 0:
@@ -257,7 +299,7 @@ def import_markets(system, radius, include_orbital, include_surface, progress=No
                 helpers.record_market_price(
                     market_lib, internal, price, station.get("name"),
                     station.get("market_id"), station_type, location,
-                    site_prices=site_prices)
+                    site_prices=site_prices, system=system_name)
                 summary.prices += 1
                 used = True
             if used:

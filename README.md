@@ -85,13 +85,16 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 
 ### Importing Nearby Markets
 - The "Pref Market" column only knows about markets you have personally docked at. The settings tab can fill in the rest: press "Import market data now" and the plugin looks up the markets around your construction site and adds their prices to the same list.
-- Set how far to look (5 to 50 ly, 25 by default) and whether you want orbital markets, surface markets or both. The search is measured from your construction site, not from wherever you happen to be.
+- Set how far to look (5 to 50 ly, 25 by default), whether you want orbital markets, surface markets or both, and a landing-pad filter:
+  - **Large pads only** — starports and other L-pad markets (excludes outposts).
+  - **Large and Medium** — also keeps medium-pad markets such as outposts (the default).
+- The search is measured from your construction site, not from wherever you happen to be.
 - The prices come from <a href="https://spansh.co.uk">spansh.co.uk</a>, which collects what other commanders report to EDDN. They are a donation funded community service, so the plugin only asks when you press the button, at most once a minute, and stops after the 200 markets nearest your site.
 - Out in colonisation space most markets have not been visited by anyone in months, so expect the prices to be older than the ones you collect yourself. The plugin tells you how old the oldest one was and ignores anything over a year. Docking at a market always replaces the imported price with what you actually saw.
 - Fleet carriers and megaships are left out on purpose because they move.
 
 ### Preferred Markets
-- The "Preferred Market" column displays markets you have found that sell construction commodities. The system name is not shown so it is suggested that you bookmark the stations.
+- The "Preferred Market" column displays markets you have found that sell construction commodities. The matching **System** column shows which star system that station is in, so you can plot a route without bookmarking every station by name.
 - Markets can be filtered using the $\Ly\Alt and O\S buttons at the top of the inteface. Filtering includes:
   - $ : the station that has the cheapest sell price that was below your construction sites buy price.
   - Ly : the station that is closest to your colony system whose sell price was below your construction sites buy price.
@@ -142,3 +145,4 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 + 2026/06/11 : [Version 1.6] Major bug fixes for Linux users. Special thanks to Commanders PatientNr0, mgrzegor, Fasgort and LiamtheLion879
  for taking time to report bugs and work with me to fix them. Added log viewer to settings tab which should helppeople report bugs.
 + 2026/08/06 : [Version 2.0] Fork release with Linux journal discovery (Steam/Proton/Flatpak/Snap), crash fixes when the tracker window is closed, BuyPrice preferred-market tracking, Spansh nearby-market import, settings persistence with the window closed, and a fix so the EDMC settings tab no longer vanishes when opening Architect Tracker preferences.
++ 2026/08/07 : Added a System column next to Pref Market, and an L / L&M landing-pad filter on the Spansh import panel.

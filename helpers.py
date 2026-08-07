@@ -67,6 +67,13 @@ def load_column_names():
         logger.info("Column names not found using default settings.")
         return cols
     saved = config.get_list('ArchTrack_cols')
+    # Pre-System builds stored eight names; insert the default System header so
+    # Carrier Qty / Ship Qty / Shortfall keep the labels the commander chose.
+    if len(saved) == len(cols) - 1 and "System" in cols:
+        system_idx = cols.index("System")
+        merged = list(saved)
+        merged.insert(system_idx, cols[system_idx])
+        saved = merged
     #a list saved by another version may not line up with the columns we have now
     return [str(saved[i]) if i < len(saved) and saved[i] else cols[i] for i in range(len(cols))]
 
@@ -143,6 +150,16 @@ def import_surface() -> bool:
     if config.get('ArchTrack_importSurface') is None:
         return True
     return config.get_bool('ArchTrack_importSurface')
+
+def import_pad_size() -> str:
+    """Landing pad filter for Spansh imports: large only, or large and medium."""
+    import marketimport
+    if config.get('ArchTrack_importPadSize') is None:
+        return marketimport.PAD_LARGE_MEDIUM
+    value = config.get_str('ArchTrack_importPadSize')
+    if value not in (marketimport.PAD_LARGE, marketimport.PAD_LARGE_MEDIUM):
+        return marketimport.PAD_LARGE_MEDIUM
+    return value
 
 def site_system() -> str:
     """The system to search around: the shown site's, or wherever we are now."""
@@ -388,15 +405,19 @@ def get_market_by_station_id(data, station_id):
             return market
     return None
 
-def ensure_market_exists(market_lib, station_name, station_id, location=None, station_type=None):
+def ensure_market_exists(market_lib, station_name, station_id, location=None,
+                         station_type=None, system=None):
     if location is None:
         location = globals.CURRENT_LOCATION
     if station_type is None:
         station_type = globals.DOCKED_STATION_TYPE
+    if system is None:
+        system = globals.CURRENT_SYSTEM
     market = get_market_by_station_id(market_lib, station_id)
     if market is None:
         market_lib["Markets"].append({
             "StationName": station_name,
+            "System": system,
             "Location": location,
             "StationID": station_id,
             "Type": station_type.name
@@ -407,6 +428,9 @@ def ensure_market_exists(market_lib, station_name, station_id, location=None, st
         #recorded before we knew where we were, so fill it in now
         market["Location"] = location
         logger.debug("Filled in the location of market: %s", station_name)
+    if system and not market.get("System"):
+        market["System"] = system
+        logger.debug("Filled in the system of market: %s", station_name)
     if station_name and market.get("StationName") != station_name:
         market["StationName"] = station_name
 
@@ -414,14 +438,15 @@ def ensure_market_exists(market_lib, station_name, station_id, location=None, st
 # wherever it came from: docking somewhere, or an import. Keeping both callers
 # on the same rules is the point, so the two sources stay comparable.
 def record_market_price(market_lib, item_name, price, station_name, station_id,
-                        station_type, location, site_prices=None):
+                        station_type, location, site_prices=None, system=None):
     if not item_name or not station_id or not price:
         return
     type_name = station_type.name
     commodity = market_lib["Commodities"].setdefault(item_name, {})
 
     def add_market():
-        ensure_market_exists(market_lib, station_name, station_id, location, station_type)
+        ensure_market_exists(market_lib, station_name, station_id, location,
+                             station_type, system)
 
     def distance_from_site():
         if not location or not globals.SITE_LOCATION:
@@ -546,7 +571,8 @@ def update_market_library() -> None:
                         not_selling_list.remove(item_name)
                     record_market_price(market_lib, item_name, m_price, station_name,
                                         station_id, globals.DOCKED_STATION_TYPE,
-                                        globals.CURRENT_LOCATION, site_prices)
+                                        globals.CURRENT_LOCATION, site_prices,
+                                        system=globals.CURRENT_SYSTEM)
 
         if not_selling_list != None:
             purge_market_from_other_commodities(market_lib, not_selling_list, station_id, station_name) #removes station ID if no longer selling commodities
@@ -694,16 +720,14 @@ def get_old_prefMarket_name(material, market_lib=None): #see if pre v1.3 market 
     
     return "Old Err"
 
-def get_prefMarket_name(material, market_lib=None, legacy_lib=None):
-    """Name of the market to buy `material` from. Callers rendering a whole table
-    should load the libraries once and pass them in rather than paying for a
-    re-read of both JSON files per row."""
+def get_prefMarket_entry(material, market_lib=None, legacy_lib=None):
+    """Preferred market dict for `material`, or None. Shared by name/system lookups."""
     try:
         if market_lib is None:
             market_lib = get_market_library()
         resource = market_lib["Commodities"].get(material)
         if not resource:
-            return get_old_prefMarket_name(material, legacy_lib)
+            return None
 
         pref = getPreferedMarket()
         if pref == globals.MARKET_MODE.Cheapest:
@@ -716,7 +740,7 @@ def get_prefMarket_name(material, market_lib=None, legacy_lib=None):
         if not markets:
             markets = resource.get("AlternateMarkets")
             if not markets:
-                return get_old_prefMarket_name(material, legacy_lib)
+                return None
 
         if getPreferedType() == globals.STATION_TYPE.Orbital:
             preferred, fallback = globals.STATION_TYPE.Orbital, globals.STATION_TYPE.Surface
@@ -724,27 +748,38 @@ def get_prefMarket_name(material, market_lib=None, legacy_lib=None):
             preferred, fallback = globals.STATION_TYPE.Surface, globals.STATION_TYPE.Orbital
 
         m = markets.get(preferred.name)
-        if m:
-            prefix = ""
-        else:
+        prefix = ""
+        if not m:
             m = markets.get(fallback.name)
             prefix = "*"  #mark the non-prefered type
         if not m:
-            return get_old_prefMarket_name(material, legacy_lib)
+            return None
 
         station = get_market_by_station_id(market_lib, m["StationID"])
         if not station or not station.get("StationName"):
-            #the market was dropped from the library, fall back to whatever we used to know
-            return get_old_prefMarket_name(material, legacy_lib)
-        return prefix + station["StationName"]
+            return None
+        return {"prefix": prefix, "station": station}
 
-    except json.JSONDecodeError as e:
-        logger.error("JSON decode error: %s", e)
     except Exception as e:
         logger.error("Unexpected error: %s", e)
         logger.error("Traceback:\n%s", traceback.format_exc())
+        return None
 
-    return "Error"
+def get_prefMarket_name(material, market_lib=None, legacy_lib=None):
+    """Name of the market to buy `material` from. Callers rendering a whole table
+    should load the libraries once and pass them in rather than paying for a
+    re-read of both JSON files per row."""
+    entry = get_prefMarket_entry(material, market_lib, legacy_lib)
+    if entry:
+        return entry["prefix"] + entry["station"]["StationName"]
+    return get_old_prefMarket_name(material, legacy_lib)
+
+def get_prefMarket_system(material, market_lib=None, legacy_lib=None):
+    """System of the preferred market for `material`, or blank if unknown."""
+    entry = get_prefMarket_entry(material, market_lib, legacy_lib)
+    if not entry:
+        return ""
+    return entry["station"].get("System") or ""
 
 def load_market_stock() -> set:
     """Names of everything the market we are docked at currently has in stock."""

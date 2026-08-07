@@ -21,7 +21,11 @@
      "sell_price": 2738,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": false,
+   "large_pads": 0,
+   "medium_pads": 1,
+   "small_pads": 2
   },
   {
    "name": "Beveridge Enterprise",
@@ -523,7 +527,11 @@
      "sell_price": 9343,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": true,
+   "large_pads": 6,
+   "medium_pads": 12,
+   "small_pads": 8
   },
   {
    "name": "Powell High",
@@ -1241,7 +1249,11 @@
      "sell_price": 8949,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": true,
+   "large_pads": 4,
+   "medium_pads": 8,
+   "small_pads": 6
   },
   {
    "name": "Tryggvason Installation",
@@ -1991,7 +2003,11 @@
      "sell_price": 8949,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": true,
+   "large_pads": 3,
+   "medium_pads": 4,
+   "small_pads": 2
   },
   {
    "name": "Lomas Orbiter",
@@ -2709,7 +2725,11 @@
      "sell_price": 8949,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": true,
+   "large_pads": 6,
+   "medium_pads": 12,
+   "small_pads": 8
   },
   {
    "name": "Cayley Enterprise",
@@ -5665,7 +5685,11 @@
      "sell_price": 793,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": false,
+   "large_pads": 0,
+   "medium_pads": 1,
+   "small_pads": 2
   },
   {
    "name": "Amis Installation",
@@ -6047,7 +6071,11 @@
      "sell_price": 8801,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": false,
+   "large_pads": 0,
+   "medium_pads": 1,
+   "small_pads": 2
   },
   {
    "name": "Stuart Prospect",
@@ -6429,7 +6457,11 @@
      "sell_price": 8801,
      "supply": 0
     }
-   ]
+   ],
+   "has_large_pad": false,
+   "large_pads": 0,
+   "medium_pads": 1,
+   "small_pads": 2
   }
  ]
 }
