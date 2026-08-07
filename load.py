@@ -1,4 +1,4 @@
-__version__ = "2.0"
+__version__ = "2.1"
 
 """
 Displays commodities required, provided and needed when you land at a construction site,
