@@ -34,9 +34,10 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     column_description["Needed"] = "Required minus Provided"
     column_description["Pref Market"] = "The closest or cheapest market that has the commodity."
     column_description["System"] = "The star system that preferred market is in."
+    column_description["Distance"] = "How far in ly that preferred market is from the construction site."
     column_description["Carrier Qty"] = "The total amount you fleet carrier has."
     column_description["Ship Qty"] = "The total amount your starship has."
-    column_description["Shortfall"] = "Needed minus Carrier Qty minus Ship Qty (or 0 if negative)"
+    column_description["Shortfall"] = "Needed minus Carrier Qty minus Ship Qty (or 0 if negative). Click the header to sort."
 
     # PREFS FRAME ************************************************
     pref_frame = nb.Frame(parent)
