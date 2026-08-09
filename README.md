@@ -28,7 +28,7 @@ Quit EDMC first. The plugin folder must contain `load.py` directly — not insid
 - Windows: `%LOCALAPPDATA%\EDMarketConnector\plugins\`
 - macOS: `~/Library/Application Support/EDMarketConnector/plugins/`
 
-**Recommended:** download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker 2.1</a> (`ArchitectTracker-2.1.zip`). That zip has `load.py` at the root — extract it straight into the `ArchitectTracker` plugins folder.
+**Recommended:** download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker 2.2</a> (`ArchitectTracker-2.2.zip`). That zip has `load.py` at the root — extract it straight into the `ArchitectTracker` plugins folder.
 
 **Linux (copy and paste):**
 
@@ -40,8 +40,8 @@ PLUGIN_DIR="$HOME/.local/share/EDMarketConnector/plugins/ArchitectTracker"
 rm -rf "$PLUGIN_DIR"
 mkdir -p "$PLUGIN_DIR"
 cd /tmp
-curl -L -o ArchitectTracker-2.1.zip https://github.com/jeffstokes72/EliteDangerous/releases/download/v2.1/ArchitectTracker-2.1.zip
-unzip -o ArchitectTracker-2.1.zip -d "$PLUGIN_DIR"
+curl -L -o ArchitectTracker-2.2.zip https://github.com/jeffstokes72/EliteDangerous/releases/download/v2.2/ArchitectTracker-2.2.zip
+unzip -o ArchitectTracker-2.2.zip -d "$PLUGIN_DIR"
 
 # Must print OK.
 test -f "$PLUGIN_DIR/load.py" && echo "OK: load.py is in the right place" || echo "BROKEN"
@@ -50,7 +50,7 @@ test -f "$PLUGIN_DIR/load.py" && echo "OK: load.py is in the right place" || ech
 Your construction sites and market library stay in `~/.config/ArchitectTracker/` (or the equivalent on Windows/macOS) and are not touched by reinstalling the plugin.
 
 **Manual / zip install**
-1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker-2.1.zip</a> (or clone this repo).
+1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker-2.2.zip</a> (or clone this repo).
 2. Create a directory called `ArchitectTracker` (no spaces) inside EDMC's plugins folder.
 3. Put the plugin files **directly** in that directory. After install you must have:
    `.../plugins/ArchitectTracker/load.py`
@@ -151,3 +151,4 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
  for taking time to report bugs and work with me to fix them. Added log viewer to settings tab which should helppeople report bugs.
 + 2026/08/06 : [Version 2.0] Fork release with Linux journal discovery (Steam/Proton/Flatpak/Snap), crash fixes when the tracker window is closed, BuyPrice preferred-market tracking, Spansh nearby-market import, settings persistence with the window closed, and a fix so the EDMC settings tab no longer vanishes when opening Architect Tracker preferences.
 + 2026/08/07 : [Version 2.1] Added a System column next to Pref Market, an L / L&M landing-pad filter on the Spansh import panel, and Ctrl+click / Shift+click to copy a system name to the clipboard.
++ 2026/08/09 : [Version 2.2] Sortable commodity columns (click Shortfall for biggest buys first), Distance (ly) to the preferred market, slightly larger tracker font, plus a bug scrub for site Location sync, station name matching, Cheap/Closest demotion, and split cargo stacks.
