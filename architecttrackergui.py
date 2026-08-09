@@ -34,8 +34,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.setStayOnTop(self.win_top)
         self.setTransparentBg(self.trans_bg)
         self.setStyle()
-        helpers.load_facility_requirements()
-        if not globals.SITE_LOCATION:
+        data = helpers.load_facility_requirements()
+        # Build the table whenever sites exist, even if Location/SITE_LOCATION is
+        # still unknown (distances stay blank until StarPos is recorded).
+        if not data:
             self._build_info_widgets()
         else:
             self._build_widgets()
@@ -566,9 +568,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
                 return
             materials = self.data[full]['materials']
 
-        cargo_items = helpers.load_starship_cargo_data()
-        # Create lookup for cargo items
-        cargo_lookup = {i.get('Name'): i for i in cargo_items}
+        cargo_counts = helpers.starship_cargo_counts()
 
         # Read these once for the whole table instead of once per row
         market_lib = helpers.get_market_library()
@@ -601,12 +601,14 @@ class ArchitectTrackerGUI(tk.Toplevel):
         ship_total = 0
         short_total = 0
 
-        # Distance is measured from the site on screen (or the known site coords for -All-).
+        # Distance is from the site on screen only. -All- has no single origin, and
+        # never fall back to another site's sticky SITE_LOCATION coords.
         if sel == '-All-':
-            from_location = globals.SITE_LOCATION
+            from_location = None
         else:
-            from_location = (self.data.get(full, {}).get("Location")
-                             or globals.SITE_LOCATION)
+            from_location = self.data.get(full, {}).get("Location")
+            if from_location:
+                globals.SITE_LOCATION = from_location
 
         rows = []
         for mat, vals in materials.items():
@@ -626,7 +628,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             # Get fleet carrier and ship cargo quantities. Cargo.json still uses the
             # bare internal name, the carrier tracker normalises whatever it is given.
             fc_qty = globals.CARRIER_TRACKER.get_quantity(mat)
-            ship_qty = cargo_lookup.get(safeMat, {}).get('Count', 0)
+            ship_qty = cargo_counts.get(safeMat, 0)
 
             # Calculate shortage
             short = max(0, need - (fc_qty + ship_qty))
@@ -778,27 +780,27 @@ class ArchitectTrackerGUI(tk.Toplevel):
             if not self.has_table:
                 return
 
-        short_name = (station.split(':', 1)[-1].strip() if ':' in station else
-                        station.split(';', 1)[-1].strip() if ';' in station
-                        else station)
+        def select_matching():
+            # Prefer the exact full journal name so duplicate short names resolve.
+            for display_name, full in self.station_map.items():
+                if full == station:
+                    self.station_var.set(display_name)
+                    return True
+            short_name = helpers.station_short_name(station)
+            if short_name in self.station_map:
+                self.station_var.set(short_name)
+                return True
+            return False
 
-        values = self.dropdown['values']
-        if not values:
-            logger.info("No stations to switch to.")
+        if select_matching():
+            self.display_station()
             return
 
-        if short_name in values:
-            self.station_var.set(short_name)
+        self.refresh()
+        if select_matching():
+            self.display_station()
             return
-        else:
-            self.refresh()
-
-        values = self.dropdown['values']
-        if short_name in values:
-            self.station_var.set(short_name)
-            return
-        else:
-            logger.info("Could not change to station: %s", short_name)
+        logger.info("Could not change to station: %s", station)
 
     def on_delete_station(self):
         if not self.has_table:
@@ -817,6 +819,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         except Exception as e:
             logger.error("Error saving data: %s", e)
 
+        helpers.sync_site_location(self.data)
         self.refresh()
 
     def reset_Style(self, new_theme):

@@ -169,6 +169,20 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             if globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign:
                 globals.SHIP_STATE = globals.SHIP_MODE.DockedAtFC
                 logger.info("Ship state: Docked at FC")
+            else:
+                # ApproachSettlement / SupercruiseDestinationDrop usually set this
+                # first; Docked is the fallback when those events were missed.
+                station_type = entry.get("StationType") or ""
+                surface_types = {
+                    "SurfaceStation", "CraterOutpost", "CraterPort",
+                    "OnFootSettlement", "Settlement",
+                }
+                if station_type in surface_types:
+                    globals.DOCKED_STATION_TYPE = globals.STATION_TYPE.Surface
+                    logger.info("Station type set to: Surface (from Docked)")
+                elif station_type and station_type != "FleetCarrier":
+                    globals.DOCKED_STATION_TYPE = globals.STATION_TYPE.Orbital
+                    logger.info("Station type set to: Orbital (from Docked)")
 
         elif event == "Undocked":
             globals.SHIP_STATE = globals.SHIP_MODE.Undocked
@@ -186,7 +200,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             globals.DOCKED_STATION_TYPE = globals.STATION_TYPE.Unknown
             logger.info("Station type set to: %s", globals.DOCKED_STATION_TYPE.name)
 
-        if helpers.gui_exists() and globals.SITE_LOCATION: #only refresh if we have construction sites to show
+        if helpers.gui_exists():
             globals.ARCHITECT_GUI.refresh()
 
     except Exception as e:
@@ -211,9 +225,8 @@ def capi_fleetcarrier(data: CAPIData):
         if fcapi_mode == "First then pause":
             globals.FCAPI_PAUSED = True
             logger.info('Fleet carrier API paused.')
-        if globals.SITE_LOCATION: #only refresh if we have construction sites to show
-            globals.ARCHITECT_GUI.refresh()
-            
+        globals.ARCHITECT_GUI.refresh()
+
 def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
     try:
         return preferences.pluginprefs(parent, cmdr, is_beta)

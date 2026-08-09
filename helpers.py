@@ -271,6 +271,10 @@ def save_facility_requirements(resources, station_name, mID, system=None):
             data[station_name]["materials"] = materials
             if system:  #the system is only recorded from 1.7 onwards
                 data[station_name]["System"] = system
+            # Sites saved before StarPos was known keep Location null forever otherwise.
+            if not data[station_name].get("Location") and globals.CURRENT_LOCATION:
+                data[station_name]["Location"] = globals.CURRENT_LOCATION
+                logger.info("Backfilled location for facility %s.", station_name)
             logger.info("Updating facility %s.", station_name)
     else:
         for s, info in data.items():
@@ -289,6 +293,39 @@ def save_facility_requirements(resources, station_name, mID, system=None):
     except Exception as e:
         logger.error("Error saving data: %s", e)
 
+def station_short_name(full):
+    """Dropdown-style short form of a construction-site journal name."""
+    if not full:
+        return full
+    if ':' in full:
+        return full.split(':', 1)[-1].strip()
+    if ';' in full:
+        return full.split(';', 1)[-1].strip()
+    return full
+
+def sync_site_location(sites, preferred=None):
+    """Point SITE_LOCATION at a live site. Prefer `preferred`, else keep if still valid."""
+    if not sites:
+        globals.SITE_LOCATION = None
+        return
+
+    if preferred and preferred in sites and sites[preferred].get("Location"):
+        globals.SITE_LOCATION = sites[preferred]["Location"]
+        return
+
+    if globals.SITE_LOCATION:
+        current = list(globals.SITE_LOCATION)
+        for info in sites.values():
+            loc = info.get("Location")
+            if loc is not None and list(loc) == current:
+                return
+
+    for info in sites.values():
+        if info.get("Location"):
+            globals.SITE_LOCATION = info["Location"]
+            return
+    globals.SITE_LOCATION = None
+
 def load_facility_requirements():
     if not os.path.exists(globals.SAVE_FILE):
         return {}
@@ -306,29 +343,25 @@ def load_facility_requirements():
         except Exception as e:
             logger.error("Error writing cleaned data: %s", e)
 
-    if not globals.SITE_LOCATION and cleaned:
-        first_site = next(iter(cleaned.values()))
-        if first_site and first_site.get("Location"):
-            globals.SITE_LOCATION = first_site.get("Location")
-            logger.info("Set site location to: %s", globals.SITE_LOCATION)
-        else:
-            globals.SITE_LOCATION = None
+    preferred = None
+    if gui_exists():
+        preferred = getattr(globals.ARCHITECT_GUI, "shown_station", None)
+    sync_site_location(cleaned, preferred=preferred)
 
     return cleaned
 
 def is_facility(station):
-    # Load new data
+    """True when `station` is one of the tracked construction sites (full or short name)."""
+    if not station:
+        return False
     data = load_facility_requirements()
-    # Prepare data for display
-    cleaned = [
-        (
-          (full.split(':', 1)[-1].strip() if ':' in full else
-           full.split(';', 1)[-1].strip() if ';' in full else full)
-        )
-        for full in data
-    ]
-
-    return station in cleaned
+    if station in data:
+        return True
+    short = station_short_name(station)
+    for full in data:
+        if station_short_name(full) == short or station_short_name(full) == station:
+            return True
+    return False
 
 # load cargo for currently piloted ship
 def load_starship_cargo_data():
@@ -341,6 +374,16 @@ def load_starship_cargo_data():
     except Exception as e:
         logger.error("Error loading cargo data: %s", e)
         return []
+
+def starship_cargo_counts():
+    """Total Count per cargo Name, summing split stolen/clean stacks."""
+    totals = {}
+    for item in load_starship_cargo_data():
+        name = item.get("Name")
+        if not name:
+            continue
+        totals[name] = totals.get(name, 0) + int(item.get("Count") or 0)
+    return totals
 
 # is the item a construction commodity
 COMMODITIES = None
@@ -472,20 +515,27 @@ def record_market_price(market_lib, item_name, price, station_name, station_id,
             cheap_entry["Price"] = price
 
         close_markets = commodity.setdefault("ClosestMarkets", {})
-        if closer_than(close_markets.get(type_name)):
+        close_entry = close_markets.get(type_name)
+        if closer_than(close_entry):
             add_market()
             logger.debug("Updating ClosestMarket for: %s", item_name)
             close_markets[type_name] = {"Price": price, "StationID": station_id}
+        elif close_entry and close_entry.get("StationID") == station_id:
+            close_entry["Price"] = price
         return
 
     logger.debug("Item %s was expensive.", item_name)
-    cheap_entry = commodity.setdefault("CheapMarkets", {}).get(type_name)
-    close_entry = commodity.setdefault("ClosestMarkets", {}).get(type_name)
-    #if this market is already listed as cheap or closest market for item, skip it
-    if (cheap_entry and cheap_entry.get("StationID") == station_id) or \
-            (close_entry and close_entry.get("StationID") == station_id):
-        logger.debug("%s was already a cheap or closest entry.", station_name)
-        return
+    cheap_markets = commodity.setdefault("CheapMarkets", {})
+    close_markets = commodity.setdefault("ClosestMarkets", {})
+    cheap_entry = cheap_markets.get(type_name)
+    close_entry = close_markets.get(type_name)
+    # Price rose above the site payment: demote this market out of Cheap/Closest.
+    if cheap_entry and cheap_entry.get("StationID") == station_id:
+        del cheap_markets[type_name]
+        logger.debug("Removed %s from CheapMarkets; no longer below site cost.", station_name)
+    if close_entry and close_entry.get("StationID") == station_id:
+        del close_markets[type_name]
+        logger.debug("Removed %s from ClosestMarkets; no longer below site cost.", station_name)
 
     alt_markets = commodity.setdefault("AlternateMarkets", {})
     if closer_than(alt_markets.get(type_name)):
@@ -649,9 +699,12 @@ def remove_from_old_market_library(station_name):
         markets_to_delete = []
 
         for market_type, market_data in markets.items():
+            market_loc = market_data.get("Location")
+            if not market_loc or location is None:
+                continue
             if (
-                market_data["StationName"] == station_name and
-                tuple(market_data["Location"]) == location
+                market_data.get("StationName") == station_name and
+                tuple(market_loc) == tuple(location)
             ):
                 markets_to_delete.append(market_type)
 
@@ -784,17 +837,23 @@ def get_prefMarket_system(material, market_lib=None, legacy_lib=None):
         return ""
     return entry["station"].get("System") or ""
 
-def get_prefMarket_distance(material, market_lib=None, legacy_lib=None, from_location=None):
+_USE_SITE_LOCATION = object()
+
+def get_prefMarket_distance(material, market_lib=None, legacy_lib=None,
+                            from_location=_USE_SITE_LOCATION):
     """Distance in ly from `from_location` (or the site) to the preferred market.
 
-    Returns a one-decimal string, or blank when either end is unknown.
+    Pass `from_location=None` to force a blank (e.g. the -All- view). Omitting it
+    uses globals.SITE_LOCATION. Returns a one-decimal string, or blank when either
+    end is unknown.
     """
     entry = get_prefMarket_entry(material, market_lib, legacy_lib)
     if not entry:
         return ""
     station = entry["station"]
     market_pos = station.get("Location")
-    origin = from_location if from_location is not None else globals.SITE_LOCATION
+    origin = (globals.SITE_LOCATION if from_location is _USE_SITE_LOCATION
+              else from_location)
     if not market_pos or not origin:
         return ""
     try:

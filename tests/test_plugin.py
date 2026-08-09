@@ -326,6 +326,62 @@ class TestMarketLibrary(PluginTestCase):
                          "10.0")
         self.assertEqual(helpers.get_prefMarket_distance("$aluminium_name;"), "")
 
+    def test_null_site_location_is_backfilled_on_update(self):
+        self.write_json(g.SAVE_FILE, self.site(location=None))
+        g.CURRENT_LOCATION = (4.0, 5.0, 6.0)
+        helpers.save_facility_requirements(
+            [{"Name": self.STEEL, "Name_Localised": "Steel", "RequiredAmount": 1000,
+              "ProvidedAmount": 1, "Payment": 9000}],
+            "Site Alpha", 3700001, "SysA")
+        with open(g.SAVE_FILE, encoding="utf-8") as f:
+            saved = json.load(f)
+        self.assertEqual(list(saved["Site Alpha"]["Location"]), [4.0, 5.0, 6.0])
+
+    def test_is_facility_matches_full_journal_names(self):
+        self.write_json(g.SAVE_FILE, {
+            "Orbital Construction Site: Vulcan Gate": {
+                "Location": [1.0, 2.0, 3.0], "ID": 1,
+                "materials": {self.STEEL: {"Name_Localised": "Steel", "RequiredAmount": 10,
+                                           "ProvidedAmount": 0, "Price": 9000}}}})
+        self.assertTrue(helpers.is_facility("Orbital Construction Site: Vulcan Gate"))
+        self.assertTrue(helpers.is_facility("Vulcan Gate"))
+        self.assertFalse(helpers.is_facility("Somewhere Else"))
+
+    def test_price_above_site_cost_demotes_cheap_and_closest(self):
+        g.SITE_LOCATION = [0.0, 0.0, 0.0]
+        lib = {"Commodities": {}, "Markets": []}
+        site_prices = {self.STEEL: [9000]}
+        helpers.record_market_price(
+            lib, self.STEEL, 1000, "Jameson", 42, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], site_prices, "Sol")
+        self.assertEqual(lib["Commodities"][self.STEEL]["CheapMarkets"]["Orbital"]["Price"], 1000)
+        helpers.record_market_price(
+            lib, self.STEEL, 9500, "Jameson", 42, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], site_prices, "Sol")
+        self.assertNotIn("Orbital", lib["Commodities"][self.STEEL].get("CheapMarkets", {}))
+        self.assertNotIn("Orbital", lib["Commodities"][self.STEEL].get("ClosestMarkets", {}))
+        self.assertEqual(
+            lib["Commodities"][self.STEEL]["AlternateMarkets"]["Orbital"]["StationID"], 42)
+
+    def test_closest_price_updates_for_the_same_station(self):
+        g.SITE_LOCATION = [0.0, 0.0, 0.0]
+        lib = {"Commodities": {}, "Markets": []}
+        site_prices = {self.STEEL: [9000]}
+        helpers.record_market_price(
+            lib, self.STEEL, 2000, "Jameson", 42, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], site_prices, "Sol")
+        helpers.record_market_price(
+            lib, self.STEEL, 1800, "Jameson", 42, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], site_prices, "Sol")
+        self.assertEqual(lib["Commodities"][self.STEEL]["ClosestMarkets"]["Orbital"]["Price"], 1800)
+
+    def test_legacy_purge_tolerates_null_location(self):
+        old = os.path.join(g.USER_DIR, "market_library.json")
+        self.write_json(old, {
+            self.STEEL: {"CheapMarket": {"StationName": "Jameson", "Location": None}}})
+        g.CURRENT_LOCATION = (1.0, 2.0, 3.0)
+        self.assertEqual(self.errors_logged(helpers.remove_from_old_market_library, "Jameson"), [])
+
 
 class TestSettings(PluginTestCase):
     def test_defaults_when_nothing_has_been_saved(self):
@@ -673,6 +729,70 @@ class TestTrackerWindow(PluginTestCase):
         window = self.open_window()
         self.assertEqual(len(set(window.dropdown["values"])), 3)  # both sites plus -All-
         self.assertEqual(len(window.station_map), 3)  # both sites plus -All-
+
+    def test_change_station_picks_the_matching_full_name(self):
+        self.write_json(g.SAVE_FILE, {
+            "Orbital Construction Site: Vulcan Gate": {
+                "Location": [1.0, 2.0, 3.0], "ID": 1,
+                "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 100,
+                                               "ProvidedAmount": 0, "Price": 9000}}},
+            "Planetary Construction Site: Vulcan Gate": {
+                "Location": [10.0, 20.0, 30.0], "ID": 2,
+                "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 200,
+                                               "ProvidedAmount": 0, "Price": 9000}}}})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        window.change_station("Planetary Construction Site: Vulcan Gate")
+        ROOT.update()
+        self.assertEqual(window.shown_station, "Planetary Construction Site: Vulcan Gate")
+        self.assertEqual(list(g.SITE_LOCATION), [10.0, 20.0, 30.0])
+
+    def test_table_opens_when_site_location_is_unknown(self):
+        self.write_json(g.SAVE_FILE, {"Orbital Construction Site: Vulcan Gate": {
+            "Location": None, "ID": 3700001,
+            "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 100,
+                                           "ProvidedAmount": 10, "Price": 9000}}}})
+        g.SITE_LOCATION = None
+        window = self.open_window()
+        ROOT.update()
+        self.assertTrue(window.has_table)
+        self.assertEqual(window.tree.set(window.tree.get_children()[0], "Distance"), "")
+
+    def test_all_view_leaves_distance_blank(self):
+        self.write_json(g.SAVE_FILE, {
+            "Orbital Construction Site: A": {
+                "Location": [1.0, 2.0, 3.0], "ID": 1,
+                "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 100,
+                                               "ProvidedAmount": 0, "Price": 9000}}},
+            "Orbital Construction Site: B": {
+                "Location": [100.0, 200.0, 300.0], "ID": 2,
+                "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 50,
+                                               "ProvidedAmount": 0, "Price": 9000}}}})
+        self.write_json(g.MARKET_LIB_PATH, {
+            "Commodities": {"$steel_name;": {
+                "CheapMarkets": {"Orbital": {"Price": 2000, "StationID": 42}}}},
+            "Markets": [{"StationName": "Jameson Memorial", "System": "Shinrarta Dezhra",
+                         "Location": [11.0, 2.0, 3.0], "StationID": 42, "Type": "Orbital"}]})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        window.station_var.set("-All-")
+        window.display_station()
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(window.tree.set(row, "Material"), "Steel")
+        self.assertEqual(window.tree.set(row, "Distance"), "")
+
+    def test_split_cargo_stacks_are_summed(self):
+        self.save_a_site()
+        self.write_json(g.CARGO_JSON, {"Inventory": [
+            {"Name": "steel", "Count": 10, "Stolen": 0},
+            {"Name": "steel", "Count": 5, "Stolen": 1}]})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(int(window.tree.set(row, "Ship Qty")), 15)
+        self.assertEqual(int(window.tree.set(row, "Shortfall")), 75)
 
     def test_edmc_keeps_its_own_ttk_theme(self):
         before = ttk.Style().theme_use()
