@@ -26,6 +26,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.column_visibility, self.hide_provided, self.theme, self.column_names, self.trans_bg, self.win_top, self.opac_amount = helpers.load_gui_settings()
         self.has_table = False
+        # Click a column header to sort; Shortfall defaults to high→low on first click.
+        self.sort_column = "Material"
+        self.sort_reverse = False
 
         self.setAlpha(self.opac_amount)
         self.setStayOnTop(self.win_top)
@@ -189,18 +192,23 @@ class ArchitectTrackerGUI(tk.Toplevel):
         # Everything below is namespaced under ArchTrack so no other plugin, and
         # none of EDMC's own widgets, pick up these colours.
         self.style.configure("ArchTrack.TFrame", background=c["bg"])
-        self.style.configure("ArchTrack.TLabel", background=c["bg"], foreground=c["fg"])
-        self.style.configure("ArchTrack.TButton", background=c["bg"], foreground=c["fg"], padding=(6, 2))
-        self.style.configure("ArchTrack.Treeview.Heading", background=c["bg"], foreground=c["fg"])
+        self.style.configure("ArchTrack.TLabel", background=c["bg"], foreground=c["fg"],
+                             font=("TkDefaultFont", 11))
+        self.style.configure("ArchTrack.TButton", background=c["bg"], foreground=c["fg"],
+                             padding=(6, 2), font=("TkDefaultFont", 11))
+        self.style.configure("ArchTrack.Treeview.Heading", background=c["bg"], foreground=c["fg"],
+                             font=("TkDefaultFont", 11, "bold"))
         self.style.configure("ArchTrack.Treeview",
                              background=c["tree_bg"],
                              foreground=c["tree_fg"],
                              fieldbackground=c["tree_bg"],
-                             rowheight=24,
+                             font=("TkDefaultFont", 11),
+                             rowheight=28,
                              selectbackground=c["sel_bg"])
         self.style.configure("ArchTrack.TCombobox",
                              background=c["bg"], foreground=c["fg"],
-                             selectbackground=c["bg"], arrowcolor=c["fg"])
+                             selectbackground=c["bg"], arrowcolor=c["fg"],
+                             font=("TkDefaultFont", 11))
         self.style.map("ArchTrack.TButton",
                        foreground=[("disabled", c["bg"])],
                        background=[("disabled", "#7d7d7d")])
@@ -299,8 +307,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
         cols = list(globals.DEFAULT_COLUMNS.keys())
         self.tree = ttk.Treeview(frame, columns=cols, show="headings", style="ArchTrack.Treeview")
         for idx, c in enumerate(cols):
-            self.tree.heading(c, text=self.column_names[idx])
+            self.tree.heading(c, text=self.column_names[idx],
+                              command=lambda col=c: self.on_sort_column(col))
             self.tree.column(c, anchor='w' if c in ("Material", "Pref Market", "System") else 'center')
+        self._refresh_sort_headings()
 
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.tree.yview, style="ArchTrack.Vertical.TScrollbar")
         self.tree.configure(yscrollcommand=scrollbar.set)
@@ -582,7 +592,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.tree.tag_configure('evenrow', background='#d9d9d9')
             self.tree.tag_configure('highlightedrow', foreground='#ff6347')
 
-        self.tree.tag_configure('totalsrow', font=('TkDefaultFont', 10, 'bold'))
+        self.tree.tag_configure('totalsrow', font=('TkDefaultFont', 11, 'bold'))
 
         req_total = 0
         prov_total = 0
@@ -590,10 +600,16 @@ class ArchitectTrackerGUI(tk.Toplevel):
         fc_total = 0
         ship_total = 0
         short_total = 0
-        rows_index = 0
 
-        # Insert the materials into the tree
-        for idx, (mat, vals) in enumerate(sorted(materials.items())):
+        # Distance is measured from the site on screen (or the known site coords for -All-).
+        if sel == '-All-':
+            from_location = globals.SITE_LOCATION
+        else:
+            from_location = (self.data.get(full, {}).get("Location")
+                             or globals.SITE_LOCATION)
+
+        rows = []
+        for mat, vals in materials.items():
             req = vals['RequiredAmount']
             prov = vals['ProvidedAmount']
             if self.hide_provided and prov >= req:
@@ -604,6 +620,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
             pref_market = helpers.get_prefMarket_name(mat, market_lib, legacy_lib)
             pref_system = helpers.get_prefMarket_system(mat, market_lib, legacy_lib)
+            pref_distance = helpers.get_prefMarket_distance(
+                mat, market_lib, legacy_lib, from_location=from_location)
 
             # Get fleet carrier and ship cargo quantities. Cargo.json still uses the
             # bare internal name, the carrier tracker normalises whatever it is given.
@@ -613,10 +631,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             # Calculate shortage
             short = max(0, need - (fc_qty + ship_qty))
 
-            # Determine row color based on even or odd index
-            row_tag = 'evenrow' if idx % 2 == 0 else 'oddrow'
-            tags = [row_tag]
-
+            tags = []
             if globals.SHIP_STATE == globals.SHIP_MODE.DockedAtMarket:
                 for_sale = helpers.is_market_selling(mat, market_stock)
                 if for_sale and short > 0:
@@ -628,28 +643,87 @@ class ArchitectTrackerGUI(tk.Toplevel):
                 if need > 0 and ship_qty > 0:
                     tags.append('highlightedrow')
 
-            # Insert row into the tree view
-            self.tree.insert("", "end", values=(locName, req, prov, need, pref_market,
-                                               pref_system, fc_qty, ship_qty, short),
-                             tags=tuple(tags))
+            rows.append({
+                "values": (locName, req, prov, need, pref_market, pref_system,
+                           pref_distance, fc_qty, ship_qty, short),
+                "tags": tags,
+            })
 
-            rows_index += 1
             req_total = req_total + req
             prov_total = prov_total + prov
             need_total = need_total + need
             fc_total = fc_total + fc_qty
             ship_total = ship_total + ship_qty
             short_total = short_total + short
-            
+
+        rows = self._sorted_material_rows(rows)
+
+        for idx, row in enumerate(rows):
+            row_tag = 'evenrow' if idx % 2 == 0 else 'oddrow'
+            tags = [row_tag] + list(row["tags"])
+            self.tree.insert("", "end", values=row["values"], tags=tuple(tags))
+
         market_note = "* denotes orbital"
         if helpers.getPreferedType() == globals.STATION_TYPE.Orbital:
             market_note = "* denotes surface"
 
-        total_row_tag = 'evenrow' if rows_index % 2 == 0 else 'oddrow'
+        total_row_tag = 'evenrow' if len(rows) % 2 == 0 else 'oddrow'
         tags = (total_row_tag, 'totalsrow')
         self.tree.insert("", "end", values=("Totals", req_total, prov_total, need_total,
-                                               market_note, "",
+                                               market_note, "", "",
                                                fc_total, ship_total, short_total), tags=tags)
+
+    # Numeric columns sort as numbers; blank Distance sorts last either way.
+    _NUMERIC_SORT_COLS = {
+        "Required", "Provided", "Needed", "Distance",
+        "Carrier Qty", "Ship Qty", "Shortfall",
+    }
+
+    def _sorted_material_rows(self, rows):
+        col = getattr(self, "sort_column", "Material") or "Material"
+        reverse = bool(getattr(self, "sort_reverse", False))
+        cols = list(globals.DEFAULT_COLUMNS.keys())
+        if col not in cols:
+            col = "Material"
+        col_idx = cols.index(col)
+
+        def sort_key(row):
+            value = row["values"][col_idx]
+            if col in self._NUMERIC_SORT_COLS:
+                if value in ("", None):
+                    return float("inf") if not reverse else float("-inf")
+                try:
+                    return float(value)
+                except (TypeError, ValueError):
+                    return float("inf") if not reverse else float("-inf")
+            return str(value).lower()
+
+        return sorted(rows, key=sort_key, reverse=reverse)
+
+    def on_sort_column(self, col):
+        """Toggle sort when a column header is clicked."""
+        if not self.has_table:
+            return
+        if self.sort_column == col:
+            self.sort_reverse = not self.sort_reverse
+        else:
+            self.sort_column = col
+            # First click on Shortfall (or other amounts) shows biggest first.
+            self.sort_reverse = col in self._NUMERIC_SORT_COLS
+        self._refresh_sort_headings()
+        self.display_station()
+        self.update_idletasks()
+        self.auto_size_tree()
+
+    def _refresh_sort_headings(self):
+        if not self.has_table or not getattr(self, "tree", None):
+            return
+        cols = list(globals.DEFAULT_COLUMNS.keys())
+        for idx, c in enumerate(cols):
+            label = self.column_names[idx]
+            if c == self.sort_column:
+                label = f"{label} {'▼' if self.sort_reverse else '▲'}"
+            self.tree.heading(c, text=label)
 
     def on_close(self):
         globals.AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
@@ -790,4 +864,4 @@ class ArchitectTrackerGUI(tk.Toplevel):
             return
         self.column_names[cols.index(c)] = v
         if self.has_table:
-            self.tree.heading(c, text=v)
+            self._refresh_sort_headings()

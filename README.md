@@ -69,7 +69,8 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 + The "Pref Market" column displays either the cheapest, closest or alternate market where that commidity has been found. This list is further filtered by orbital or surface markets. See "Prefered Markets" section below for more information.
 + To display\update your fleet carrier cargo, open the "Carrier Management" in-game tool. The quantities will appear after a few moments (this can take a while and occasionaly display incorrect number). If you are also selling commodities from your fleet carrier, you will need to update this list as needed (sales are not tracked).
 + Starship cargo will be displayed automatically.
-+ The shortfall column displays how much of a commodity you still need to aquire.
++ The shortfall column displays how much of a commodity you still need to aquire. Click the Shortfall header (or any other header) to sort the list.
++ The Distance column shows how far in light years the preferred market is from the construction site.
 + Settings are available in the E:D Market Connector under File menu->Settings->ArchitectTracker tab. You can choose whioch columns to display, set the text displayed in the column header and other settings (see screenshot above).
 + Rows are highlighted (see screenshots above) depending on where you are docked, rows are highlighted to indicate:
   + Markets - market is selling the item and you have shortfall.
@@ -95,6 +96,8 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 
 ### Preferred Markets
 - The "Preferred Market" column displays markets you have found that sell construction commodities. The matching **System** column shows which star system that station is in, so you can plot a route without bookmarking every station by name.
+- The **Distance** column shows how far that preferred market is from the construction site, in light years.
+- Click any column header to sort the list. Click **Shortfall** to put the biggest remaining buys first (click again to reverse).
 - **Ctrl+click** or **Shift+click** a row to copy that System name to the clipboard (handy for the galaxy map search box). The Preferred Market label briefly shows `Copied: …` as confirmation.
 - Markets can be filtered using the $\Ly\Alt and O\S buttons at the top of the inteface. Filtering includes:
   - $ : the station that has the cheapest sell price that was below your construction sites buy price.

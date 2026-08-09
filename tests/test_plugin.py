@@ -313,6 +313,19 @@ class TestMarketLibrary(PluginTestCase):
         self.assertEqual(station["System"], "Sol")
         self.assertEqual(helpers.get_prefMarket_system(self.STEEL), "Sol")
 
+    def test_preferred_market_distance_is_in_ly(self):
+        self.write_json(g.MARKET_LIB_PATH, {
+            "Commodities": {self.STEEL: {
+                "ClosestMarkets": {"Orbital": {"Price": 2000, "StationID": 42}}}},
+            "Markets": [{"StationName": "Jameson Memorial", "System": "Shinrarta Dezhra",
+                         "Location": [11.0, 2.0, 3.0], "StationID": 42, "Type": "Orbital"}]})
+        config.set("ArchTrack_prefMarket", g.MARKET_MODE.Closest.value)
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        self.assertEqual(helpers.get_prefMarket_distance(self.STEEL), "10.0")
+        self.assertEqual(helpers.get_prefMarket_distance(self.STEEL, from_location=[1.0, 2.0, 3.0]),
+                         "10.0")
+        self.assertEqual(helpers.get_prefMarket_distance("$aluminium_name;"), "")
+
 
 class TestSettings(PluginTestCase):
     def test_defaults_when_nothing_has_been_saved(self):
@@ -343,7 +356,7 @@ class TestSettings(PluginTestCase):
         self.assertEqual(names[2], list(g.DEFAULT_COLUMNS)[2])
 
     def test_pre_system_column_renames_are_kept(self):
-        # Eight names from before System was inserted after Pref Market.
+        # Eight names from before System (and Distance) were inserted after Pref Market.
         config.set("ArchTrack_cols", [
             "Material", "Required", "Provided", "Left", "Pref Market",
             "FC", "Ship", "Still to buy"])
@@ -351,9 +364,23 @@ class TestSettings(PluginTestCase):
         self.assertEqual(len(names), len(g.DEFAULT_COLUMNS))
         self.assertEqual(names[3], "Left")
         self.assertEqual(names[5], "System")
-        self.assertEqual(names[6], "FC")
-        self.assertEqual(names[7], "Ship")
-        self.assertEqual(names[8], "Still to buy")
+        self.assertEqual(names[6], "Distance")
+        self.assertEqual(names[7], "FC")
+        self.assertEqual(names[8], "Ship")
+        self.assertEqual(names[9], "Still to buy")
+
+    def test_pre_distance_column_renames_are_kept(self):
+        # Nine names from after System but before Distance.
+        config.set("ArchTrack_cols", [
+            "Material", "Required", "Provided", "Left", "Pref Market",
+            "System", "FC", "Ship", "Still to buy"])
+        names = helpers.load_column_names()
+        self.assertEqual(len(names), len(g.DEFAULT_COLUMNS))
+        self.assertEqual(names[3], "Left")
+        self.assertEqual(names[5], "System")
+        self.assertEqual(names[6], "Distance")
+        self.assertEqual(names[7], "FC")
+        self.assertEqual(names[9], "Still to buy")
 
     def test_show_ui_at_start_defaults_to_true(self):
         self.assertTrue(helpers.show_ui_at_start())
@@ -521,12 +548,13 @@ class TestTrackerWindow(PluginTestCase):
             "Commodities": {"$steel_name;": {
                 "CheapMarkets": {"Orbital": {"Price": 2000, "StationID": 42}}}},
             "Markets": [{"StationName": "Jameson Memorial", "System": "Shinrarta Dezhra",
-                         "Location": [1.0, 2.0, 3.0], "StationID": 42, "Type": "Orbital"}]})
+                         "Location": [11.0, 2.0, 3.0], "StationID": 42, "Type": "Orbital"}]})
         g.SITE_LOCATION = [1.0, 2.0, 3.0]
         window = self.open_window()
         ROOT.update()
         row = window.tree.get_children()[0]
         self.assertEqual(window.tree.set(row, "System"), "Shinrarta Dezhra")
+        self.assertEqual(window.tree.set(row, "Distance"), "10.0")
         bbox = window.tree.bbox(row)
         self.assertTrue(bbox)
         event = type("E", (), {"y": bbox[1] + bbox[3] // 2})()
@@ -534,6 +562,47 @@ class TestTrackerWindow(PluginTestCase):
         self.assertEqual(result, "break")
         self.assertEqual(window.clipboard_get(), "Shinrarta Dezhra")
         self.assertIn("Copied: Shinrarta Dezhra", window.market_name_label.cget("text"))
+
+    def test_shortfall_header_sorts_the_list(self):
+        self.write_json(g.SAVE_FILE, {"Orbital Construction Site: Vulcan Gate": {
+            "Location": [1.0, 2.0, 3.0], "ID": 3700001,
+            "materials": {
+                "$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 100,
+                                 "ProvidedAmount": 10, "Price": 9000},
+                "$aluminium_name;": {"Name_Localised": "Aluminium", "RequiredAmount": 50,
+                                     "ProvidedAmount": 40, "Price": 9000},
+                "$titanium_name;": {"Name_Localised": "Titanium", "RequiredAmount": 200,
+                                    "ProvidedAmount": 0, "Price": 9000},
+            }}})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        names = [window.tree.set(r, "Material") for r in window.tree.get_children()[:-1]]
+        self.assertEqual(names, ["Aluminium", "Steel", "Titanium"])  # Material A→Z default
+
+        window.on_sort_column("Shortfall")
+        ROOT.update()
+        names = [window.tree.set(r, "Material") for r in window.tree.get_children()[:-1]]
+        shorts = [int(window.tree.set(r, "Shortfall")) for r in window.tree.get_children()[:-1]]
+        self.assertEqual(window.tree.set(window.tree.get_children()[-1], "Material"), "Totals")
+        self.assertEqual(shorts, [200, 90, 10])  # high shortfall first
+        self.assertEqual(names, ["Titanium", "Steel", "Aluminium"])
+        self.assertIn("▼", window.tree.heading("Shortfall")["text"])
+
+        window.on_sort_column("Shortfall")
+        ROOT.update()
+        shorts = [int(window.tree.set(r, "Shortfall")) for r in window.tree.get_children()[:-1]]
+        self.assertEqual(shorts, [10, 90, 200])
+        self.assertIn("▲", window.tree.heading("Shortfall")["text"])
+
+    def test_distance_is_blank_without_a_preferred_market(self):
+        self.save_a_site()
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(window.tree.set(row, "Distance"), "")
+        self.assertIn("Distance", window.tree["columns"])
 
     def test_copy_ignores_empty_system_cells(self):
         self.save_a_site()

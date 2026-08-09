@@ -66,14 +66,17 @@ def load_column_names():
     if config.get('ArchTrack_cols') is None:
         logger.info("Column names not found using default settings.")
         return cols
-    saved = config.get_list('ArchTrack_cols')
-    # Pre-System builds stored eight names; insert the default System header so
-    # Carrier Qty / Ship Qty / Shortfall keep the labels the commander chose.
-    if len(saved) == len(cols) - 1 and "System" in cols:
-        system_idx = cols.index("System")
-        merged = list(saved)
-        merged.insert(system_idx, cols[system_idx])
-        saved = merged
+    saved = list(config.get_list('ArchTrack_cols') or [])
+    # Older builds are missing columns inserted later. Inject the default header
+    # at the right index so renames on Carrier Qty / Ship Qty / Shortfall stick.
+    # Pre-System (8 names) then pre-Distance (9 names) before the current set.
+    if "System" in cols and "Distance" in cols and len(saved) == len(cols) - 2:
+        saved.insert(cols.index("System"), cols[cols.index("System")])
+        saved.insert(cols.index("Distance"), cols[cols.index("Distance")])
+    elif "Distance" in cols and len(saved) == len(cols) - 1:
+        saved.insert(cols.index("Distance"), cols[cols.index("Distance")])
+    elif "System" in cols and len(saved) == len(cols) - 1:
+        saved.insert(cols.index("System"), cols[cols.index("System")])
     #a list saved by another version may not line up with the columns we have now
     return [str(saved[i]) if i < len(saved) and saved[i] else cols[i] for i in range(len(cols))]
 
@@ -780,6 +783,27 @@ def get_prefMarket_system(material, market_lib=None, legacy_lib=None):
     if not entry:
         return ""
     return entry["station"].get("System") or ""
+
+def get_prefMarket_distance(material, market_lib=None, legacy_lib=None, from_location=None):
+    """Distance in ly from `from_location` (or the site) to the preferred market.
+
+    Returns a one-decimal string, or blank when either end is unknown.
+    """
+    entry = get_prefMarket_entry(material, market_lib, legacy_lib)
+    if not entry:
+        return ""
+    station = entry["station"]
+    market_pos = station.get("Location")
+    origin = from_location if from_location is not None else globals.SITE_LOCATION
+    if not market_pos or not origin:
+        return ""
+    try:
+        dist = calculate_distance(*market_pos, *origin)
+    except (TypeError, ValueError):
+        return ""
+    if dist == float("inf"):
+        return ""
+    return f"{dist:.1f}"
 
 def load_market_stock() -> set:
     """Names of everything the market we are docked at currently has in stock."""
