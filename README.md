@@ -97,6 +97,7 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 ### Preferred Markets
 - The "Preferred Market" column displays markets you have found that sell construction commodities. The matching **System** column shows which star system that station is in, so you can plot a route without bookmarking every station by name.
 - The **Distance** column shows how far that preferred market is from the construction site, in light years.
+- In the **-All-** view Distance is left blank (there is no single site to measure from).
 - Click any column header to sort the list. Click **Shortfall** to put the biggest remaining buys first (click again to reverse).
 - **Ctrl+click** or **Shift+click** a row to copy that System name to the clipboard (handy for the galaxy map search box). The Preferred Market label briefly shows `Copied: …` as confirmation.
 - Markets can be filtered using the $\Ly\Alt and O\S buttons at the top of the inteface. Filtering includes:
