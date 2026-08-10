@@ -13,20 +13,35 @@ HEIGHT_OVERLAY = 960
 # Left edge, starting at mid-screen and listing downward.
 OVERLAY_X = 24
 OVERLAY_Y_START = HEIGHT_OVERLAY // 2  # 480
-LINE_HEIGHT = 16
-MAX_LINES = 28
+# Room between rows so names stay readable over game HUD noise.
+LINE_HEIGHT = 22
+MAX_ROWS = 20
 TTL_SECONDS = 20
+
+# Two-column table: commodity name | amount needed.
+# Overlay fonts are roughly fixed-width; pad for a clear gap between columns.
+NAME_WIDTH = 26
+QTY_WIDTH = 8
+NAME_COL_X = OVERLAY_X
+# ~5 px per character at normal size on the virtual canvas.
+QTY_COL_X = OVERLAY_X + (NAME_WIDTH * 5) + 24
+
 TITLE_COLOR = "#1fbeff"  # Elite-ish cyan
-ROW_COLOR = "yellow"
-SHORTFALL_COLOR = "#ff8500"
-HEADER_ID = "archtrack-title"
-ROW_ID_PREFIX = "archtrack-row-"
+HEADER_COLOR = "yellow"
+NAME_COLOR = "yellow"
+QTY_COLOR = "#ff8500"
+
+TITLE_ID = "archtrack-title"
+HEADER_NAME_ID = "archtrack-hdr-name"
+HEADER_QTY_ID = "archtrack-hdr-qty"
+NAME_ID_PREFIX = "archtrack-name-"
+QTY_ID_PREFIX = "archtrack-qty-"
 
 _edmcoverlay_mod = None
 _overlay_client = None
 _import_attempted = False
 _warned_unavailable = False
-_active_row_ids = []
+_active_row_count = 0
 
 
 def _import_overlay_module():
@@ -95,22 +110,34 @@ def _send(msg_id, text, color, x, y, size="normal", ttl=TTL_SECONDS):
         return False
 
 
+def _clear_slot_range(count):
+    for i in range(count):
+        _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, OVERLAY_Y_START, ttl=1)
+        _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, OVERLAY_Y_START, ttl=1)
+
+
 def clear():
     """Blank previously painted Architect Tracker lines."""
-    global _active_row_ids
-    _send(HEADER_ID, "", TITLE_COLOR, OVERLAY_X, OVERLAY_Y_START, size="large", ttl=1)
-    for msg_id in _active_row_ids:
-        _send(msg_id, "", ROW_COLOR, OVERLAY_X, OVERLAY_Y_START, ttl=1)
-    # Also clear the fixed slot range so leftover lines from a longer list vanish.
-    for i in range(MAX_LINES):
-        _send(f"{ROW_ID_PREFIX}{i}", "", ROW_COLOR, OVERLAY_X, OVERLAY_Y_START, ttl=1)
-    _active_row_ids = []
+    global _active_row_count
+    _send(TITLE_ID, "", TITLE_COLOR, OVERLAY_X, OVERLAY_Y_START, size="large", ttl=1)
+    _send(HEADER_NAME_ID, "", HEADER_COLOR, NAME_COL_X, OVERLAY_Y_START, ttl=1)
+    _send(HEADER_QTY_ID, "", HEADER_COLOR, QTY_COL_X, OVERLAY_Y_START, ttl=1)
+    _clear_slot_range(max(_active_row_count, MAX_ROWS))
+    _active_row_count = 0
+
+
+def _format_qty(value):
+    """Thousand-separated amount for easier reading in-game."""
+    try:
+        return f"{int(value):,}"
+    except (TypeError, ValueError):
+        return str(value)
 
 
 def paint(title, rows):
-    """Draw the commodity list on the left, from mid-height downward.
+    """Draw a two-column table: commodity | amount needed.
 
-    `rows` is a list of dicts with keys: name, shortfall, distance (optional).
+    `rows` is a list of dicts with keys: name, shortfall.
     Only items with shortfall > 0 are shown (what you still need to haul).
     """
     import helpers
@@ -122,44 +149,37 @@ def paint(title, rows):
         return
 
     needed = [r for r in rows if int(r.get("shortfall") or 0) > 0]
-    lines = []
     site = (title or "Architect Tracker").strip() or "Architect Tracker"
-    lines.append(("title", site[:48]))
-
-    if not needed:
-        lines.append(("row", "Nothing left to haul"))
-    else:
-        for r in needed[: MAX_LINES - 1]:
-            name = str(r.get("name") or "")[:22]
-            short = int(r.get("shortfall") or 0)
-            dist = r.get("distance") or ""
-            if dist:
-                text = f"{name:<22} {short:>6}  {dist}ly"
-            else:
-                text = f"{name:<22} {short:>6}"
-            color = SHORTFALL_COLOR if short > 0 else ROW_COLOR
-            lines.append(("row", text, color))
 
     y = OVERLAY_Y_START
-    active = []
-    for index, entry in enumerate(lines):
-        kind = entry[0]
-        text = entry[1]
-        if kind == "title":
-            msg_id = HEADER_ID
-            color = TITLE_COLOR
-            size = "large"
-        else:
-            msg_id = f"{ROW_ID_PREFIX}{index - 1}"
-            color = entry[2] if len(entry) > 2 else ROW_COLOR
-            size = "normal"
-            active.append(msg_id)
-        _send(msg_id, text, color, OVERLAY_X, y, size=size, ttl=TTL_SECONDS)
-        y += LINE_HEIGHT + (4 if kind == "title" else 0)
+    _send(TITLE_ID, site[:48], TITLE_COLOR, OVERLAY_X, y, size="large", ttl=TTL_SECONDS)
+    y += LINE_HEIGHT + 6
+
+    _send(HEADER_NAME_ID, "Commodity", HEADER_COLOR, NAME_COL_X, y, ttl=TTL_SECONDS)
+    _send(HEADER_QTY_ID, "Needed", HEADER_COLOR, QTY_COL_X, y, ttl=TTL_SECONDS)
+    y += LINE_HEIGHT + 4
+
+    if not needed:
+        _send(f"{NAME_ID_PREFIX}0", "Nothing left to haul", NAME_COLOR, NAME_COL_X, y,
+              ttl=TTL_SECONDS)
+        _send(f"{QTY_ID_PREFIX}0", "", QTY_COLOR, QTY_COL_X, y, ttl=TTL_SECONDS)
+        painted = 1
+        y += LINE_HEIGHT
+    else:
+        painted = 0
+        for r in needed[:MAX_ROWS]:
+            name = str(r.get("name") or "")[:NAME_WIDTH]
+            qty = _format_qty(r.get("shortfall") or 0)
+            _send(f"{NAME_ID_PREFIX}{painted}", name, NAME_COLOR, NAME_COL_X, y,
+                  ttl=TTL_SECONDS)
+            _send(f"{QTY_ID_PREFIX}{painted}", qty, QTY_COLOR, QTY_COL_X, y,
+                  ttl=TTL_SECONDS)
+            painted += 1
+            y += LINE_HEIGHT
 
     # Clear unused slots from a previous longer paint.
-    global _active_row_ids
-    for i in range(len(active), MAX_LINES):
-        msg_id = f"{ROW_ID_PREFIX}{i}"
-        _send(msg_id, "", ROW_COLOR, OVERLAY_X, OVERLAY_Y_START, ttl=1)
-    _active_row_ids = active
+    global _active_row_count
+    for i in range(painted, max(_active_row_count, MAX_ROWS)):
+        _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, OVERLAY_Y_START, ttl=1)
+        _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, OVERLAY_Y_START, ttl=1)
+    _active_row_count = painted

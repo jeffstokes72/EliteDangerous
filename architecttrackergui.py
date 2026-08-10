@@ -688,7 +688,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
 
     def _paint_overlay(self, sel, rows):
         if not helpers.overlay_enabled():
-            if overlay_mod._active_row_ids:
+            if overlay_mod._active_row_count:
                 overlay_mod.clear()
             return
         title = sel if sel and sel != '-All-' else (sel or "Architect Tracker")
@@ -697,14 +697,12 @@ class ArchitectTrackerGUI(tk.Toplevel):
         cols = list(globals.DEFAULT_COLUMNS.keys())
         name_i = cols.index("Material")
         short_i = cols.index("Shortfall")
-        dist_i = cols.index("Distance")
         payload = []
         for row in rows:
             values = row["values"]
             payload.append({
                 "name": values[name_i],
                 "shortfall": values[short_i],
-                "distance": values[dist_i],
             })
         overlay_mod.paint(title, payload)
 
