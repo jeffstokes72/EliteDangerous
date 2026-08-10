@@ -89,7 +89,7 @@ class PluginTestCase(unittest.TestCase):
         overlay_mod._overlay_client = None
         overlay_mod._import_attempted = True
         overlay_mod._warned_unavailable = False
-        overlay_mod._active_row_ids = []
+        overlay_mod._active_row_count = 0
         edmcoverlay_stub.Overlay.reset()
 
     def tearDown(self):
@@ -846,7 +846,7 @@ class TestOverlay(PluginTestCase):
         import overlay as overlay_mod
         import edmcoverlay as stub
         stub.Overlay.reset()
-        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90, "distance": "10.0"}])
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90}])
         self.assertEqual(stub.Overlay.messages, [])
 
     def test_paint_lists_shortfall_from_mid_left(self):
@@ -855,21 +855,27 @@ class TestOverlay(PluginTestCase):
         helpers.set_overlay_enabled(True)
         stub.Overlay.reset()
         overlay_mod.paint("Vulcan Gate", [
-            {"name": "Aluminium", "shortfall": 0, "distance": ""},
-            {"name": "Steel", "shortfall": 90, "distance": "10.0"},
-            {"name": "Titanium", "shortfall": 200, "distance": ""},
+            {"name": "Aluminium", "shortfall": 0},
+            {"name": "Steel", "shortfall": 90},
+            {"name": "Titanium", "shortfall": 200},
         ])
-        texts = [m["text"] for m in stub.Overlay.messages if m["text"]]
-        self.assertEqual(texts[0], "Vulcan Gate")
-        self.assertTrue(any("Steel" in t and "90" in t and "10.0ly" in t for t in texts))
-        self.assertTrue(any("Titanium" in t and "200" in t for t in texts))
-        self.assertFalse(any("Aluminium" in t for t in texts))  # zero shortfall skipped
-        title = next(m for m in stub.Overlay.messages if m["id"] == "archtrack-title")
-        self.assertEqual(title["x"], 24)
-        self.assertEqual(title["y"], 480)
-        rows = [m for m in stub.Overlay.messages if m["id"].startswith("archtrack-row-") and m["text"]]
-        self.assertGreaterEqual(rows[0]["y"], 480)
-        self.assertGreater(rows[1]["y"], rows[0]["y"])
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-title"]["text"], "Vulcan Gate")
+        self.assertEqual(by_id["archtrack-title"]["x"], 24)
+        self.assertEqual(by_id["archtrack-title"]["y"], 480)
+        self.assertEqual(by_id["archtrack-hdr-name"]["text"], "Commodity")
+        self.assertEqual(by_id["archtrack-hdr-qty"]["text"], "Needed")
+        self.assertEqual(by_id["archtrack-name-0"]["text"], "Steel")
+        self.assertEqual(by_id["archtrack-qty-0"]["text"], "90")
+        self.assertEqual(by_id["archtrack-name-1"]["text"], "Titanium")
+        self.assertEqual(by_id["archtrack-qty-1"]["text"], "200")
+        self.assertNotIn("archtrack-name-2", by_id)  # zero shortfall skipped
+        # Quantity column sits to the right of the name column.
+        self.assertGreater(by_id["archtrack-qty-0"]["x"], by_id["archtrack-name-0"]["x"])
+        # Rows are spaced downward for legibility.
+        self.assertGreater(by_id["archtrack-name-1"]["y"], by_id["archtrack-name-0"]["y"])
+        self.assertGreaterEqual(
+            by_id["archtrack-name-1"]["y"] - by_id["archtrack-name-0"]["y"], 20)
 
     def test_tracker_paints_when_overlay_enabled(self):
         import edmcoverlay as stub
@@ -882,8 +888,9 @@ class TestOverlay(PluginTestCase):
         stub.Overlay.reset()
         window = self.open_window()
         ROOT.update()
-        texts = [m["text"] for m in stub.Overlay.messages if m["text"]]
-        self.assertTrue(any("Steel" in t and "90" in t for t in texts))
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-name-0"]["text"], "Steel")
+        self.assertEqual(by_id["archtrack-qty-0"]["text"], "90")
         window.on_close()
         # Closing clears the overlay slots (empty strings / short ttl).
         self.assertTrue(any(m["text"] == "" for m in stub.Overlay.messages))
