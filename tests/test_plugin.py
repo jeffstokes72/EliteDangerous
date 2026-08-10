@@ -82,6 +82,15 @@ class PluginTestCase(unittest.TestCase):
         g.DOCKED_STATION_TYPE = g.STATION_TYPE.Orbital
         g.CARRIER_TRACKER = FleetCarrierCargoTracker()
         config.settings.clear()
+        # Overlay module caches its import and painted ids across tests.
+        import overlay as overlay_mod
+        import edmcoverlay as edmcoverlay_stub
+        overlay_mod._edmcoverlay_mod = edmcoverlay_stub
+        overlay_mod._overlay_client = None
+        overlay_mod._import_attempted = True
+        overlay_mod._warned_unavailable = False
+        overlay_mod._active_row_ids = []
+        edmcoverlay_stub.Overlay.reset()
 
     def tearDown(self):
         if g.ARCHITECT_GUI is not None:
@@ -94,6 +103,18 @@ class PluginTestCase(unittest.TestCase):
     def write_json(self, path, obj):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(obj, f)
+
+    def open_tracker_window(self):
+        """Build the tracker against this test's temp dirs."""
+        if g.ARCHITECT_GUI is not None:
+            try:
+                g.ARCHITECT_GUI.destroy()
+            except Exception:
+                pass
+        from architecttrackergui import ArchitectTrackerGUI
+        g.ARCHITECT_GUI = ArchitectTrackerGUI(ROOT)
+        ROOT.update()
+        return g.ARCHITECT_GUI
 
     def errors_logged(self, fn, *args, **kwargs):
         """Run fn and return the ERROR-level messages the plugin logged."""
@@ -812,6 +833,60 @@ class TestTrackerWindow(PluginTestCase):
         style = ttk.Style()
         self.assertNotEqual(style.lookup("ArchTrack.TLabel", "background"),
                             style.lookup("TLabel", "background"))
+
+
+class TestOverlay(PluginTestCase):
+    def open_window(self):
+        return self.open_tracker_window()
+
+    def test_overlay_defaults_to_off(self):
+        self.assertFalse(helpers.overlay_enabled())
+
+    def test_paint_is_a_noop_when_disabled(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90, "distance": "10.0"}])
+        self.assertEqual(stub.Overlay.messages, [])
+
+    def test_paint_lists_shortfall_from_mid_left(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [
+            {"name": "Aluminium", "shortfall": 0, "distance": ""},
+            {"name": "Steel", "shortfall": 90, "distance": "10.0"},
+            {"name": "Titanium", "shortfall": 200, "distance": ""},
+        ])
+        texts = [m["text"] for m in stub.Overlay.messages if m["text"]]
+        self.assertEqual(texts[0], "Vulcan Gate")
+        self.assertTrue(any("Steel" in t and "90" in t and "10.0ly" in t for t in texts))
+        self.assertTrue(any("Titanium" in t and "200" in t for t in texts))
+        self.assertFalse(any("Aluminium" in t for t in texts))  # zero shortfall skipped
+        title = next(m for m in stub.Overlay.messages if m["id"] == "archtrack-title")
+        self.assertEqual(title["x"], 24)
+        self.assertEqual(title["y"], 480)
+        rows = [m for m in stub.Overlay.messages if m["id"].startswith("archtrack-row-") and m["text"]]
+        self.assertGreaterEqual(rows[0]["y"], 480)
+        self.assertGreater(rows[1]["y"], rows[0]["y"])
+
+    def test_tracker_paints_when_overlay_enabled(self):
+        import edmcoverlay as stub
+        self.write_json(g.SAVE_FILE, {"Orbital Construction Site: Vulcan Gate": {
+            "Location": [1.0, 2.0, 3.0], "ID": 3700001,
+            "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 100,
+                                           "ProvidedAmount": 10, "Price": 9000}}}})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        window = self.open_window()
+        ROOT.update()
+        texts = [m["text"] for m in stub.Overlay.messages if m["text"]]
+        self.assertTrue(any("Steel" in t and "90" in t for t in texts))
+        window.on_close()
+        # Closing clears the overlay slots (empty strings / short ttl).
+        self.assertTrue(any(m["text"] == "" for m in stub.Overlay.messages))
 
 
 class TestCommodityNames(unittest.TestCase):
