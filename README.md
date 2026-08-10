@@ -72,6 +72,7 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 + The shortfall column displays how much of a commodity you still need to aquire. Click the Shortfall header (or any other header) to sort the list.
 + The Distance column shows how far in light years the preferred market is from the construction site.
 + Settings are available in the E:D Market Connector under File menu->Settings->ArchitectTracker tab. You can choose whioch columns to display, set the text displayed in the column header and other settings (see screenshot above).
++ Optional in-game overlay: with <a href="https://github.com/pan-mroku/edmcoverlay2">EDMC Overlay2</a> (Linux), <a href="https://github.com/inorton/EDMCOverlay">EDMC Overlay</a>, or <a href="https://github.com/SweetJonnySauce/EDMC-ModernOverlay">EDMC Modern Overlay</a> installed, enable "Show list on in-game overlay" in settings. The shortfall list paints on the left side of the game window, starting at mid-screen and listing downward.
 + Rows are highlighted (see screenshots above) depending on where you are docked, rows are highlighted to indicate:
   + Markets - market is selling the item and you have shortfall.
   + Fleeet Carrier - site needs it and fleet carrier has some AND starship does not have enough.

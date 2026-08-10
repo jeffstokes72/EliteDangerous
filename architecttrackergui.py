@@ -10,6 +10,7 @@ import globals
 from globals import logger
 import helpers
 from tooltip import Tooltip
+import overlay as overlay_mod
 
 # --- GUI Definition ---
 class ArchitectTrackerGUI(tk.Toplevel):
@@ -464,6 +465,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
                 self.clear_frame()
                 self._build_info_widgets()
             globals.SITE_LOCATION = None
+            overlay_mod.clear()
             return
 
         # The window is showing the "no sites yet" message and now has something to
@@ -665,6 +667,8 @@ class ArchitectTrackerGUI(tk.Toplevel):
             tags = [row_tag] + list(row["tags"])
             self.tree.insert("", "end", values=row["values"], tags=tuple(tags))
 
+        self._paint_overlay(sel, rows)
+
         market_note = "* denotes orbital"
         if helpers.getPreferedType() == globals.STATION_TYPE.Orbital:
             market_note = "* denotes surface"
@@ -674,6 +678,35 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.tree.insert("", "end", values=("Totals", req_total, prov_total, need_total,
                                                market_note, "", "",
                                                fc_total, ship_total, short_total), tags=tags)
+
+    def refresh_overlay(self):
+        """Re-paint or clear the in-game overlay from the current table."""
+        if not self.has_table:
+            overlay_mod.clear()
+            return
+        self.display_station()
+
+    def _paint_overlay(self, sel, rows):
+        if not helpers.overlay_enabled():
+            if overlay_mod._active_row_ids:
+                overlay_mod.clear()
+            return
+        title = sel if sel and sel != '-All-' else (sel or "Architect Tracker")
+        if sel == '-All-':
+            title = "All sites"
+        cols = list(globals.DEFAULT_COLUMNS.keys())
+        name_i = cols.index("Material")
+        short_i = cols.index("Shortfall")
+        dist_i = cols.index("Distance")
+        payload = []
+        for row in rows:
+            values = row["values"]
+            payload.append({
+                "name": values[name_i],
+                "shortfall": values[short_i],
+                "distance": values[dist_i],
+            })
+        overlay_mod.paint(title, payload)
 
     # Numeric columns sort as numbers; blank Distance sorts last either way.
     _NUMERIC_SORT_COLS = {
@@ -728,6 +761,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.tree.heading(c, text=label)
 
     def on_close(self):
+        overlay_mod.clear()
         globals.AT_BUTTON.set("Show Architect Tracker (tracking disabled)")
         self.destroy()  # Close the window
 

@@ -209,6 +209,26 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
 
+    # In-game overlay (EDMC Overlay / Overlay2 / Modern Overlay)
+    import overlay as overlay_mod
+    overlay_var = tk.BooleanVar(value=helpers.overlay_enabled())
+    overlay_state = "normal" if overlay_mod.overlay_available() else "disabled"
+    nb.Checkbutton(
+        but_frame,
+        text="Show list on in-game overlay\n(left side, from mid-screen down)",
+        variable=overlay_var,
+        state=overlay_state,
+        command=lambda v=overlay_var: toggle_overlay(v.get())
+    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+    if overlay_mod.overlay_available():
+        overlay_note = "Requires EDMC Overlay, Overlay2, or Modern Overlay."
+    else:
+        overlay_note = "No overlay plugin detected — install Overlay2 / EDMC Overlay first."
+    nb.Label(but_frame, text=overlay_note, font=italic_font, wraplength=260,
+             justify="left").grid(row=g_row, sticky="nw", padx=10, pady=1)
+    g_row = g_row +1
+
     #Open Log Directory
     nb.Button(but_frame, text="Open Log Directory\\Viewer", command=on_log_open).grid(row=g_row, sticky="nsew", padx=5, pady=5)
     g_row = g_row +1
@@ -263,6 +283,8 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "Selecting -All- in the station dropdown list will display materials from all construction sites in a single view.\n")
     text_widget.insert(tk.END, "Ctrl+click or Shift+click", 'big')
     text_widget.insert(tk.END, " a row to copy that preferred market's system name to the clipboard.\n")
+    text_widget.insert(tk.END, "In-game overlay", 'big')
+    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game, from mid-screen downward.\n")
 
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
@@ -512,6 +534,14 @@ def toggle_hide_provided(val):
     config.set('ArchTrack_hide_Provided', bool(val))
     if helpers.gui_exists():
         globals.ARCHITECT_GUI.toggle_hide_provided(val)
+
+def toggle_overlay(val):
+    helpers.set_overlay_enabled(val)
+    import overlay as overlay_mod
+    if helpers.gui_exists():
+        globals.ARCHITECT_GUI.refresh_overlay()
+    elif not val:
+        overlay_mod.clear()
 
 def reset_Style(style):
     config.set('ArchTrack_theme', str(style))

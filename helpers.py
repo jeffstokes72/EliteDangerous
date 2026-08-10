@@ -136,6 +136,15 @@ def show_ui_at_start() -> bool:
         return True
     return config.get_bool('ArchTrack_showUI')
 
+def overlay_enabled() -> bool:
+    """Paint the shortfall list via EDMC Overlay / Overlay2 when True."""
+    if config.get('ArchTrack_overlay') is None:
+        return False
+    return config.get_bool('ArchTrack_overlay')
+
+def set_overlay_enabled(val: bool) -> None:
+    config.set('ArchTrack_overlay', bool(val))
+
 # --- Market import settings ---
 def import_radius() -> int:
     import marketimport
