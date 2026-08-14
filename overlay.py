@@ -4,6 +4,8 @@ Uses the shared edmcoverlay API. When no overlay plugin is installed, every
 call is a no-op so Architect Tracker still runs normally.
 """
 
+import json
+import os
 import time
 
 from globals import logger
@@ -12,10 +14,10 @@ from globals import logger
 WIDTH_OVERLAY = 1280
 HEIGHT_OVERLAY = 960
 
-# Stable name for Modern Overlay's Overlay Controller. Folder rename
-# (ArchitectTracker → ArchitectTracker_enhanced) must not create a new group.
+# Stable name reported to Modern Overlay so the payloads stay attributed to
+# this plugin whatever the plugin folder is called.
 PLUGIN_OVERLAY_NAME = "ArchitectTracker"
-PLUGIN_GROUP_NAME = "Architect Tracker"
+PLUGIN_GROUP_NAME = "Architect Tracker"  # group written by older builds; removed now
 PLUGIN_ID_PREFIX = "archtrack-"
 
 # Left edge. Vertical start is chosen in settings (top / mid / bottomish).
@@ -26,8 +28,13 @@ OVERLAY_Y_BY_POS = {
     "bottom": 700,
 }
 OVERLAY_Y_START = OVERLAY_Y_BY_POS["mid"]
-# Room between rows so names stay readable over game HUD noise.
+# Space between rows on the 1280x960 virtual canvas, chosen in settings.
 LINE_HEIGHT = 22
+SPACING_PX = {
+    "compact": 16,
+    "normal": LINE_HEIGHT,
+    "roomy": 30,
+}
 MAX_ROWS = 20
 # Status.json heartbeat refreshes this; keep it long enough to survive a quiet stretch.
 TTL_SECONDS = 60
@@ -144,11 +151,64 @@ def _is_modern_overlay(mod=None) -> bool:
     return hasattr(mod, "normalise_legacy_payload")
 
 
+def _groupings_dir():
+    """Directory holding Modern Overlay's overlay_groupings.json, or None."""
+    mod_file = getattr(_edmcoverlay_mod, "__file__", None)
+    if not mod_file:
+        return None
+    root = os.path.dirname(os.path.abspath(mod_file))
+    for _ in range(3):
+        if os.path.exists(os.path.join(root, "overlay_groupings.json")):
+            return root
+        parent = os.path.dirname(root)
+        if parent == root:
+            break
+        root = parent
+    return None
+
+
+def _remove_legacy_group():
+    """Delete the idPrefixGroup an earlier build registered.
+
+    A fill-mode group renders the whole block at 1:1 logical pixels around a
+    single anchor, which squashed the rows together on large monitors. The
+    grouping API cannot delete entries, so edit the same JSON files it writes.
+    """
+    root = _groupings_dir()
+    if root is None:
+        return
+    for fname in ("overlay_groupings.json", "overlay_groupings.user.json"):
+        path = os.path.join(root, fname)
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            block = data.get(PLUGIN_OVERLAY_NAME)
+            if not isinstance(block, dict) or "idPrefixGroups" not in block:
+                continue
+            block.pop("idPrefixGroups")
+            if not block:
+                data.pop(PLUGIN_OVERLAY_NAME)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+                f.write("\n")
+            logger.info("Overlay: removed the old Architect Tracker group from %s", fname)
+        except Exception as e:
+            logger.debug("Overlay: could not tidy %s: %s", fname, e)
+
+
 def _register_modern_overlay_group():
-    """Tell Modern Overlay to keep our lines in one left-anchored group."""
+    """Attribute our payloads to ArchitectTracker without grouping them.
+
+    Only the matching prefix is registered, so Modern Overlay knows whose
+    lines these are while each line still scales with the game window like
+    every other legacy payload (grouping collapsed the row spacing).
+    """
     global _group_registered
     if _group_registered or not _is_modern_overlay():
         return
+    _remove_legacy_group()
     try:
         from overlay_plugin.overlay_api import define_plugin_group
     except ImportError:
@@ -158,24 +218,17 @@ def _register_modern_overlay_group():
             define_plugin_group(
                 plugin_name=PLUGIN_OVERLAY_NAME,
                 plugin_matching_prefixes=[PLUGIN_ID_PREFIX],
-                plugin_group_name=PLUGIN_GROUP_NAME,
-                plugin_group_prefixes=[PLUGIN_ID_PREFIX],
-                plugin_group_anchor="nw",
-                payload_justification="left",
             )
         except TypeError:
             # Modern Overlay builds from before the argument rename.
             define_plugin_group(
                 plugin_group=PLUGIN_OVERLAY_NAME,
                 matching_prefixes=[PLUGIN_ID_PREFIX],
-                id_prefix_group=PLUGIN_GROUP_NAME,
-                id_prefixes=[PLUGIN_ID_PREFIX],
-                id_prefix_group_anchor="nw",
             )
         _group_registered = True
-        logger.info("Overlay: registered Modern Overlay group %s", PLUGIN_GROUP_NAME)
+        logger.info("Overlay: payloads registered to %s (ungrouped)", PLUGIN_OVERLAY_NAME)
     except Exception as e:
-        logger.debug("Overlay: Modern Overlay group not registered yet: %s", e)
+        logger.debug("Overlay: Modern Overlay registration not done yet: %s", e)
 
 
 def _client():
@@ -233,6 +286,15 @@ def _y_start():
     except Exception:
         pos = "mid"
     return OVERLAY_Y_BY_POS.get(pos, OVERLAY_Y_BY_POS["mid"])
+
+
+def _line_height():
+    try:
+        import helpers
+        spacing = helpers.overlay_spacing()
+    except Exception:
+        spacing = "normal"
+    return SPACING_PX.get(spacing, LINE_HEIGHT)
 
 
 def _clear_slot_range(count, y=None):
@@ -302,13 +364,14 @@ def paint(title, rows):
     site = (title or "Architect Tracker").strip() or "Architect Tracker"
     _last_payload = (site, list(rows or []))
 
+    line_height = _line_height()
     y = _y_start()
     sent = _send(TITLE_ID, site[:48], TITLE_COLOR, OVERLAY_X, y, size="large", ttl=TTL_SECONDS)
-    y += LINE_HEIGHT + 6
+    y += line_height + 6
 
     _send(HEADER_NAME_ID, "Commodity", HEADER_COLOR, NAME_COL_X, y, ttl=TTL_SECONDS)
     _send(HEADER_QTY_ID, "Needed", HEADER_COLOR, QTY_COL_X, y, ttl=TTL_SECONDS)
-    y += LINE_HEIGHT + 4
+    y += line_height + 4
 
     if not needed:
         _send(f"{NAME_ID_PREFIX}0", "Nothing left to haul", NAME_COLOR, NAME_COL_X, y,
@@ -317,7 +380,7 @@ def paint(title, rows):
         # treats empty text as a per-id remove).
         _send(f"{QTY_ID_PREFIX}0", "", QTY_COLOR, QTY_COL_X, y, ttl=1)
         painted = 1
-        y += LINE_HEIGHT
+        y += line_height
     else:
         painted = 0
         for r in needed[:MAX_ROWS]:
@@ -328,7 +391,7 @@ def paint(title, rows):
             _send(f"{QTY_ID_PREFIX}{painted}", qty, QTY_COLOR, QTY_COL_X, y,
                   ttl=TTL_SECONDS)
             painted += 1
-            y += LINE_HEIGHT
+            y += line_height
 
     # Clear unused slots from a previous longer paint. Do not blast MAX_ROWS
     # empty messages on every frame — Overlay2 treats empty text as a delete,

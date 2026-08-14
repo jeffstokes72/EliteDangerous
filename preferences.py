@@ -251,6 +251,25 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     pos_opt.bind("<<ComboboxSelected>>", _on_overlay_pos)
     pos_opt.after_idle(lambda: _pos_ready.update(ok=True))
     g_row = g_row +1
+    space_row = nb.Frame(but_frame)
+    space_row.grid(row=g_row, sticky="nw", padx=5, pady=2)
+    nb.Label(space_row, text="Row spacing").grid(row=1, column=0, sticky="w")
+    space_labels = [helpers.OVERLAY_SPACING_LABELS[k] for k in helpers.OVERLAY_SPACINGS]
+    space_var = tk.StringVar(value=helpers.OVERLAY_SPACING_LABELS[helpers.overlay_spacing()])
+    space_opt = ttk.Combobox(space_row, textvariable=space_var,
+                             state="readonly" if overlay_mod.overlay_available() else "disabled",
+                             width=16, values=space_labels)
+    space_opt.grid(row=1, column=1, sticky="w", padx=4)
+    _space_ready = {"ok": False}
+
+    def _on_overlay_spacing(_event=None):
+        if not _space_ready["ok"]:
+            return
+        change_overlay_spacing(space_var.get())
+
+    space_opt.bind("<<ComboboxSelected>>", _on_overlay_spacing)
+    space_opt.after_idle(lambda: _space_ready.update(ok=True))
+    g_row = g_row +1
     if overlay_mod.overlay_available():
         overlay_note = "Requires EDMC Overlay, Overlay2, or Modern Overlay."
     else:
@@ -314,7 +333,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "Ctrl+click or Shift+click", 'big')
     text_widget.insert(tk.END, " a row to copy that preferred market's system name to the clipboard.\n")
     text_widget.insert(tk.END, "In-game overlay", 'big')
-    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game. Use the overlay position dropdown for top left, mid left, or bottomish left.\n")
+    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game. Use the overlay position dropdown for top left, mid left, or bottomish left, and row spacing for Compact / Normal / Roomy lines.\n")
 
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
@@ -577,6 +596,14 @@ def change_overlay_position(pos):
     previous = helpers.overlay_position()
     helpers.set_overlay_position(pos)
     if helpers.overlay_position() == previous:
+        return
+    if helpers.gui_exists() and helpers.overlay_enabled():
+        globals.ARCHITECT_GUI.refresh_overlay()
+
+def change_overlay_spacing(spacing):
+    previous = helpers.overlay_spacing()
+    helpers.set_overlay_spacing(spacing)
+    if helpers.overlay_spacing() == previous:
         return
     if helpers.gui_exists() and helpers.overlay_enabled():
         globals.ARCHITECT_GUI.refresh_overlay()

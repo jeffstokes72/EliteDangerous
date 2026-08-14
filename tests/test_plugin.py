@@ -1092,6 +1092,23 @@ class TestOverlay(PluginTestCase):
         preferences.change_overlay_position("Bottomish left")
         self.assertEqual(helpers.overlay_position(), "bottom")
 
+    def test_row_spacing_setting_spreads_or_tightens_the_rows(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        rows = [{"name": "Steel", "shortfall": 90},
+                {"name": "Titanium", "shortfall": 20}]
+
+        self.assertEqual(helpers.overlay_spacing(), "normal")
+        for label, key in (("Roomy", "roomy"), ("Compact", "compact")):
+            preferences.change_overlay_spacing(label)
+            self.assertEqual(helpers.overlay_spacing(), key)
+            stub.Overlay.reset()
+            overlay_mod.paint("Vulcan Gate", rows)
+            by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+            step = by_id["archtrack-name-1"]["y"] - by_id["archtrack-name-0"]["y"]
+            self.assertEqual(step, overlay_mod.SPACING_PX[key])
+
     def test_tracker_paints_when_overlay_enabled(self):
         import edmcoverlay as stub
         self.write_json(g.SAVE_FILE, {"Orbital Construction Site: Vulcan Gate": {

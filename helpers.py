@@ -177,6 +177,37 @@ def set_overlay_position(val: str) -> None:
             break
     config.set('ArchTrack_overlayPos', key)
 
+# Vertical distance between overlay rows.
+OVERLAY_SPACINGS = ("compact", "normal", "roomy")
+OVERLAY_SPACING_LABELS = {
+    "compact": "Compact",
+    "normal": "Normal",
+    "roomy": "Roomy",
+}
+
+def overlay_spacing() -> str:
+    """Row spacing for the in-game overlay: compact, normal, or roomy."""
+    try:
+        if config.get('ArchTrack_overlaySpacing') is None:
+            return "normal"
+        val = config.get_str('ArchTrack_overlaySpacing')
+    except Exception:
+        return "normal"
+    if val in OVERLAY_SPACINGS:
+        return val
+    for key, label in OVERLAY_SPACING_LABELS.items():
+        if val == label:
+            return key
+    return "normal"
+
+def set_overlay_spacing(val: str) -> None:
+    key = val if val in OVERLAY_SPACINGS else "normal"
+    for k, label in OVERLAY_SPACING_LABELS.items():
+        if val == label:
+            key = k
+            break
+    config.set('ArchTrack_overlaySpacing', key)
+
 # Fleet carrier CAPI: apply Frontier snapshots, or ignore them.
 FCAPI_MODES = ("always", "paused")
 FCAPI_MODE_LABELS = {
