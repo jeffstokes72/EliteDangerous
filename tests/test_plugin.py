@@ -603,24 +603,82 @@ class TestFleetCarrierCargo(PluginTestCase):
         tracker = g.CARRIER_TRACKER
         tracker.update({"cargo": [{"commodity": "Steel", "qty": 1000}],
                         "name": {"callsign": "ABC-123"},
-                        "market": {"id": 3700000099},
-                        "timestamp": "2026-01-01T12:00:00Z"})
+                        "market": {"id": 3700000099}})
         tracker.apply_transfer_event(
-            [{"Type": "steel", "Count": 400, "Direction": "toship"}],
-            timestamp="2026-01-01T12:05:00Z")
+            [{"Type": "steel", "Count": 400, "Direction": "toship"}])
         self.assertEqual(tracker.get_quantity("steel"), 600)
 
         # Frontier CAPI often still has the pre-transfer snapshot.
         tracker.update({"cargo": [{"commodity": "Steel", "qty": 1000}],
-                        "name": {"callsign": "ABC-123"},
-                        "timestamp": "2026-01-01T12:00:00Z"})
+                        "name": {"callsign": "ABC-123"}})
         self.assertEqual(tracker.get_quantity("steel"), 600)
 
         # A later snapshot that already includes the transfer is left alone.
         tracker.update({"cargo": [{"commodity": "Steel", "qty": 600}],
-                        "name": {"callsign": "ABC-123"},
-                        "timestamp": "2026-01-01T12:06:00Z"})
+                        "name": {"callsign": "ABC-123"}})
         self.assertEqual(tracker.get_quantity("steel"), 600)
+
+    def test_fresh_capi_snapshot_is_not_double_counted(self):
+        # Real CAPI carrier payloads carry no timestamp field. A snapshot that
+        # already includes a transfer must not have the transfer applied again
+        # (this left Aluminium one 1,100 deposit behind reality).
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Aluminium", "qty": 5000}],
+                        "name": {"callsign": "ABC-123"}})
+        tracker.apply_transfer_event(
+            [{"Type": "aluminium", "Count": 1100, "Direction": "toship"}],
+            timestamp="2026-08-14T07:00:00Z")
+        self.assertEqual(tracker.get_quantity("aluminium"), 3900)
+
+        tracker.update({"cargo": [{"commodity": "Aluminium", "qty": 3900}],
+                        "name": {"callsign": "ABC-123"}})
+        self.assertEqual(tracker.get_quantity("aluminium"), 3900)
+
+        # And repeated snapshots must not drift it further.
+        tracker.update({"cargo": [{"commodity": "Aluminium", "qty": 3900}],
+                        "name": {"callsign": "ABC-123"}})
+        self.assertEqual(tracker.get_quantity("aluminium"), 3900)
+
+    def test_stale_untimestamped_capi_does_not_undo_a_transfer(self):
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Aluminium", "qty": 5000}],
+                        "name": {"callsign": "ABC-123"}})
+        tracker.apply_transfer_event(
+            [{"Type": "aluminium", "Count": 1100, "Direction": "toship"}])
+        # Frontier still serves the pre-transfer hold; keep the journal tally.
+        tracker.update({"cargo": [{"commodity": "Aluminium", "qty": 5000}],
+                        "name": {"callsign": "ABC-123"}})
+        self.assertEqual(tracker.get_quantity("aluminium"), 3900)
+        # Once Frontier catches up nothing changes.
+        tracker.update({"cargo": [{"commodity": "Aluminium", "qty": 3900}],
+                        "name": {"callsign": "ABC-123"}})
+        self.assertEqual(tracker.get_quantity("aluminium"), 3900)
+
+    def test_snapshot_that_saw_only_some_transfers(self):
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 1000}],
+                        "name": {"callsign": "ABC-123"}})
+        tracker.apply_transfer_event(
+            [{"Type": "steel", "Count": 100, "Direction": "toship"}])
+        tracker.apply_transfer_event(
+            [{"Type": "steel", "Count": 200, "Direction": "toship"}])
+        self.assertEqual(tracker.get_quantity("steel"), 700)
+        # Snapshot taken between the two transfers: includes the -100 only.
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 900}],
+                        "name": {"callsign": "ABC-123"}})
+        self.assertEqual(tracker.get_quantity("steel"), 700)
+
+    def test_changes_the_journal_never_saw_take_the_snapshot(self):
+        # Another commander buying from the carrier market is invisible to our
+        # journal; the snapshot is the only truth for that.
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 1000}],
+                        "name": {"callsign": "ABC-123"}})
+        tracker.apply_transfer_event(
+            [{"Type": "steel", "Count": 100, "Direction": "toship"}])
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 640}],
+                        "name": {"callsign": "ABC-123"}})
+        self.assertEqual(tracker.get_quantity("steel"), 640)
 
     def test_toship_accepts_localised_names_and_odd_direction_case(self):
         tracker = g.CARRIER_TRACKER

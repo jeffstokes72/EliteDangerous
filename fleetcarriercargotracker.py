@@ -8,6 +8,9 @@ from globals import logger
 from commodities import commodity_key as cargo_key
 
 _MAX_JOURNAL_DELTAS = 200
+# Journal changes older than this cannot plausibly still be missing from a
+# Frontier CAPI snapshot, so stop weighing them against new snapshots.
+_DELTA_RETENTION_SECONDS = 12 * 3600
 
 
 def _parse_ts(value):
@@ -94,18 +97,7 @@ class FleetCarrierCargoTracker:
                 logger.error("Error updating fleet carrier cargo from CAPI: %s", e)
                 continue
 
-        capi_ts = _parse_ts(data.get("timestamp"))
-        replayed = 0
-        kept = []
-        for ts, name, delta in self._journal_deltas:
-            if capi_ts is None or ts is None or ts > capi_ts:
-                newcargo[name] = max(0, newcargo.get(name, 0) + delta)
-                kept.append((ts, name, delta))
-                replayed += 1
-        if replayed:
-            logger.info("Replayed %s journal cargo change(s) on top of CAPI snapshot", replayed)
-        self._journal_deltas = kept[-_MAX_JOURNAL_DELTAS:]
-        self.commodities = newcargo
+        self.commodities = self._reconcile_snapshot(newcargo)
 
         carrier_info = data.get("name", {}) if isinstance(data.get("name"), dict) else {}
         hex_name = carrier_info.get("vanityName")
@@ -115,6 +107,59 @@ class FleetCarrierCargoTracker:
         if mid is not None:
             self.market_id = mid
         self.save()
+
+    def _reconcile_snapshot(self, snapshot):
+        """Merge a CAPI cargo snapshot with journal-tracked changes.
+
+        Frontier's fleetcarrier payload carries no timestamp, so we cannot
+        tell how old a snapshot is. Instead, compare values: if the snapshot
+        equals our tally either with or without the most recent journal
+        changes, our tally is right (the snapshot is either current or merely
+        stale) and nothing may be applied twice. Only when the snapshot moves
+        in a way the journal never saw (another commander trading at the
+        carrier, cargo we missed) does the snapshot win.
+        """
+        now = datetime.now(timezone.utc).timestamp()
+        fresh = [(ts, name, delta) for ts, name, delta in self._journal_deltas
+                 if ts is None or now - ts <= _DELTA_RETENTION_SECONDS]
+
+        pending = {}
+        for entry in fresh:
+            pending.setdefault(entry[1], []).append(entry)
+
+        result = dict(snapshot)
+        kept = []
+        for name, entries in pending.items():
+            new_val = snapshot.get(name, 0)
+            pre_val = self.commodities.get(name, 0)
+            missing = self._deltas_missing_from_snapshot(entries, pre_val, new_val)
+            if missing is None:
+                logger.info(
+                    "CAPI and journal disagree on %s (journal %s, CAPI %s); using CAPI",
+                    name, pre_val, new_val)
+                result[name] = new_val
+            else:
+                result[name] = pre_val
+                kept.extend(missing)
+        self._journal_deltas = kept[-_MAX_JOURNAL_DELTAS:]
+        return result
+
+    @staticmethod
+    def _deltas_missing_from_snapshot(entries, pre_val, new_val):
+        """The trailing run of journal changes a snapshot has not seen yet.
+
+        [] when the snapshot already includes everything, a suffix of
+        `entries` when it predates those changes, or None when the snapshot
+        cannot be explained by our journal at all.
+        """
+        if new_val == pre_val:
+            return []
+        rolled_back = 0
+        for i in range(len(entries) - 1, -1, -1):
+            rolled_back += entries[i][2]
+            if new_val == max(0, pre_val - rolled_back):
+                return entries[i:]
+        return None
 
     def is_own_carrier(self, station=None, market_id=None) -> bool:
         """True when `station` or `market_id` is the commander's tracked carrier."""
