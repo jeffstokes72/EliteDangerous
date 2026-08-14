@@ -9,6 +9,7 @@ from config import config
 import globals
 from globals import logger
 import helpers
+from commodities import commodity_key
 from tooltip import Tooltip
 import overlay as overlay_mod
 
@@ -618,7 +619,6 @@ class ArchitectTrackerGUI(tk.Toplevel):
             prov = vals['ProvidedAmount']
             if self.hide_provided and prov >= req:
                 continue
-            safeMat = mat.replace("$", "").replace("_name;", "")
             locName = vals['Name_Localised']
             need = req - prov
 
@@ -627,10 +627,9 @@ class ArchitectTrackerGUI(tk.Toplevel):
             pref_distance = helpers.get_prefMarket_distance(
                 mat, market_lib, legacy_lib, from_location=from_location)
 
-            # Get fleet carrier and ship cargo quantities. Cargo.json still uses the
-            # bare internal name, the carrier tracker normalises whatever it is given.
+            # Carrier tracker and ship hold both fold names through commodity_key.
             fc_qty = globals.CARRIER_TRACKER.get_quantity(mat)
-            ship_qty = cargo_counts.get(safeMat, 0)
+            ship_qty = cargo_counts.get(commodity_key(mat), 0)
 
             # Calculate shortage
             short = max(0, need - (fc_qty + ship_qty))

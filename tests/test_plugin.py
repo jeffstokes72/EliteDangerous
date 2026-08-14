@@ -557,6 +557,60 @@ class TestFleetCarrierCargo(PluginTestCase):
         tracker.update({"cargo": [], "name": {"vanityName": "not hex", "callsign": "ABC-123"}})
         self.assertEqual(tracker.carrier_name, "not hex")
 
+    def test_stale_capi_does_not_undo_a_transfer_to_ship(self):
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 1000}],
+                        "name": {"callsign": "ABC-123"},
+                        "market": {"id": 3700000099},
+                        "timestamp": "2026-01-01T12:00:00Z"})
+        tracker.apply_transfer_event(
+            [{"Type": "steel", "Count": 400, "Direction": "toship"}],
+            timestamp="2026-01-01T12:05:00Z")
+        self.assertEqual(tracker.get_quantity("steel"), 600)
+
+        # Frontier CAPI often still has the pre-transfer snapshot.
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 1000}],
+                        "name": {"callsign": "ABC-123"},
+                        "timestamp": "2026-01-01T12:00:00Z"})
+        self.assertEqual(tracker.get_quantity("steel"), 600)
+
+        # A later snapshot that already includes the transfer is left alone.
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 600}],
+                        "name": {"callsign": "ABC-123"},
+                        "timestamp": "2026-01-01T12:06:00Z"})
+        self.assertEqual(tracker.get_quantity("steel"), 600)
+
+    def test_toship_accepts_localised_names_and_odd_direction_case(self):
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 50}],
+                        "name": {"callsign": "ABC-123"}})
+        tracker.apply_transfer_event([
+            {"Type": "", "Type_Localised": "Steel", "Count": "20", "Direction": "ToShip"}])
+        self.assertEqual(tracker.get_quantity("$steel_name;"), 30)
+
+    def test_own_carrier_matches_market_id_when_the_station_name_differs(self):
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 80}],
+                        "name": {"callsign": "ABC-123"},
+                        "market": {"id": 3700000099}})
+        self.assertTrue(tracker.is_own_carrier("Homerus", 3700000099))
+        self.assertTrue(tracker.is_own_carrier("abc-123"))
+        self.assertFalse(tracker.is_own_carrier("Jameson Memorial", 128666762))
+
+        tracker.apply_market_purchase({"Type": "steel", "Count": 15, "MarketID": 3700000099})
+        self.assertEqual(tracker.get_quantity("steel"), 65)
+
+    def test_transfer_to_ship_is_tracked_with_the_window_closed(self):
+        g.ARCHITECT_GUI = None
+        tracker = g.CARRIER_TRACKER
+        tracker.update({"cargo": [{"commodity": "Steel", "qty": 100}],
+                        "name": {"callsign": "ABC-123"}})
+        load.journal_entry("Cmdr", False, "Vulcan", "ABC-123", {
+            "event": "CargoTransfer", "timestamp": "2026-01-01T12:05:00Z",
+            "Transfers": [{"Type": "steel", "Count": 40, "Direction": "toship"}]},
+            {"IsDocked": True})
+        self.assertEqual(tracker.get_quantity("steel"), 60)
+
 
 class TestTooltip(PluginTestCase):
     def test_updating_the_text_does_not_add_bindings(self):
@@ -815,6 +869,40 @@ class TestTrackerWindow(PluginTestCase):
         self.assertEqual(int(window.tree.set(row, "Ship Qty")), 15)
         self.assertEqual(int(window.tree.set(row, "Shortfall")), 75)
 
+    def test_ship_and_carrier_qty_share_one_commodity_spelling(self):
+        self.write_json(g.SAVE_FILE, {"Orbital Construction Site: Vulcan Gate": {
+            "Location": [1.0, 2.0, 3.0], "ID": 3700001,
+            "materials": {"$hazardousenvironmentsuits_name;": {
+                "Name_Localised": "H.E. Suits", "RequiredAmount": 100,
+                "ProvidedAmount": 0, "Price": 9000}}}})
+        self.write_json(g.CARGO_JSON, {"Inventory": [
+            {"Name": "$hesuits_name;", "Count": 12}]})
+        g.CARRIER_TRACKER.update({"cargo": [{"commodity": "H.E. Suits", "qty": 30}],
+                                  "name": {"callsign": "ABC-123"}})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(int(window.tree.set(row, "Carrier Qty")), 30)
+        self.assertEqual(int(window.tree.set(row, "Ship Qty")), 12)
+        self.assertEqual(int(window.tree.set(row, "Shortfall")), 58)
+
+    def test_transfer_to_ship_updates_the_carrier_column(self):
+        self.save_a_site()
+        g.CARRIER_TRACKER.update({"cargo": [{"commodity": "Steel", "qty": 100}],
+                                  "name": {"callsign": "ABC-123"},
+                                  "timestamp": "2026-01-01T12:00:00Z"})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        load.journal_entry("Cmdr", False, "Vulcan", "ABC-123", {
+            "event": "CargoTransfer", "timestamp": "2026-01-01T12:05:00Z",
+            "Transfers": [{"Type": "steel", "Count": 40, "Direction": "toship"}]},
+            {"IsDocked": True})
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(int(window.tree.set(row, "Carrier Qty")), 60)
+
     def test_edmc_keeps_its_own_ttk_theme(self):
         before = ttk.Style().theme_use()
         window = self.open_window()
@@ -876,6 +964,33 @@ class TestOverlay(PluginTestCase):
         self.assertGreater(by_id["archtrack-name-1"]["y"], by_id["archtrack-name-0"]["y"])
         self.assertGreaterEqual(
             by_id["archtrack-name-1"]["y"] - by_id["archtrack-name-0"]["y"], 20)
+
+    def test_overlay_position_dropdown_moves_the_anchor(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        rows = [{"name": "Steel", "shortfall": 90}]
+
+        helpers.set_overlay_position("top")
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", rows)
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-title"]["y"], overlay_mod.OVERLAY_Y_BY_POS["top"])
+        self.assertEqual(by_id["archtrack-title"]["x"], 24)
+
+        helpers.set_overlay_position("bottom")
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", rows)
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-title"]["y"], overlay_mod.OVERLAY_Y_BY_POS["bottom"])
+        self.assertGreater(by_id["archtrack-title"]["y"], overlay_mod.OVERLAY_Y_BY_POS["mid"])
+
+    def test_overlay_position_defaults_to_mid_left(self):
+        self.assertEqual(helpers.overlay_position(), "mid")
+        preferences.change_overlay_position("Top left")
+        self.assertEqual(helpers.overlay_position(), "top")
+        preferences.change_overlay_position("Bottomish left")
+        self.assertEqual(helpers.overlay_position(), "bottom")
 
     def test_tracker_paints_when_overlay_enabled(self):
         import edmcoverlay as stub

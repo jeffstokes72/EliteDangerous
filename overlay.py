@@ -10,9 +10,14 @@ from globals import logger
 WIDTH_OVERLAY = 1280
 HEIGHT_OVERLAY = 960
 
-# Left edge, starting at mid-screen and listing downward.
+# Left edge. Vertical start is chosen in settings (top / mid / bottomish).
 OVERLAY_X = 24
-OVERLAY_Y_START = HEIGHT_OVERLAY // 2  # 480
+OVERLAY_Y_BY_POS = {
+    "top": 36,
+    "mid": HEIGHT_OVERLAY // 2,  # 480, original placement
+    "bottom": 700,
+}
+OVERLAY_Y_START = OVERLAY_Y_BY_POS["mid"]
 # Room between rows so names stay readable over game HUD noise.
 LINE_HEIGHT = 22
 MAX_ROWS = 20
@@ -110,19 +115,27 @@ def _send(msg_id, text, color, x, y, size="normal", ttl=TTL_SECONDS):
         return False
 
 
-def _clear_slot_range(count):
+def _y_start():
+    import helpers
+    return OVERLAY_Y_BY_POS.get(helpers.overlay_position(), OVERLAY_Y_BY_POS["mid"])
+
+
+def _clear_slot_range(count, y=None):
+    if y is None:
+        y = _y_start()
     for i in range(count):
-        _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, OVERLAY_Y_START, ttl=1)
-        _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, OVERLAY_Y_START, ttl=1)
+        _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, y, ttl=1)
+        _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, y, ttl=1)
 
 
 def clear():
     """Blank previously painted Architect Tracker lines."""
     global _active_row_count
-    _send(TITLE_ID, "", TITLE_COLOR, OVERLAY_X, OVERLAY_Y_START, size="large", ttl=1)
-    _send(HEADER_NAME_ID, "", HEADER_COLOR, NAME_COL_X, OVERLAY_Y_START, ttl=1)
-    _send(HEADER_QTY_ID, "", HEADER_COLOR, QTY_COL_X, OVERLAY_Y_START, ttl=1)
-    _clear_slot_range(max(_active_row_count, MAX_ROWS))
+    y = _y_start()
+    _send(TITLE_ID, "", TITLE_COLOR, OVERLAY_X, y, size="large", ttl=1)
+    _send(HEADER_NAME_ID, "", HEADER_COLOR, NAME_COL_X, y, ttl=1)
+    _send(HEADER_QTY_ID, "", HEADER_COLOR, QTY_COL_X, y, ttl=1)
+    _clear_slot_range(max(_active_row_count, MAX_ROWS), y)
     _active_row_count = 0
 
 
@@ -151,7 +164,7 @@ def paint(title, rows):
     needed = [r for r in rows if int(r.get("shortfall") or 0) > 0]
     site = (title or "Architect Tracker").strip() or "Architect Tracker"
 
-    y = OVERLAY_Y_START
+    y = _y_start()
     _send(TITLE_ID, site[:48], TITLE_COLOR, OVERLAY_X, y, size="large", ttl=TTL_SECONDS)
     y += LINE_HEIGHT + 6
 
@@ -179,7 +192,8 @@ def paint(title, rows):
 
     # Clear unused slots from a previous longer paint.
     global _active_row_count
+    origin = _y_start()
     for i in range(painted, max(_active_row_count, MAX_ROWS)):
-        _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, OVERLAY_Y_START, ttl=1)
-        _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, OVERLAY_Y_START, ttl=1)
+        _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, origin, ttl=1)
+        _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, origin, ttl=1)
     _active_row_count = painted

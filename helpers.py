@@ -9,6 +9,7 @@ from config import config
 
 import globals
 from globals import logger
+from commodities import commodity_key
 
 # --- Journal directory ---
 def resolve_journal_dir():
@@ -144,6 +145,34 @@ def overlay_enabled() -> bool:
 
 def set_overlay_enabled(val: bool) -> None:
     config.set('ArchTrack_overlay', bool(val))
+
+# Left-side overlay anchor. "mid" is the original mid-screen-down placement.
+OVERLAY_POSITIONS = ("top", "mid", "bottom")
+OVERLAY_POSITION_LABELS = {
+    "top": "Top left",
+    "mid": "Mid left",
+    "bottom": "Bottomish left",
+}
+
+def overlay_position() -> str:
+    """Where to paint the in-game overlay: top, mid, or bottom (all left)."""
+    if config.get('ArchTrack_overlayPos') is None:
+        return "mid"
+    val = config.get_str('ArchTrack_overlayPos')
+    if val in OVERLAY_POSITIONS:
+        return val
+    for key, label in OVERLAY_POSITION_LABELS.items():
+        if val == label:
+            return key
+    return "mid"
+
+def set_overlay_position(val: str) -> None:
+    key = val if val in OVERLAY_POSITIONS else "mid"
+    for k, label in OVERLAY_POSITION_LABELS.items():
+        if val == label:
+            key = k
+            break
+    config.set('ArchTrack_overlayPos', key)
 
 # --- Market import settings ---
 def import_radius() -> int:
@@ -385,13 +414,18 @@ def load_starship_cargo_data():
         return []
 
 def starship_cargo_counts():
-    """Total Count per cargo Name, summing split stolen/clean stacks."""
+    """Total Count per commodity_key, summing split stolen/clean stacks."""
     totals = {}
     for item in load_starship_cargo_data():
-        name = item.get("Name")
+        name = commodity_key(item.get("Name") or item.get("Type") or item.get("Name_Localised"))
         if not name:
             continue
-        totals[name] = totals.get(name, 0) + int(item.get("Count") or 0)
+        try:
+            qty = int(item.get("Count") or 0)
+        except (TypeError, ValueError):
+            continue
+        if qty:
+            totals[name] = totals.get(name, 0) + qty
     return totals
 
 # is the item a construction commodity

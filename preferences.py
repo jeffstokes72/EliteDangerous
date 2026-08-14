@@ -215,11 +215,21 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     overlay_state = "normal" if overlay_mod.overlay_available() else "disabled"
     nb.Checkbutton(
         but_frame,
-        text="Show list on in-game overlay\n(left side, from mid-screen down)",
+        text="Show list on in-game overlay",
         variable=overlay_var,
         state=overlay_state,
         command=lambda v=overlay_var: toggle_overlay(v.get())
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+    pos_row = nb.Frame(but_frame)
+    pos_row.grid(row=g_row, sticky="nw", padx=5, pady=2)
+    nb.Label(pos_row, text="Overlay position").grid(row=1, column=0, sticky="w")
+    pos_labels = [helpers.OVERLAY_POSITION_LABELS[k] for k in helpers.OVERLAY_POSITIONS]
+    pos_var = tk.StringVar(value=helpers.OVERLAY_POSITION_LABELS[helpers.overlay_position()])
+    pos_opt = ttk.Combobox(pos_row, textvariable=pos_var, state="readonly" if overlay_mod.overlay_available() else "disabled",
+                           width=16, values=pos_labels)
+    pos_opt.grid(row=1, column=1, sticky="w", padx=4)
+    pos_opt.bind("<<ComboboxSelected>>", lambda e: change_overlay_position(pos_var.get()))
     g_row = g_row +1
     if overlay_mod.overlay_available():
         overlay_note = "Requires EDMC Overlay, Overlay2, or Modern Overlay."
@@ -284,7 +294,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "Ctrl+click or Shift+click", 'big')
     text_widget.insert(tk.END, " a row to copy that preferred market's system name to the clipboard.\n")
     text_widget.insert(tk.END, "In-game overlay", 'big')
-    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game, from mid-screen downward.\n")
+    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game. Use the overlay position dropdown for top left, mid left, or bottomish left.\n")
 
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
@@ -542,6 +552,11 @@ def toggle_overlay(val):
         globals.ARCHITECT_GUI.refresh_overlay()
     elif not val:
         overlay_mod.clear()
+
+def change_overlay_position(pos):
+    helpers.set_overlay_position(pos)
+    if helpers.gui_exists() and helpers.overlay_enabled():
+        globals.ARCHITECT_GUI.refresh_overlay()
 
 def reset_Style(style):
     config.set('ArchTrack_theme', str(style))

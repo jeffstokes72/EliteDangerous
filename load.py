@@ -1,4 +1,4 @@
-__version__ = "2.3"
+__version__ = "2.5"
 
 """
 Displays commodities required, provided and needed when you land at a construction site,
@@ -106,12 +106,19 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             globals.CURRENT_LOCATION = tuple(entry["StarPos"])
             logger.info("Set current location to: %s", globals.CURRENT_LOCATION)
 
+        event = entry.get("event")
+        ts = entry.get("timestamp")
+
+        # Keep carrier/ship cargo current even if the tracker window is closed.
+        if event in ("CargoTransfer", "MarketBuy", "MarketSell") and globals.CARRIER_TRACKER:
+            _apply_cargo_journal(event, entry, station, ts)
+
         if not helpers.gui_exists():
             return
 
         if globals.SHIP_STATE == globals.SHIP_MODE.Unknown:
             if state.get("IsDocked") is True:
-                if globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign:
+                if _own_carrier(station, entry):
                     globals.SHIP_STATE = globals.SHIP_MODE.DockedAtFC
                     logger.info("Ship state: Docked at FC")
                 elif helpers.is_facility(station):
@@ -123,8 +130,6 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             else:
                 globals.SHIP_STATE = globals.SHIP_MODE.Undocked
                 logger.info("Ship state: Undocked")
-
-        event = entry.get("event")
 
         if event == "ColonisationConstructionDepot":
             if station == None:
@@ -147,26 +152,13 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             if station == None:
                 return
             # do not register my fleet carrier as a market
-            if not (globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign):
+            if not _own_carrier(station, entry):
                 globals.SHIP_STATE = globals.SHIP_MODE.DockedAtMarket
                 logger.info("Ship state: Docked at market: %s", station)
                 helpers.update_market_library()
 
-        elif event == "MarketBuy":
-            if globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign:
-                globals.CARRIER_TRACKER.apply_market_purchase(entry)
-
-        elif event == "MarketSell":
-            if globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign:
-                globals.CARRIER_TRACKER.apply_market_sale(entry)
-
-        elif event == "CargoTransfer":
-            transfers = entry.get("Transfers", [])
-            if globals.CARRIER_TRACKER:
-                globals.CARRIER_TRACKER.apply_transfer_event(transfers)
-
         elif event == "Docked":
-            if globals.CARRIER_TRACKER and station == globals.CARRIER_TRACKER.callsign:
+            if _own_carrier(station, entry):
                 globals.SHIP_STATE = globals.SHIP_MODE.DockedAtFC
                 logger.info("Ship state: Docked at FC")
             else:
@@ -207,6 +199,24 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         logger.error("Unexpected error: %s", e)
         logger.error("Traceback:\n%s", traceback.format_exc())
 
+def _own_carrier(station, entry=None) -> bool:
+    tracker = globals.CARRIER_TRACKER
+    if not tracker:
+        return False
+    mid = entry.get("MarketID") if entry else None
+    return tracker.is_own_carrier(station, mid)
+
+def _apply_cargo_journal(event, entry, station, timestamp=None):
+    tracker = globals.CARRIER_TRACKER
+    if event == "CargoTransfer":
+        tracker.apply_transfer_event(entry.get("Transfers", []), timestamp=timestamp)
+    elif event == "MarketBuy":
+        if tracker.is_own_carrier(station, entry.get("MarketID")):
+            tracker.apply_market_purchase(entry, timestamp=timestamp)
+    elif event == "MarketSell":
+        if tracker.is_own_carrier(station, entry.get("MarketID")):
+            tracker.apply_market_sale(entry, timestamp=timestamp)
+
 def capi_fleetcarrier(data: CAPIData):
     if globals.FCAPI_PAUSED:
         logger.info("Ignored fleet carrier API data")
@@ -219,12 +229,12 @@ def capi_fleetcarrier(data: CAPIData):
     else:
         fcapi_mode = config.get_str('ArchTrack_fcapimode')
 
+    logger.info("Received fleet carrier CAPI data") #only OUR carrier, others are treated as markets
+    globals.CARRIER_TRACKER.update(data)
+    if fcapi_mode == "First then pause":
+        globals.FCAPI_PAUSED = True
+        logger.info('Fleet carrier API paused.')
     if helpers.gui_exists():
-        logger.info("Received fleet carrier CAPI data") #only OUR carrier, others are treated as markets
-        globals.CARRIER_TRACKER.update(data)
-        if fcapi_mode == "First then pause":
-            globals.FCAPI_PAUSED = True
-            logger.info('Fleet carrier API paused.')
         globals.ARCHITECT_GUI.refresh()
 
 def plugin_prefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | None:
