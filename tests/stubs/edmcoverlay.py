@@ -14,11 +14,8 @@ class Overlay:
         })
 
     def send_raw(self, msg):
-        Overlay.messages.append({
-            "id": msg.get("id"), "text": msg.get("text"), "color": msg.get("color"),
-            "x": msg.get("x"), "y": msg.get("y"), "ttl": msg.get("ttl"),
-            "size": msg.get("size"), "plugin": msg.get("plugin"),
-        })
+        raise AssertionError("plugin must stick to send_message; "
+                             "send_raw differs between overlay versions")
 
     @classmethod
     def reset(cls):

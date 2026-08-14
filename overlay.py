@@ -154,14 +154,24 @@ def _register_modern_overlay_group():
     except ImportError:
         return
     try:
-        define_plugin_group(
-            plugin_name=PLUGIN_OVERLAY_NAME,
-            plugin_matching_prefixes=[PLUGIN_ID_PREFIX],
-            plugin_group_name=PLUGIN_GROUP_NAME,
-            plugin_group_prefixes=[PLUGIN_ID_PREFIX],
-            plugin_group_anchor="nw",
-            payload_justification="left",
-        )
+        try:
+            define_plugin_group(
+                plugin_name=PLUGIN_OVERLAY_NAME,
+                plugin_matching_prefixes=[PLUGIN_ID_PREFIX],
+                plugin_group_name=PLUGIN_GROUP_NAME,
+                plugin_group_prefixes=[PLUGIN_ID_PREFIX],
+                plugin_group_anchor="nw",
+                payload_justification="left",
+            )
+        except TypeError:
+            # Modern Overlay builds from before the argument rename.
+            define_plugin_group(
+                plugin_group=PLUGIN_OVERLAY_NAME,
+                matching_prefixes=[PLUGIN_ID_PREFIX],
+                id_prefix_group=PLUGIN_GROUP_NAME,
+                id_prefixes=[PLUGIN_ID_PREFIX],
+                id_prefix_group_anchor="nw",
+            )
         _group_registered = True
         logger.info("Overlay: registered Modern Overlay group %s", PLUGIN_GROUP_NAME)
     except Exception as e:
@@ -186,25 +196,16 @@ def _client():
 
 
 def _send(msg_id, text, color, x, y, size="normal", ttl=TTL_SECONDS):
+    # Plain send_message only: it is the one call every overlay plugin
+    # (EDMC Overlay, Overlay2, all Modern Overlay versions) implements the
+    # same way. Modern Overlay routes our lines to the Architect Tracker
+    # group by the archtrack- id prefix, so no extra payload fields needed.
     global _overlay_client, _warned_send
     client = _client()
     if client is None:
         return False
     try:
-        x, y = int(x), int(y)
-        if _is_modern_overlay() and hasattr(client, "send_raw"):
-            client.send_raw({
-                "id": msg_id,
-                "text": text,
-                "color": color,
-                "x": x,
-                "y": y,
-                "ttl": ttl,
-                "size": size,
-                "plugin": PLUGIN_OVERLAY_NAME,
-            })
-            return True
-        client.send_message(msg_id, text, color, x, y, ttl=ttl, size=size)
+        client.send_message(msg_id, text, color, int(x), int(y), ttl=ttl, size=size)
         return True
     except TypeError:
         # Older clients may not take size=

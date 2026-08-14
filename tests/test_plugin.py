@@ -1096,7 +1096,10 @@ class TestOverlay(PluginTestCase):
         self.assertEqual(by_id["archtrack-name-0"]["text"], "Steel")
         g.ARCHITECT_GUI = None
 
-    def test_modern_overlay_payloads_carry_the_stable_plugin_name(self):
+    def test_modern_overlay_still_gets_plain_send_message(self):
+        # send_raw normalisation differs between Modern Overlay versions, so
+        # even when the stub advertises itself as Modern Overlay the plugin
+        # must stay on send_message (the stub's send_raw raises).
         import overlay as overlay_mod
         import edmcoverlay as stub
         stub.MODERN_OVERLAY_IDENTITY = {"plugin": "EDMCModernOverlay"}
@@ -1105,9 +1108,9 @@ class TestOverlay(PluginTestCase):
         helpers.set_overlay_enabled(True)
         stub.Overlay.reset()
         overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90}])
-        titled = [m for m in stub.Overlay.messages if m.get("id") == "archtrack-title" and m.get("text")]
-        self.assertTrue(titled)
-        self.assertEqual(titled[0].get("plugin"), overlay_mod.PLUGIN_OVERLAY_NAME)
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-title"]["text"], "Vulcan Gate")
+        self.assertEqual(by_id["archtrack-name-0"]["text"], "Steel")
         del stub.MODERN_OVERLAY_IDENTITY
 
 
