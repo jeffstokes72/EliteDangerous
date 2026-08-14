@@ -1052,6 +1052,24 @@ class TestOverlay(PluginTestCase):
         # Closing clears the overlay slots (empty strings / short ttl).
         self.assertTrue(any(m["text"] == "" for m in stub.Overlay.messages))
 
+    def test_long_names_are_trimmed_clear_of_the_needed_column(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod.paint("Marius Beacon", [
+            {"name": "Medical Diagnostic Equipment", "shortfall": 1546},
+            {"name": "Steel", "shortfall": 7603},
+        ])
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        long_name = by_id["archtrack-name-0"]["text"]
+        self.assertLessEqual(len(long_name), overlay_mod.NAME_MAX_CHARS)
+        self.assertTrue(long_name.endswith(".."))
+        self.assertEqual(by_id["archtrack-name-1"]["text"], "Steel")
+        # ~8 px per character of name budget before the numbers start.
+        gap = by_id["archtrack-qty-0"]["x"] - by_id["archtrack-name-0"]["x"]
+        self.assertGreaterEqual(gap, overlay_mod.NAME_MAX_CHARS * 8)
+
     def test_overlay_import_is_retried_after_a_failed_first_look(self):
         import overlay as overlay_mod
         overlay_mod._edmcoverlay_mod = None

@@ -34,12 +34,12 @@ TTL_SECONDS = 60
 HEARTBEAT_SECONDS = 8
 
 # Two-column table: commodity name | amount needed.
-# Overlay fonts are roughly fixed-width; pad for a clear gap between columns.
-NAME_WIDTH = 26
-QTY_WIDTH = 8
+# The overlay font is proportional and wider than the ~5 px/char the old
+# layout assumed, so long names collided with the numbers. Budget ~8 px per
+# character and truncate with ".." so the name can never reach the numbers.
+NAME_MAX_CHARS = 22
 NAME_COL_X = OVERLAY_X
-# ~5 px per character at normal size on the virtual canvas.
-QTY_COL_X = OVERLAY_X + (NAME_WIDTH * 5) + 24
+QTY_COL_X = OVERLAY_X + (NAME_MAX_CHARS * 8) + 20  # 220
 
 TITLE_COLOR = "#1fbeff"  # Elite-ish cyan
 HEADER_COLOR = "yellow"
@@ -263,6 +263,14 @@ def _format_qty(value):
         return str(value)
 
 
+def _fit_name(name):
+    """Trim a commodity name so it stays inside the name column."""
+    name = str(name or "")
+    if len(name) <= NAME_MAX_CHARS:
+        return name
+    return name[:NAME_MAX_CHARS - 2] + ".."
+
+
 def paint(title, rows):
     """Draw a two-column table: commodity | amount needed.
 
@@ -313,7 +321,7 @@ def paint(title, rows):
     else:
         painted = 0
         for r in needed[:MAX_ROWS]:
-            name = str(r.get("name") or "")[:NAME_WIDTH]
+            name = _fit_name(r.get("name"))
             qty = _format_qty(r.get("shortfall") or 0)
             _send(f"{NAME_ID_PREFIX}{painted}", name, NAME_COLOR, NAME_COL_X, y,
                   ttl=TTL_SECONDS)
