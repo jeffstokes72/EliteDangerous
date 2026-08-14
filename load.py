@@ -87,6 +87,13 @@ def plugin_app(parent: tk.Frame) -> tk.Frame:
     tk.Button(globals.EDMCframe, textvariable=globals.AT_BUTTON, command=helpers.toggle_gui).pack(fill=tk.X, padx=5, pady=5)
 
     theme.update(globals.EDMCframe)
+    # plugin_start3 can open the tracker before Overlay2 / Modern Overlay is
+    # on sys.path. Re-paint now that every plugin has loaded.
+    try:
+        if helpers.overlay_enabled() and helpers.gui_exists():
+            globals.ARCHITECT_GUI.refresh_overlay()
+    except Exception as e:
+        logger.debug("Overlay refresh at plugin_app skipped: %s", e)
     return globals.EDMCframe
 
 def plugin_stop():
@@ -96,6 +103,16 @@ def plugin_stop():
         globals.ARCHITECT_GUI.destroy()
     logger.info("Shutting down.")
     logger.info("***************************************")
+
+def dashboard_entry(cmdr, is_beta, entry):
+    """Status.json ticks often enough to keep the overlay from expiring in-game."""
+    try:
+        if not helpers.overlay_enabled() or not helpers.gui_exists():
+            return
+        import overlay as overlay_mod
+        overlay_mod.heartbeat()
+    except Exception:
+        pass
 
 # --- Data Hooks ---
 def journal_entry(cmdr, is_beta, system, station, entry, state):

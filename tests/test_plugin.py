@@ -89,8 +89,17 @@ class PluginTestCase(unittest.TestCase):
         overlay_mod._overlay_client = None
         overlay_mod._import_attempted = True
         overlay_mod._warned_unavailable = False
+        overlay_mod._warned_send = False
+        overlay_mod._logged_missing = False
+        overlay_mod._logged_skip_disabled = False
+        overlay_mod._logged_skip_unavailable = False
+        overlay_mod._group_registered = False
         overlay_mod._active_row_count = 0
+        overlay_mod._last_payload = None
+        overlay_mod._last_heartbeat = 0.0
         edmcoverlay_stub.Overlay.reset()
+        if hasattr(edmcoverlay_stub, "MODERN_OVERLAY_IDENTITY"):
+            delattr(edmcoverlay_stub, "MODERN_OVERLAY_IDENTITY")
 
     def tearDown(self):
         if g.ARCHITECT_GUI is not None:
@@ -1009,6 +1018,64 @@ class TestOverlay(PluginTestCase):
         window.on_close()
         # Closing clears the overlay slots (empty strings / short ttl).
         self.assertTrue(any(m["text"] == "" for m in stub.Overlay.messages))
+
+    def test_overlay_import_is_retried_after_a_failed_first_look(self):
+        import overlay as overlay_mod
+        overlay_mod._edmcoverlay_mod = None
+        overlay_mod._import_attempted = True
+        overlay_mod._logged_missing = True
+        self.assertTrue(overlay_mod.overlay_available())
+        self.assertIsNotNone(overlay_mod._edmcoverlay_mod)
+
+    def test_heartbeat_repaints_the_last_frame(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90}])
+        stub.Overlay.reset()
+        overlay_mod._last_heartbeat = 0.0
+        overlay_mod.heartbeat()
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-title"]["text"], "Vulcan Gate")
+        self.assertEqual(by_id["archtrack-name-0"]["text"], "Steel")
+
+    def test_first_paint_does_not_blank_twenty_unused_rows(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod._active_row_count = 0
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90}])
+        blanks = [m for m in stub.Overlay.messages if m["text"] == ""]
+        self.assertLess(len(blanks), 10)
+
+    def test_dashboard_entry_keeps_the_overlay_alive(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        g.ARCHITECT_GUI = FakeGUI(True)
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90}])
+        stub.Overlay.reset()
+        overlay_mod._last_heartbeat = 0.0
+        load.dashboard_entry("CMDR", False, {"event": "Status"})
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-name-0"]["text"], "Steel")
+        g.ARCHITECT_GUI = None
+
+    def test_modern_overlay_payloads_carry_the_stable_plugin_name(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        stub.MODERN_OVERLAY_IDENTITY = {"plugin": "EDMCModernOverlay"}
+        overlay_mod._edmcoverlay_mod = stub
+        overlay_mod._overlay_client = None
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "shortfall": 90}])
+        titled = [m for m in stub.Overlay.messages if m.get("id") == "archtrack-title" and m.get("text")]
+        self.assertTrue(titled)
+        self.assertEqual(titled[0].get("plugin"), overlay_mod.PLUGIN_OVERLAY_NAME)
+        del stub.MODERN_OVERLAY_IDENTITY
 
 
 class TestCommodityNames(unittest.TestCase):

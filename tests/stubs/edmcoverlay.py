@@ -13,6 +13,13 @@ class Overlay:
             "x": x, "y": y, "ttl": ttl, "size": size,
         })
 
+    def send_raw(self, msg):
+        Overlay.messages.append({
+            "id": msg.get("id"), "text": msg.get("text"), "color": msg.get("color"),
+            "x": msg.get("x"), "y": msg.get("y"), "ttl": msg.get("ttl"),
+            "size": msg.get("size"), "plugin": msg.get("plugin"),
+        })
+
     @classmethod
     def reset(cls):
         cls.messages = []

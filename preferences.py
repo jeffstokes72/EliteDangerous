@@ -233,7 +233,17 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     pos_opt = ttk.Combobox(pos_row, textvariable=pos_var, state="readonly" if overlay_mod.overlay_available() else "disabled",
                            width=16, values=pos_labels)
     pos_opt.grid(row=1, column=1, sticky="w", padx=4)
-    pos_opt.bind("<<ComboboxSelected>>", lambda e: change_overlay_position(pos_var.get()))
+    # Some Tk builds fire <<ComboboxSelected>> while the widget is built, which
+    # would silently move the overlay to the first list entry (Top left).
+    _pos_ready = {"ok": False}
+
+    def _on_overlay_pos(_event=None):
+        if not _pos_ready["ok"]:
+            return
+        change_overlay_position(pos_var.get())
+
+    pos_opt.bind("<<ComboboxSelected>>", _on_overlay_pos)
+    pos_opt.after_idle(lambda: _pos_ready.update(ok=True))
     g_row = g_row +1
     if overlay_mod.overlay_available():
         overlay_note = "Requires EDMC Overlay, Overlay2, or Modern Overlay."
@@ -558,7 +568,10 @@ def toggle_overlay(val):
         overlay_mod.clear()
 
 def change_overlay_position(pos):
+    previous = helpers.overlay_position()
     helpers.set_overlay_position(pos)
+    if helpers.overlay_position() == previous:
+        return
     if helpers.gui_exists() and helpers.overlay_enabled():
         globals.ARCHITECT_GUI.refresh_overlay()
 

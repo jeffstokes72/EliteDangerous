@@ -156,9 +156,12 @@ OVERLAY_POSITION_LABELS = {
 
 def overlay_position() -> str:
     """Where to paint the in-game overlay: top, mid, or bottom (all left)."""
-    if config.get('ArchTrack_overlayPos') is None:
+    try:
+        if config.get('ArchTrack_overlayPos') is None:
+            return "mid"
+        val = config.get_str('ArchTrack_overlayPos')
+    except Exception:
         return "mid"
-    val = config.get_str('ArchTrack_overlayPos')
     if val in OVERLAY_POSITIONS:
         return val
     for key, label in OVERLAY_POSITION_LABELS.items():
