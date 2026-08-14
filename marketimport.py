@@ -70,8 +70,8 @@ class ImportError_(Exception):
 def user_agent():
     global USER_AGENT
     if USER_AGENT is None:
-        USER_AGENT = (f"ArchitectTracker/{globals.ARCHITECT_TRACKER_VER} "
-                      "(EDMC plugin; +https://github.com/kfpopeye/EliteDangerous)")
+        USER_AGENT = (f"ArchitectTracker_enhanced/{globals.ARCHITECT_TRACKER_VER} "
+                      "(EDMC plugin; +https://github.com/jeffstokes72/EliteDangerous)")
     return USER_AGENT
 
 

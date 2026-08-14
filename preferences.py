@@ -43,7 +43,11 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     pref_frame = nb.Frame(parent)
     title_frame = nb.Frame(pref_frame, border=0)
     title_frame.grid(row=0, column=1, columnspan=2)
-    nb.Label(title_frame, text="Architect Tracker (" + globals.ARCHITECT_TRACKER_VER + ") plugin by CMDR kfpopeye.").grid(row=0, column=1, sticky="nsew")
+    nb.Label(
+        title_frame,
+        text=("Architect Tracker Enhanced (" + globals.ARCHITECT_TRACKER_VER +
+              ") by Jeff Stokes — original by CMDR kfpopeye"),
+    ).grid(row=0, column=1, sticky="nsew")
     nb.Button(title_frame, text="Open website", command=open_url).grid(row=0, column=2, sticky="w")
 
     upper_row = nb.Frame(pref_frame, border=0)

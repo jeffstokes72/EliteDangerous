@@ -1,8 +1,10 @@
-# EliteDangerous
+# Architect Tracker Enhanced
 
-## Architect Tracker
-Displays commodities required, provided and needed when you land at a construction site, market or fleet carrier and tracks cargo in your fleet carrier and starship.
-The focus is to create a simple to use and hands free tracker for system colonisation. I will be adding features often so check back here often. This was created using ChatGPT. It probably took me as long to create as a human could have programmed manually but I have no experience programming in Python or for the EDMC so it is kind of impressive.
+This is a **fork** of [CMDR kfpopeye's Architect Tracker](https://github.com/kfpopeye/EliteDangerous), maintained by **Jeff Stokes**.
+
+The original plugin is GNU GPL v2. This fork is distributed under the same license, with source in this repository and in `ArchitectTracker_enhanced.zip`. CMDR kfpopeye remains the original author; Jeff Stokes maintains this enhanced branch (overlay placement, fleet-carrier tally fixes, Linux install, and related work).
+
+Displays commodities required, provided and needed when you land at a construction site, market or fleet carrier and tracks cargo in your fleet carrier and starship. The focus is a simple, hands-free tracker for system colonisation.
 
 <img width="833" height="593" alt="Screenshot 2026-03-20 192521" src="https://github.com/user-attachments/assets/04c893f3-c70b-4bbc-832b-5c4bed7b1abd" />
 
@@ -18,6 +20,9 @@ Settings Window
 
 ### Discussion
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
+
+### License
+GNU GPL v2. See `LICENSE`. Original Architect Tracker by [CMDR kfpopeye](https://github.com/kfpopeye/EliteDangerous); this enhanced fork is maintained by [Jeff Stokes](https://github.com/jeffstokes72/EliteDangerous).
 
 ### Install Instructions
 Quit EDMC first. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker_enhanced.zip</a> and extract it into EDMC's **plugins** folder. The zip already contains the `ArchitectTracker_enhanced` folder (no version in the name, no renaming). After unzip you must have:
