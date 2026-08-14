@@ -138,7 +138,7 @@ def show_ui_at_start() -> bool:
     return config.get_bool('ArchTrack_showUI')
 
 def overlay_enabled() -> bool:
-    """Paint the shortfall list via EDMC Overlay / Overlay2 when True."""
+    """Paint the remaining-needed list via EDMC Overlay / Overlay2 when True."""
     if config.get('ArchTrack_overlay') is None:
         return False
     return config.get_bool('ArchTrack_overlay')

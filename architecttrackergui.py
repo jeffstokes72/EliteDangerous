@@ -695,13 +695,13 @@ class ArchitectTrackerGUI(tk.Toplevel):
             title = "All sites"
         cols = list(globals.DEFAULT_COLUMNS.keys())
         name_i = cols.index("Material")
-        short_i = cols.index("Shortfall")
+        need_i = cols.index("Needed")
         payload = []
         for row in rows:
             values = row["values"]
             payload.append({
                 "name": values[name_i],
-                "shortfall": values[short_i],
+                "needed": values[need_i],
             })
         overlay_mod.paint(title, payload)
 

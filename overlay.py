@@ -333,11 +333,22 @@ def _fit_name(name):
     return name[:NAME_MAX_CHARS - 2] + ".."
 
 
+def _row_needed(row):
+    """Site remaining need (Required − Provided). Falls back to shortfall."""
+    value = row.get("needed")
+    if value is None:
+        value = row.get("shortfall")
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def paint(title, rows):
     """Draw a two-column table: commodity | amount needed.
 
-    `rows` is a list of dicts with keys: name, shortfall.
-    Only items with shortfall > 0 are shown (what you still need to haul).
+    `rows` is a list of dicts with keys: name, needed (shortfall is accepted
+    as a fallback). Only items with needed > 0 are shown, sorted highest first.
     """
     global _active_row_count, _last_payload
     global _logged_skip_disabled, _logged_skip_unavailable
@@ -357,10 +368,8 @@ def paint(title, rows):
     _logged_skip_unavailable = False
     _register_modern_overlay_group()
 
-    try:
-        needed = [r for r in rows if int(r.get("shortfall") or 0) > 0]
-    except (TypeError, ValueError):
-        needed = []
+    needed = [r for r in (rows or []) if _row_needed(r) > 0]
+    needed.sort(key=lambda r: (-_row_needed(r), str(r.get("name") or "").lower()))
     site = (title or "Architect Tracker").strip() or "Architect Tracker"
     _last_payload = (site, list(rows or []))
 
@@ -385,7 +394,7 @@ def paint(title, rows):
         painted = 0
         for r in needed[:MAX_ROWS]:
             name = _fit_name(r.get("name"))
-            qty = _format_qty(r.get("shortfall") or 0)
+            qty = _format_qty(_row_needed(r))
             _send(f"{NAME_ID_PREFIX}{painted}", name, NAME_COLOR, NAME_COL_X, y,
                   ttl=TTL_SECONDS)
             _send(f"{QTY_ID_PREFIX}{painted}", qty, QTY_COLOR, QTY_COL_X, y,
