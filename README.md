@@ -2,7 +2,7 @@
 
 This is a **fork** of [CMDR kfpopeye's Architect Tracker](https://github.com/kfpopeye/EliteDangerous), maintained by **Jeff Stokes**.
 
-The original plugin is GNU GPL v2. This fork is distributed under the same license, with source in this repository and in `ArchitectTracker_enhanced.zip`. CMDR kfpopeye remains the original author; Jeff Stokes maintains this enhanced branch (overlay placement, fleet-carrier tally fixes, Linux install, and related work).
+The original plugin is GNU GPL v2. This fork is distributed under the same license, with source in this repository and in `ArchitectTracker_enhanced.zip`. CMDR kfpopeye remains the original author; Jeff Stokes maintains this enhanced branch (in-game overlay, carrier sync Always on / Paused, fleet-carrier tally fixes, Linux install, and related work).
 
 Displays commodities required, provided and needed when you land at a construction site, market or fleet carrier and tracks cargo in your fleet carrier and starship. The focus is a simple, hands-free tracker for system colonisation.
 
@@ -149,4 +149,5 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 + 2026/08/07 : [Version 2.1] Added a System column next to Pref Market, an L / L&M landing-pad filter on the Spansh import panel, and Ctrl+click / Shift+click to copy a system name to the clipboard.
 + 2026/08/09 : [Version 2.2] Sortable commodity columns (click Shortfall for biggest buys first), Distance (ly) to the preferred market, slightly larger tracker font, plus a bug scrub for site Location sync, station name matching, Cheap/Closest demotion, and split cargo stacks.
 + 2026/08/10 : [Version 2.3] Optional in-game shortfall list via EDMC Overlay / Overlay2 / Modern Overlay — left side of the game, from mid-screen downward.
-+ 2026/08/13 : [Version 2.5] Overlay position dropdown (top / mid / bottomish left). Fleet carrier cargo no longer snaps back when a stale CAPI snapshot arrives after a transfer to ship; ship and carrier columns use the same commodity spelling. Releases are now **ArchitectTracker_enhanced.zip** (stable plugin folder name, no version in the zip). Overlay import is retried after EDMC finishes loading plugins, the list is kept alive from Status.json, and Modern Overlay groups the lines as **Architect Tracker** so a folder rename cannot hide them. Carrier sync is **Always on** or **Paused** (the old “first then pause” modes are gone).
++ 2026/08/13 : Overlay position dropdown (top / mid / bottomish left). Fleet carrier cargo no longer snaps back when a stale CAPI snapshot arrives after a transfer to ship; ship and carrier columns use the same commodity spelling.
++ 2026/08/14 : **ArchitectTracker_enhanced** — In-game overlay restored (retry import after EDMC finishes loading plugins, keep-alive from Status.json, Modern Overlay group named Architect Tracker so the plugin folder name cannot hide it). Carrier sync is **Always on** or **Paused**; the old “first then pause” / “only when unpaused” modes are gone. The pause button on the tracker matches that setting. Releases stay **ArchitectTracker_enhanced.zip** (stable plugin folder name, no version in the zip).
