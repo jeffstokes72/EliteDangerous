@@ -107,12 +107,10 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 - Note: if you started using this plugin prior to version 1.4, the old data will be shown with a double asterix (**) prepended to the name untill you have landed at the market again.
 
 ### Fleet Carrier Cargo Quantities
-- Information coming from the fleet carrier CAPI (fcapi) queries can often become unsyncronized with the actual amounts shown in the game. This causes Architect Tracker to sometimes display incorrect fleet carrier cargo quantities. As a work around, I have added a pause\unpause button next to the carrier name.
-- Transferring cargo to\from your starship or buying\selling commodities at your own fleet carrier's market are still tracked by Architect Tracker regardless.
-- The pause\unpause button has 2 modes it can operate which can be set in the "Settings" of EDMC:
-  - "First then pause" mode will accept the first fcapi query then ignore any others unless the pause button is clicked. This is the default mode. I have found that the first query is usually accurate if I haven't played for over an hour.
-  - "Only when UNpaused" mode will accept all fcapi queries unless you pause them.
-- Note: if you sell commodities to other players from your fleet carrier, pausing fcapi queries will cause the fleet carrier cargo amounts in Architect Tracker to become out of sync. Unpausing will, hopefully, restore them.
+- Information coming from the fleet carrier CAPI (fcapi) queries can often become unsyncronized with the actual amounts shown in the game. This causes Architect Tracker to sometimes display incorrect fleet carrier cargo quantities.
+- **Carrier sync** in settings is **Always on** (apply Frontier snapshots when they arrive) or **Paused** (ignore them). The pause/unpause button next to the carrier name does the same thing and is bound to `u`.
+- Transferring cargo to\from your starship or buying\selling commodities at your own fleet carrier's market are still tracked from the journal either way.
+- Note: if you sell commodities to other players from your fleet carrier while paused, the carrier cargo amounts in Architect Tracker will drift until you turn sync back on.
 
 ### Notes
 1. VR programs like Desktop+ can display this window inside the game for you.
@@ -151,4 +149,4 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 + 2026/08/07 : [Version 2.1] Added a System column next to Pref Market, an L / L&M landing-pad filter on the Spansh import panel, and Ctrl+click / Shift+click to copy a system name to the clipboard.
 + 2026/08/09 : [Version 2.2] Sortable commodity columns (click Shortfall for biggest buys first), Distance (ly) to the preferred market, slightly larger tracker font, plus a bug scrub for site Location sync, station name matching, Cheap/Closest demotion, and split cargo stacks.
 + 2026/08/10 : [Version 2.3] Optional in-game shortfall list via EDMC Overlay / Overlay2 / Modern Overlay — left side of the game, from mid-screen downward.
-+ 2026/08/13 : [Version 2.5] Overlay position dropdown (top / mid / bottomish left). Fleet carrier cargo no longer snaps back when a stale CAPI snapshot arrives after a transfer to ship; ship and carrier columns use the same commodity spelling. Releases are now **ArchitectTracker_enhanced.zip** (stable plugin folder name, no version in the zip). Overlay import is retried after EDMC finishes loading plugins, the list is kept alive from Status.json, and Modern Overlay groups the lines as **Architect Tracker** so a folder rename cannot hide them.
++ 2026/08/13 : [Version 2.5] Overlay position dropdown (top / mid / bottomish left). Fleet carrier cargo no longer snaps back when a stale CAPI snapshot arrives after a transfer to ship; ship and carrier columns use the same commodity spelling. Releases are now **ArchitectTracker_enhanced.zip** (stable plugin folder name, no version in the zip). Overlay import is retried after EDMC finishes loading plugins, the list is kept alive from Status.json, and Modern Overlay groups the lines as **Architect Tracker** so a folder rename cannot hide them. Carrier sync is **Always on** or **Paused** (the old “first then pause” modes are gone).

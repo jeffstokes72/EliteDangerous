@@ -81,6 +81,7 @@ class PluginTestCase(unittest.TestCase):
         g.SHIP_STATE = g.SHIP_MODE.Unknown
         g.DOCKED_STATION_TYPE = g.STATION_TYPE.Orbital
         g.CARRIER_TRACKER = FleetCarrierCargoTracker()
+        g.FCAPI_PAUSED = False
         config.settings.clear()
         # Overlay module caches its import and painted ids across tests.
         import overlay as overlay_mod
@@ -480,6 +481,38 @@ class TestSettings(PluginTestCase):
         self.assertIs(config.get("ArchTrack_showUI"), False)
         helpers.save_gui_settings()
         self.assertIs(config.get("ArchTrack_showUI"), False)
+
+    def test_carrier_sync_defaults_to_always_on(self):
+        self.assertEqual(helpers.fcapi_mode(), "always")
+        self.assertFalse(g.FCAPI_PAUSED)
+
+    def test_old_carrier_sync_labels_map_to_always_or_paused(self):
+        config.set("ArchTrack_fcapimode", "First then pause")
+        self.assertEqual(helpers.fcapi_mode(), "always")
+        config.set("ArchTrack_fcapimode", "Only when unpaused")
+        self.assertEqual(helpers.fcapi_mode(), "paused")
+
+    def test_carrier_sync_dropdown_pauses_and_resumes_capi(self):
+        payload = {"cargo": [{"commodity": "Steel", "qty": 10}],
+                   "name": {"callsign": "ABC-123"}}
+        preferences.change_fcapi_mode("Always on")
+        self.assertFalse(g.FCAPI_PAUSED)
+        load.capi_fleetcarrier(payload)
+        self.assertEqual(g.CARRIER_TRACKER.get_quantity("steel"), 10)
+        load.capi_fleetcarrier({"cargo": [{"commodity": "Steel", "qty": 40}],
+                                "name": {"callsign": "ABC-123"}})
+        self.assertEqual(g.CARRIER_TRACKER.get_quantity("steel"), 40)
+        self.assertFalse(g.FCAPI_PAUSED)
+
+        preferences.change_fcapi_mode("Paused")
+        self.assertTrue(g.FCAPI_PAUSED)
+        load.capi_fleetcarrier({"cargo": [{"commodity": "Steel", "qty": 99}],
+                                "name": {"callsign": "ABC-123"}})
+        self.assertEqual(g.CARRIER_TRACKER.get_quantity("steel"), 40)
+
+        helpers.set_fcapi_paused(False)
+        self.assertEqual(helpers.fcapi_mode(), "always")
+        self.assertFalse(g.FCAPI_PAUSED)
 
     def test_renaming_a_column_is_saved_with_the_window_closed(self):
         g.ARCHITECT_GUI = None

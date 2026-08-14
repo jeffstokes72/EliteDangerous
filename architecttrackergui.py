@@ -763,7 +763,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.destroy()  # Close the window
 
     def on_canvas_click(self, event):
-        globals.FCAPI_PAUSED = not globals.FCAPI_PAUSED
+        helpers.set_fcapi_paused(not globals.FCAPI_PAUSED)
         if globals.FCAPI_PAUSED:
             logger.info('Fleet carrier API paused.')
         else:

@@ -21,11 +21,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
 
     column_visibility, hide_provided, theme, column_display, trans_bg, win_top, opac_amount = helpers.load_gui_settings() #globals.SHOW_UI_AT_START is set in plugin_start3()
 
-    if config.get('ArchTrack_fcapimode') is None:
-        fcapi_mode = "First then pause"
-        logger.info("fcapi_mode not found using default settings.")
-    else:
-        fcapi_mode = config.get_str('ArchTrack_fcapimode')
+    fcapi_mode = helpers.FCAPI_MODE_LABELS[helpers.fcapi_mode()]
 
     column_description = {}
     column_description["Material"] = "The commodities the construction site requires."
@@ -94,26 +90,36 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     capi_frame.grid(row=1, column=1, sticky="nsew")
     g_row = 0
 
-    #select FCAPI mode
-    nb.Label(capi_frame, text="Select fleet capi mode:").grid(row=g_row, sticky="nw")
+    # Carrier CAPI sync
+    nb.Label(capi_frame, text="Carrier sync:").grid(row=g_row, sticky="nw")
     g_row = g_row +1
+    fcapi_labels = [helpers.FCAPI_MODE_LABELS[k] for k in helpers.FCAPI_MODES]
     fcapi_var = tk.StringVar(value=fcapi_mode)
-    capi_opt = ttk.Combobox(capi_frame, textvariable=fcapi_var, state="readonly")
-    capi_opt['values'] = ("First then pause", "Only when unpaused")
+    capi_opt = ttk.Combobox(capi_frame, textvariable=fcapi_var, state="readonly",
+                            width=16, values=fcapi_labels)
     capi_opt.grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
-    capi_opt.bind("<<ComboboxSelected>>", lambda event: change_fcapi_mode(fcapi_var.get()))
+    _fcapi_ready = {"ok": False}
+
+    def _on_fcapi_mode(_event=None):
+        if not _fcapi_ready["ok"]:
+            return
+        change_fcapi_mode(fcapi_var.get())
+
+    capi_opt.bind("<<ComboboxSelected>>", _on_fcapi_mode)
+    capi_opt.after_idle(lambda: _fcapi_ready.update(ok=True))
 
     #display fcapi notes
     text2_widget = tk.Text(capi_frame, height=8, width=40, wrap='word', font=('Verdana', 9), border=0)
     text2_widget.tag_configure('big', font=('Verdana', 9, 'bold'))
     text2_widget.tag_configure('underline', font=('Verdana', 9, 'underline'))
 
-    text2_widget.insert(tk.END, "Fleet Carrier API Options\n\n", 'underline')
-    text2_widget.insert(tk.END, "First then pause\n", 'big')
-    text2_widget.insert(tk.END, "Accepts the first update then automatically pauses.\n")
-    text2_widget.insert(tk.END, "Only when UNpaused\n", 'big')
-    text2_widget.insert(tk.END, "Only accepts updates when NOT paused.\n")
+    text2_widget.insert(tk.END, "Fleet Carrier API\n\n", 'underline')
+    text2_widget.insert(tk.END, "Always on\n", 'big')
+    text2_widget.insert(tk.END, "Apply Frontier's carrier cargo snapshot whenever it arrives.\n")
+    text2_widget.insert(tk.END, "Paused\n", 'big')
+    text2_widget.insert(tk.END, "Ignore those snapshots. The pause button on the tracker does the same thing.\n")
+    text2_widget.insert(tk.END, "Transfers, buys and sells on your own carrier are tracked from the journal either way.\n")
 
     text2_widget.config(state='disabled')
     text2_widget.grid(row=g_row, sticky="nsew", padx=5, pady=5)
@@ -292,7 +298,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "O\\S", 'big')
     text_widget.insert(tk.END, " - toggles between orbital and surface markets. Works together with cheapest, closest and alternate. (Bound to 'o' key)\n")
     text_widget.insert(tk.END, "Pause\\Unpause", 'big')
-    text_widget.insert(tk.END, " - pauses and unpause updating fleet carrier cargo from Fdev servers, which can become out of sync with game data. (Bound to 'u' key)\n\n")
+    text_widget.insert(tk.END, " - same as Carrier sync in settings: pause or resume Frontier carrier cargo snapshots. (Bound to 'u' key)\n\n")
     text_widget.insert(tk.END, "Row highlighting\n", 'underline')
     text_widget.insert(tk.END, "Depending on where you are docked, rows are highlighted to indicate:\n")
     text_widget.insert(tk.END, "Markets", 'big')
@@ -598,4 +604,9 @@ def toggle_showUIatStart(b):
     config.set('ArchTrack_showUI', bool(b))
 
 def change_fcapi_mode(mode):
-    config.set('ArchTrack_fcapimode', mode)
+    helpers.set_fcapi_mode(mode)
+    if helpers.gui_exists() and getattr(globals.ARCHITECT_GUI, "has_table", False):
+        try:
+            globals.ARCHITECT_GUI.draw_canvas()
+        except Exception:
+            pass

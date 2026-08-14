@@ -177,6 +177,57 @@ def set_overlay_position(val: str) -> None:
             break
     config.set('ArchTrack_overlayPos', key)
 
+# Fleet carrier CAPI: apply Frontier snapshots, or ignore them.
+FCAPI_MODES = ("always", "paused")
+FCAPI_MODE_LABELS = {
+    "always": "Always on",
+    "paused": "Paused",
+}
+_FCAPI_MODE_ALIASES = {
+    "always": "always",
+    "always on": "always",
+    "paused": "paused",
+    "pause": "paused",
+    # Pre-2.5 labels. Both of those modes ended up paused; map them to the
+    # intent rather than keeping the auto-pause behaviour.
+    "first then pause": "always",
+    "only when unpaused": "paused",
+}
+
+def _fcapi_mode_key(val) -> str:
+    if not val:
+        return "always"
+    token = str(val).strip()
+    if token in FCAPI_MODES:
+        return token
+    lowered = token.lower()
+    if lowered in _FCAPI_MODE_ALIASES:
+        return _FCAPI_MODE_ALIASES[lowered]
+    for key, label in FCAPI_MODE_LABELS.items():
+        if token == label or lowered == label.lower():
+            return key
+    return "always"
+
+def fcapi_mode() -> str:
+    """Carrier sync setting: always (apply CAPI) or paused (ignore CAPI)."""
+    try:
+        if config.get('ArchTrack_fcapimode') is None:
+            return "always"
+        return _fcapi_mode_key(config.get_str('ArchTrack_fcapimode'))
+    except Exception:
+        return "always"
+
+def set_fcapi_mode(val: str) -> None:
+    key = _fcapi_mode_key(val)
+    config.set('ArchTrack_fcapimode', key)
+    apply_fcapi_paused_from_mode()
+
+def apply_fcapi_paused_from_mode() -> None:
+    globals.FCAPI_PAUSED = fcapi_mode() == "paused"
+
+def set_fcapi_paused(paused: bool) -> None:
+    set_fcapi_mode("paused" if paused else "always")
+
 # --- Market import settings ---
 def import_radius() -> int:
     import marketimport

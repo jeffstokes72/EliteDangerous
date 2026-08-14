@@ -57,17 +57,12 @@ def plugin_start3(plugin_dir):
         else:
             logger.info('Found the user directory: %s', globals.USER_DIR)
 
-        if config.get('ArchTrack_fcapimode') is None:
-            fcapi_mode = "First then pause"
-            config.set('ArchTrack_fcapimode', fcapi_mode)
-            logger.info("fcapi_mode not found using default settings.")
-        else:
-            fcapi_mode = config.get_str('ArchTrack_fcapimode')
-
-        if fcapi_mode == "Only when unpaused":
-            globals.FCAPI_PAUSED = True
+        helpers.apply_fcapi_paused_from_mode()
+        if globals.FCAPI_PAUSED:
             logger.info('Fleet carrier API paused.')
-            
+        else:
+            logger.info('Fleet carrier API always on.')
+
         globals.SHOW_UI_AT_START = helpers.show_ui_at_start()
         if globals.SHOW_UI_AT_START:
             helpers.show_gui()
@@ -240,18 +235,8 @@ def capi_fleetcarrier(data: CAPIData):
         logger.info("Ignored fleet carrier API data")
         return
 
-    if config.get('ArchTrack_fcapimode') is None:
-        fcapi_mode = "First then pause"
-        config.set('ArchTrack_fcapimode', fcapi_mode)
-        logger.info("fcapi_mode not found using default settings.")
-    else:
-        fcapi_mode = config.get_str('ArchTrack_fcapimode')
-
     logger.info("Received fleet carrier CAPI data") #only OUR carrier, others are treated as markets
     globals.CARRIER_TRACKER.update(data)
-    if fcapi_mode == "First then pause":
-        globals.FCAPI_PAUSED = True
-        logger.info('Fleet carrier API paused.')
     if helpers.gui_exists():
         globals.ARCHITECT_GUI.refresh()
 
