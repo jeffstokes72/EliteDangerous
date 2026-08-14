@@ -20,7 +20,11 @@ Settings Window
 https://forums.frontier.co.uk/threads/colonization-tool-architect-tracker.636854/#post-10621804
 
 ### Install Instructions
-Quit EDMC first. The plugin folder must contain `load.py` directly — not inside a nested zip folder. If `load.py` is one level too deep, EDMC will not load the plugin (and the ArchitectTracker settings tab can disappear).
+Quit EDMC first. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker_enhanced.zip</a> and extract it into EDMC's **plugins** folder. The zip already contains the `ArchitectTracker_enhanced` folder (no version in the name, no renaming). After unzip you must have:
+
+`.../plugins/ArchitectTracker_enhanced/load.py`
+
+not `.../plugins/ArchitectTracker_enhanced/ArchitectTracker_enhanced/load.py`.
 
 **Plugins folder locations**
 - Linux (normal install): `~/.local/share/EDMarketConnector/plugins/`
@@ -28,38 +32,26 @@ Quit EDMC first. The plugin folder must contain `load.py` directly — not insid
 - Windows: `%LOCALAPPDATA%\EDMarketConnector\plugins\`
 - macOS: `~/Library/Application Support/EDMarketConnector/plugins/`
 
-**Recommended:** download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker 2.3</a> (`ArchitectTracker-2.3.zip`). That zip has `load.py` at the root — extract it straight into the `ArchitectTracker` plugins folder.
-
 **Linux (copy and paste):**
 
 ```bash
 # Use the Flatpak line instead if that is how you run EDMC.
-PLUGIN_DIR="$HOME/.local/share/EDMarketConnector/plugins/ArchitectTracker"
-# PLUGIN_DIR="$HOME/.var/app/io.edcd.EDMarketConnector/data/EDMarketConnector/plugins/ArchitectTracker"
+PLUGINS="$HOME/.local/share/EDMarketConnector/plugins"
+# PLUGINS="$HOME/.var/app/io.edcd.EDMarketConnector/data/EDMarketConnector/plugins"
 
-rm -rf "$PLUGIN_DIR"
-mkdir -p "$PLUGIN_DIR"
+mkdir -p "$PLUGINS"
 cd /tmp
-curl -L -o ArchitectTracker-2.3.zip https://github.com/jeffstokes72/EliteDangerous/releases/download/v2.3/ArchitectTracker-2.3.zip
-unzip -o ArchitectTracker-2.3.zip -d "$PLUGIN_DIR"
+curl -L -o ArchitectTracker_enhanced.zip https://github.com/jeffstokes72/EliteDangerous/releases/latest/download/ArchitectTracker_enhanced.zip
+unzip -o ArchitectTracker_enhanced.zip -d "$PLUGINS"
 
 # Must print OK.
-test -f "$PLUGIN_DIR/load.py" && echo "OK: load.py is in the right place" || echo "BROKEN"
+test -f "$PLUGINS/ArchitectTracker_enhanced/load.py" && echo "OK: load.py is in the right place" || echo "BROKEN"
 ```
 
-Your construction sites and market library stay in `~/.config/ArchitectTracker/` (or the equivalent on Windows/macOS) and are not touched by reinstalling the plugin.
-
-**Manual / zip install**
-1. Download <a href="https://github.com/jeffstokes72/EliteDangerous/releases/latest">ArchitectTracker-2.3.zip</a> (or clone this repo).
-2. Create a directory called `ArchitectTracker` (no spaces) inside EDMC's plugins folder.
-3. Put the plugin files **directly** in that directory. After install you must have:
-   `.../plugins/ArchitectTracker/load.py`
-   not
-   `.../plugins/ArchitectTracker/EliteDangerous-main/load.py`
-4. Start EDMC. File → Settings should show an **ArchitectTracker** tab. The main EDMC window should also show a "Show Architect Tracker" button.
+If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), delete that old plugin folder so EDMC does not load two copies. Your construction sites and market library stay in `~/.config/ArchitectTracker/` (or the equivalent on Windows/macOS) and are not touched by reinstalling.
 
 **If the settings tab is missing**
-1. Confirm `load.py` sits directly in the `ArchitectTracker` plugins folder (command above).
+1. Confirm `load.py` sits directly in `.../plugins/ArchitectTracker_enhanced/` (command above).
 2. Confirm you used the same plugins folder EDMC actually reads (Flatpak vs normal install).
 3. Check EDMC's own log and `~/.config/ArchitectTracker/EDMC_Architect_Log.txt` for an import or startup error.
    A known cause was mixing pack/grid in the prefs UI; that is fixed in 2.0.
@@ -154,4 +146,4 @@ Your construction sites and market library stay in `~/.config/ArchitectTracker/`
 + 2026/08/07 : [Version 2.1] Added a System column next to Pref Market, an L / L&M landing-pad filter on the Spansh import panel, and Ctrl+click / Shift+click to copy a system name to the clipboard.
 + 2026/08/09 : [Version 2.2] Sortable commodity columns (click Shortfall for biggest buys first), Distance (ly) to the preferred market, slightly larger tracker font, plus a bug scrub for site Location sync, station name matching, Cheap/Closest demotion, and split cargo stacks.
 + 2026/08/10 : [Version 2.3] Optional in-game shortfall list via EDMC Overlay / Overlay2 / Modern Overlay — left side of the game, from mid-screen downward.
-+ 2026/08/13 : [Version 2.5] Overlay position dropdown (top / mid / bottomish left). Fleet carrier cargo no longer snaps back when a stale CAPI snapshot arrives after a transfer to ship; ship and carrier columns use the same commodity spelling.
++ 2026/08/13 : [Version 2.5] Overlay position dropdown (top / mid / bottomish left). Fleet carrier cargo no longer snaps back when a stale CAPI snapshot arrives after a transfer to ship; ship and carrier columns use the same commodity spelling. Releases are now **ArchitectTracker_enhanced.zip** (stable plugin folder name, no version in the zip).
