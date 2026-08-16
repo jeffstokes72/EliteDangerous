@@ -1198,9 +1198,14 @@ class TestOverlay(PluginTestCase):
         long_name = by_id["archtrack-name-1"]["text"]
         self.assertLessEqual(len(long_name), overlay_mod.NAME_MAX_CHARS)
         self.assertTrue(long_name.endswith(".."))
-        # ~8 px per character of name budget before the numbers start.
         gap = by_id["archtrack-qty-0"]["x"] - by_id["archtrack-name-0"]["x"]
-        self.assertGreaterEqual(gap, overlay_mod.NAME_MAX_CHARS * 8)
+        self.assertEqual(
+            gap,
+            overlay_mod.NAME_MAX_CHARS * overlay_mod.NAME_PX_PER_CHAR
+            + overlay_mod.COL_GAP_PX,
+        )
+        # Needed sits close to the names, not in the old 8 px/char empty band.
+        self.assertLess(gap, overlay_mod.NAME_MAX_CHARS * 8)
 
     def test_overlay_import_is_retried_after_a_failed_first_look(self):
         import overlay as overlay_mod

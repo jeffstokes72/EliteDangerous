@@ -41,12 +41,15 @@ TTL_SECONDS = 60
 HEARTBEAT_SECONDS = 8
 
 # Two-column table: commodity name | amount needed.
-# The overlay font is proportional and wider than the ~5 px/char the old
-# layout assumed, so long names collided with the numbers. Budget ~8 px per
-# character and truncate with ".." so the name can never reach the numbers.
+# Names are truncated with ".." so they cannot run into the numbers. The
+# overlay font is proportional; 8 px/char left a wide empty band between
+# the name and the amount (about as wide as the longest label). 5 px/char
+# plus a small gap is enough once names are capped.
 NAME_MAX_CHARS = 22
+NAME_PX_PER_CHAR = 5
+COL_GAP_PX = 12
 NAME_COL_X = OVERLAY_X
-QTY_COL_X = OVERLAY_X + (NAME_MAX_CHARS * 8) + 20  # 220
+QTY_COL_X = OVERLAY_X + (NAME_MAX_CHARS * NAME_PX_PER_CHAR) + COL_GAP_PX  # 146
 
 TITLE_COLOR = "#1fbeff"  # Elite-ish cyan
 HEADER_COLOR = "yellow"
