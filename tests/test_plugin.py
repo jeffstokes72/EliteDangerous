@@ -98,6 +98,10 @@ class PluginTestCase(unittest.TestCase):
         overlay_mod._active_row_count = 0
         overlay_mod._last_payload = None
         overlay_mod._last_heartbeat = 0.0
+        overlay_mod._last_sent = {}
+        overlay_mod._dirty = False
+        overlay_mod._last_emit_at = 0.0
+        overlay_mod.MIN_PAINT_INTERVAL = 0
         edmcoverlay_stub.Overlay.reset()
         if hasattr(edmcoverlay_stub, "MODERN_OVERLAY_IDENTITY"):
             delattr(edmcoverlay_stub, "MODERN_OVERLAY_IDENTITY")
@@ -1258,6 +1262,50 @@ class TestOverlay(PluginTestCase):
         self.assertEqual(by_id["archtrack-title"]["text"], "Vulcan Gate")
         self.assertEqual(by_id["archtrack-name-0"]["text"], "Steel")
         del stub.MODERN_OVERLAY_IDENTITY
+
+    def test_identical_paint_does_not_resend(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        rows = [{"name": "Steel", "needed": 90}]
+        overlay_mod.paint("Vulcan Gate", rows)
+        first = len(stub.Overlay.messages)
+        self.assertGreater(first, 0)
+        overlay_mod.paint("Vulcan Gate", rows)
+        overlay_mod.paint("Vulcan Gate", rows)
+        self.assertEqual(len(stub.Overlay.messages), first)
+
+    def test_only_changed_qty_is_resent(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "needed": 90}])
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "needed": 80}])
+        ids = [m["id"] for m in stub.Overlay.messages]
+        self.assertEqual(ids, ["archtrack-qty-0"])
+        self.assertEqual(stub.Overlay.messages[0]["text"], "80")
+
+    def test_rapid_paints_stay_under_modern_overlay_spam_limit(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod.MIN_PAINT_INTERVAL = 10
+        rows = [{"name": f"Mat {i}", "needed": 1000 - i} for i in range(20)]
+        overlay_mod.paint("Vulcan Gate", rows)
+        first = len(stub.Overlay.messages)
+        self.assertLess(first, 50)
+        for n in range(8):
+            overlay_mod.paint("Vulcan Gate", [
+                {"name": r["name"], "needed": r["needed"] + n} for r in rows])
+        # Still the first frame; later paints were deferred.
+        self.assertEqual(len(stub.Overlay.messages), first)
+        overlay_mod._last_emit_at = 0.0
+        overlay_mod._emit(force=False)
+        self.assertLess(len(stub.Overlay.messages), 200)
 
 
 class TestCommodityNames(unittest.TestCase):

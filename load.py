@@ -109,6 +109,18 @@ def dashboard_entry(cmdr, is_beta, entry):
     except Exception:
         pass
 
+# Journal events that can change the tracker table or overlay. Everything else
+# (chat, music, jumps, ...) used to call refresh() too, and LoadGame plus
+# construction-site ticks re-sent the whole overlay dozens of times in 2s.
+_GUI_REFRESH_EVENTS = frozenset({
+    "Cargo", "CargoTransfer", "MarketBuy", "MarketSell",
+    "CollectCargo", "EjectCargo",
+    "Market", "Docked", "Undocked",
+    "ApproachSettlement", "SupercruiseDestinationDrop", "SupercruiseEntry",
+    "LoadGame", "StartUp",
+})
+
+
 # --- Data Hooks ---
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     try:
@@ -144,6 +156,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                 globals.SHIP_STATE = globals.SHIP_MODE.Undocked
                 logger.info("Ship state: Undocked")
 
+        gui_already_updated = False
+
         if event == "ColonisationConstructionDepot":
             if station == None:
                 return
@@ -160,6 +174,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                 helpers.show_gui()
             elif helpers.gui_exists():
                 globals.ARCHITECT_GUI.change_station(station)
+            gui_already_updated = True
 
         elif event == "Market":
             if station == None:
@@ -205,7 +220,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             globals.DOCKED_STATION_TYPE = globals.STATION_TYPE.Unknown
             logger.info("Station type set to: %s", globals.DOCKED_STATION_TYPE.name)
 
-        if helpers.gui_exists():
+        if helpers.gui_exists() and not gui_already_updated and event in _GUI_REFRESH_EVENTS:
             globals.ARCHITECT_GUI.refresh()
 
     except Exception as e:

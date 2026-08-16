@@ -71,6 +71,13 @@ _group_registered = False
 _active_row_count = 0
 _last_payload = None  # (title, rows) for heartbeat
 _last_heartbeat = 0.0
+_last_sent = {}  # msg_id -> (text, color, x, y, size)
+_dirty = False
+_last_emit_at = 0.0
+# Modern Overlay warns at 200 payloads / 2s. A full table is ~43 messages, so
+# more than one complete re-paint in a journal burst trips it. Tests set this
+# to 0 so they can assert on the next call.
+MIN_PAINT_INTERVAL = 1.0
 
 
 def _module_has_overlay(mod):
@@ -248,23 +255,42 @@ def _client():
     return _overlay_client
 
 
-def _send(msg_id, text, color, x, y, size="normal", ttl=TTL_SECONDS):
+def _visual_key(text, color, x, y, size):
+    return (str(text), color, int(x), int(y), size)
+
+
+def _remember_sent(msg_id, text, color, x, y, size):
+    if text == "":
+        _last_sent.pop(msg_id, None)
+    else:
+        _last_sent[msg_id] = _visual_key(text, color, x, y, size)
+
+
+def _send(msg_id, text, color, x, y, size="normal", ttl=TTL_SECONDS, force=False):
     # Plain send_message only: it is the one call every overlay plugin
     # (EDMC Overlay, Overlay2, all Modern Overlay versions) implements the
     # same way. Modern Overlay routes our lines to the Architect Tracker
     # group by the archtrack- id prefix, so no extra payload fields needed.
+    #
+    # Unchanged lines are skipped unless force=True (TTL heartbeat). Journal
+    # bursts used to re-send the whole table and trip Modern Overlay's
+    # 200-payloads-in-2-seconds warning.
     global _overlay_client, _warned_send
+    key = _visual_key(text, color, x, y, size)
+    if not force:
+        if _last_sent.get(msg_id) == key:
+            return True
+        if text == "" and msg_id not in _last_sent:
+            return True
     client = _client()
     if client is None:
         return False
     try:
         client.send_message(msg_id, text, color, int(x), int(y), ttl=ttl, size=size)
-        return True
     except TypeError:
         # Older clients may not take size=
         try:
             client.send_message(msg_id, text, color, int(x), int(y), ttl=ttl)
-            return True
         except Exception as e:
             if not _warned_send:
                 logger.warning("Overlay send failed: %s", e)
@@ -277,6 +303,8 @@ def _send(msg_id, text, color, x, y, size="normal", ttl=TTL_SECONDS):
             _warned_send = True
         _overlay_client = None
         return False
+    _remember_sent(msg_id, text, color, x, y, size)
+    return True
 
 
 def _y_start():
@@ -307,7 +335,7 @@ def _clear_slot_range(count, y=None):
 
 def clear():
     """Blank previously painted Architect Tracker lines."""
-    global _active_row_count, _last_payload
+    global _active_row_count, _last_payload, _dirty
     y = _y_start()
     _send(TITLE_ID, "", TITLE_COLOR, OVERLAY_X, y, size="large", ttl=1)
     _send(HEADER_NAME_ID, "", HEADER_COLOR, NAME_COL_X, y, ttl=1)
@@ -315,6 +343,8 @@ def clear():
     _clear_slot_range(_active_row_count, y)
     _active_row_count = 0
     _last_payload = None
+    _dirty = False
+    _last_sent.clear()
 
 
 def _format_qty(value):
@@ -344,13 +374,15 @@ def _row_needed(row):
         return 0
 
 
-def paint(title, rows):
+def paint(title, rows, force=False):
     """Draw a two-column table: commodity | amount needed.
 
     `rows` is a list of dicts with keys: name, needed (shortfall is accepted
     as a fallback). Only items with needed > 0 are shown, sorted highest first.
+    Unchanged lines are not re-sent. Rapid calls are coalesced to one emit per
+    MIN_PAINT_INTERVAL (heartbeat still force-refreshes TTLs).
     """
-    global _active_row_count, _last_payload
+    global _last_payload, _dirty
     global _logged_skip_disabled, _logged_skip_unavailable
     import helpers
 
@@ -368,23 +400,50 @@ def paint(title, rows):
     _logged_skip_unavailable = False
     _register_modern_overlay_group()
 
-    needed = [r for r in (rows or []) if _row_needed(r) > 0]
-    needed.sort(key=lambda r: (-_row_needed(r), str(r.get("name") or "").lower()))
     site = (title or "Architect Tracker").strip() or "Architect Tracker"
     _last_payload = (site, list(rows or []))
+    _dirty = True
+    _emit(force=force)
+
+
+def _emit(force=False):
+    """Send the stored frame, unless a paint just went out (unless force)."""
+    global _last_emit_at, _dirty
+    if _last_payload is None:
+        return
+    now = time.monotonic()
+    if not force:
+        if not _dirty:
+            return
+        if MIN_PAINT_INTERVAL > 0 and (now - _last_emit_at) < MIN_PAINT_INTERVAL:
+            return
+    site, rows = _last_payload
+    _draw(site, rows, resend=force)
+    _last_emit_at = now
+    _dirty = False
+
+
+def _draw(site, rows, resend=False):
+    global _active_row_count
+
+    needed = [r for r in (rows or []) if _row_needed(r) > 0]
+    needed.sort(key=lambda r: (-_row_needed(r), str(r.get("name") or "").lower()))
 
     line_height = _line_height()
     y = _y_start()
-    sent = _send(TITLE_ID, site[:48], TITLE_COLOR, OVERLAY_X, y, size="large", ttl=TTL_SECONDS)
+    sent = _send(TITLE_ID, site[:48], TITLE_COLOR, OVERLAY_X, y, size="large",
+                 ttl=TTL_SECONDS, force=resend)
     y += line_height + 6
 
-    _send(HEADER_NAME_ID, "Commodity", HEADER_COLOR, NAME_COL_X, y, ttl=TTL_SECONDS)
-    _send(HEADER_QTY_ID, "Needed", HEADER_COLOR, QTY_COL_X, y, ttl=TTL_SECONDS)
+    _send(HEADER_NAME_ID, "Commodity", HEADER_COLOR, NAME_COL_X, y,
+          ttl=TTL_SECONDS, force=resend)
+    _send(HEADER_QTY_ID, "Needed", HEADER_COLOR, QTY_COL_X, y,
+          ttl=TTL_SECONDS, force=resend)
     y += line_height + 4
 
     if not needed:
         _send(f"{NAME_ID_PREFIX}0", "Nothing left to haul", NAME_COLOR, NAME_COL_X, y,
-              ttl=TTL_SECONDS)
+              ttl=TTL_SECONDS, force=resend)
         # Empty qty deletes a leftover number from a previous paint (Overlay2
         # treats empty text as a per-id remove).
         _send(f"{QTY_ID_PREFIX}0", "", QTY_COLOR, QTY_COL_X, y, ttl=1)
@@ -396,9 +455,9 @@ def paint(title, rows):
             name = _fit_name(r.get("name"))
             qty = _format_qty(_row_needed(r))
             _send(f"{NAME_ID_PREFIX}{painted}", name, NAME_COLOR, NAME_COL_X, y,
-                  ttl=TTL_SECONDS)
+                  ttl=TTL_SECONDS, force=resend)
             _send(f"{QTY_ID_PREFIX}{painted}", qty, QTY_COLOR, QTY_COL_X, y,
-                  ttl=TTL_SECONDS)
+                  ttl=TTL_SECONDS, force=resend)
             painted += 1
             y += line_height
 
@@ -416,13 +475,16 @@ def paint(title, rows):
 
 
 def heartbeat():
-    """Re-send the last frame so the overlay does not expire between journal events."""
+    """Re-send the last frame so the overlay does not expire between journal events.
+
+    Also flushes a paint that was deferred to stay under Modern Overlay's rate limit.
+    """
     global _last_heartbeat
     if _last_payload is None:
         return
     now = time.monotonic()
-    if now - _last_heartbeat < HEARTBEAT_SECONDS:
+    if now - _last_heartbeat >= HEARTBEAT_SECONDS:
+        _last_heartbeat = now
+        _emit(force=True)
         return
-    _last_heartbeat = now
-    title, rows = _last_payload
-    paint(title, rows)
+    _emit(force=False)
