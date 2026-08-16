@@ -99,6 +99,7 @@ class PluginTestCase(unittest.TestCase):
         overlay_mod._last_payload = None
         overlay_mod._last_heartbeat = 0.0
         overlay_mod._last_qty_mode = None
+        overlay_mod._last_qty_color = None
         overlay_mod._last_sent = {}
         overlay_mod._dirty = False
         overlay_mod._last_emit_at = 0.0
@@ -1155,6 +1156,31 @@ class TestOverlay(PluginTestCase):
             by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
             step = by_id["archtrack-name-1"]["y"] - by_id["archtrack-name-0"]["y"]
             self.assertEqual(step, overlay_mod.SPACING_PX[key])
+
+    def test_overlay_numbers_default_to_orange(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "needed": 90}])
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-qty-0"]["color"], overlay_mod.QTY_COLOR)
+        self.assertNotEqual(by_id["archtrack-qty-0"]["color"], "white")
+        self.assertEqual(by_id["archtrack-name-0"]["color"], overlay_mod.NAME_COLOR)
+
+    def test_white_overlay_numbers_setting(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        self.assertFalse(helpers.overlay_white_numbers())
+        preferences.toggle_overlay_white_numbers(True)
+        self.assertTrue(helpers.overlay_white_numbers())
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [{"name": "Steel", "needed": 90}])
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-qty-0"]["color"], "white")
+        self.assertEqual(by_id["archtrack-name-0"]["color"], overlay_mod.NAME_COLOR)
+        self.assertEqual(by_id["archtrack-hdr-qty"]["color"], overlay_mod.HEADER_COLOR)
 
     def test_tracker_paints_when_overlay_enabled(self):
         import edmcoverlay as stub

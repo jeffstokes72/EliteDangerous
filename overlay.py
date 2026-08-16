@@ -55,6 +55,7 @@ TITLE_COLOR = "#1fbeff"  # Elite-ish cyan
 HEADER_COLOR = "yellow"
 NAME_COLOR = "yellow"
 QTY_COLOR = "#ff8500"
+QTY_COLOR_WHITE = "white"
 
 TITLE_ID = "archtrack-title"
 HEADER_NAME_ID = "archtrack-hdr-name"
@@ -75,6 +76,7 @@ _active_row_count = 0
 _last_payload = None  # (title, rows) for heartbeat
 _last_heartbeat = 0.0
 _last_qty_mode = None
+_last_qty_color = None
 _last_sent = {}  # msg_id -> (text, color, x, y, size)
 _dirty = False
 _last_emit_at = 0.0
@@ -339,7 +341,7 @@ def _clear_slot_range(count, y=None):
 
 def clear():
     """Blank previously painted Architect Tracker lines."""
-    global _active_row_count, _last_payload, _dirty, _last_qty_mode
+    global _active_row_count, _last_payload, _dirty, _last_qty_mode, _last_qty_color
     y = _y_start()
     _send(TITLE_ID, "", TITLE_COLOR, OVERLAY_X, y, size="large", ttl=1)
     _send(HEADER_NAME_ID, "", HEADER_COLOR, NAME_COL_X, y, ttl=1)
@@ -349,6 +351,7 @@ def clear():
     _last_payload = None
     _dirty = False
     _last_qty_mode = None
+    _last_qty_color = None
     _last_sent.clear()
 
 
@@ -380,6 +383,16 @@ def _qty_header(mode=None):
     if mode is None:
         mode = _qty_mode()
     return "Shortfall" if mode == "shortfall" else "Needed"
+
+
+def _qty_color():
+    try:
+        import helpers
+        if helpers.overlay_white_numbers():
+            return QTY_COLOR_WHITE
+    except Exception:
+        pass
+    return QTY_COLOR
 
 
 def _row_qty(row, mode=None):
@@ -431,7 +444,7 @@ def paint(title, rows, force=False):
     site = (title or "Architect Tracker").strip() or "Architect Tracker"
     _last_payload = (site, list(rows or []))
     _dirty = True
-    if helpers.overlay_qty_mode() != _last_qty_mode:
+    if helpers.overlay_qty_mode() != _last_qty_mode or _qty_color() != _last_qty_color:
         force = True
     _emit(force=force)
 
@@ -454,9 +467,10 @@ def _emit(force=False):
 
 
 def _draw(site, rows, resend=False):
-    global _active_row_count, _last_qty_mode
+    global _active_row_count, _last_qty_mode, _last_qty_color
 
     mode = _qty_mode()
+    qty_color = _qty_color()
     visible = [r for r in (rows or []) if _row_qty(r, mode) > 0]
     visible.sort(key=lambda r: (-_row_qty(r, mode), str(r.get("name") or "").lower()))
 
@@ -477,7 +491,7 @@ def _draw(site, rows, resend=False):
               ttl=TTL_SECONDS, force=resend)
         # Empty qty deletes a leftover number from a previous paint (Overlay2
         # treats empty text as a per-id remove).
-        _send(f"{QTY_ID_PREFIX}0", "", QTY_COLOR, QTY_COL_X, y, ttl=1)
+        _send(f"{QTY_ID_PREFIX}0", "", qty_color, QTY_COL_X, y, ttl=1)
         painted = 1
         y += line_height
     else:
@@ -487,7 +501,7 @@ def _draw(site, rows, resend=False):
             qty = _format_qty(_row_qty(r, mode))
             _send(f"{NAME_ID_PREFIX}{painted}", name, NAME_COLOR, NAME_COL_X, y,
                   ttl=TTL_SECONDS, force=resend)
-            _send(f"{QTY_ID_PREFIX}{painted}", qty, QTY_COLOR, QTY_COL_X, y,
+            _send(f"{QTY_ID_PREFIX}{painted}", qty, qty_color, QTY_COL_X, y,
                   ttl=TTL_SECONDS, force=resend)
             painted += 1
             y += line_height
@@ -498,9 +512,10 @@ def _draw(site, rows, resend=False):
     origin = _y_start()
     for i in range(painted, _active_row_count):
         _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, origin, ttl=1)
-        _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, origin, ttl=1)
+        _send(f"{QTY_ID_PREFIX}{i}", "", qty_color, QTY_COL_X, origin, ttl=1)
     _active_row_count = painted
     _last_qty_mode = mode
+    _last_qty_color = qty_color
 
     if sent:
         logger.debug("Overlay: painted %s (%s rows, %s)", site, painted, mode)

@@ -270,6 +270,15 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     space_opt.bind("<<ComboboxSelected>>", _on_overlay_spacing)
     space_opt.after_idle(lambda: _space_ready.update(ok=True))
     g_row = g_row +1
+    white_qty_var = tk.BooleanVar(value=helpers.overlay_white_numbers())
+    nb.Checkbutton(
+        but_frame,
+        text="White overlay numbers",
+        variable=white_qty_var,
+        state=overlay_state,
+        command=lambda v=white_qty_var: toggle_overlay_white_numbers(v.get())
+    ).grid(row=g_row, sticky="nw", padx=5, pady=2)
+    g_row = g_row +1
     if overlay_mod.overlay_available():
         overlay_note = "Requires EDMC Overlay, Overlay2, or Modern Overlay."
     else:
@@ -333,7 +342,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "Ctrl+click or Shift+click", 'big')
     text_widget.insert(tk.END, " a row to copy that preferred market's system name to the clipboard.\n")
     text_widget.insert(tk.END, "In-game overlay", 'big')
-    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game. Use the overlay position dropdown for top left, mid left, or bottomish left, and row spacing for Compact / Normal / Roomy lines. On the tracker window, the Overlay dropdown chooses whether that list shows Needed or Shortfall.\n")
+    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game. Use the overlay position dropdown for top left, mid left, or bottomish left, and row spacing for Compact / Normal / Roomy lines. On the tracker window, the Overlay dropdown chooses whether that list shows Needed or Shortfall. \"White overlay numbers\" paints the amounts in white instead of orange.\n")
 
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
@@ -605,6 +614,11 @@ def change_overlay_spacing(spacing):
     helpers.set_overlay_spacing(spacing)
     if helpers.overlay_spacing() == previous:
         return
+    if helpers.gui_exists() and helpers.overlay_enabled():
+        globals.ARCHITECT_GUI.refresh_overlay()
+
+def toggle_overlay_white_numbers(val):
+    helpers.set_overlay_white_numbers(val)
     if helpers.gui_exists() and helpers.overlay_enabled():
         globals.ARCHITECT_GUI.refresh_overlay()
 

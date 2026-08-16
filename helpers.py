@@ -248,6 +248,18 @@ def set_overlay_qty_mode(val: str) -> None:
                     break
     config.set('ArchTrack_overlayQty', key)
 
+def overlay_white_numbers() -> bool:
+    """True when overlay quantity numbers should be white instead of orange."""
+    try:
+        if config.get('ArchTrack_overlayWhiteQty') is None:
+            return False
+        return config.get_bool('ArchTrack_overlayWhiteQty')
+    except Exception:
+        return False
+
+def set_overlay_white_numbers(val: bool) -> None:
+    config.set('ArchTrack_overlayWhiteQty', bool(val))
+
 # Fleet carrier CAPI: apply Frontier snapshots, or ignore them.
 FCAPI_MODES = ("always", "paused")
 FCAPI_MODE_LABELS = {
