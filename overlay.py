@@ -40,13 +40,16 @@ MAX_ROWS = 20
 TTL_SECONDS = 60
 HEARTBEAT_SECONDS = 8
 
-# Two-column table: commodity name | amount needed.
-# The overlay font is proportional and wider than the ~5 px/char the old
-# layout assumed, so long names collided with the numbers. Budget ~8 px per
-# character and truncate with ".." so the name can never reach the numbers.
+# Two-column table: commodity name | Needed or Shortfall (chosen in the tracker).
+# Names are truncated with ".." so they cannot run into the numbers. The
+# overlay font is proportional; 8 px/char left a wide empty band between
+# the name and the amount (about as wide as the longest label). 5 px/char
+# plus a small gap is enough once names are capped.
 NAME_MAX_CHARS = 22
+NAME_PX_PER_CHAR = 5
+COL_GAP_PX = 12
 NAME_COL_X = OVERLAY_X
-QTY_COL_X = OVERLAY_X + (NAME_MAX_CHARS * 8) + 20  # 220
+QTY_COL_X = OVERLAY_X + (NAME_MAX_CHARS * NAME_PX_PER_CHAR) + COL_GAP_PX  # 146
 
 TITLE_COLOR = "#1fbeff"  # Elite-ish cyan
 HEADER_COLOR = "yellow"
@@ -71,6 +74,7 @@ _group_registered = False
 _active_row_count = 0
 _last_payload = None  # (title, rows) for heartbeat
 _last_heartbeat = 0.0
+_last_qty_mode = None
 _last_sent = {}  # msg_id -> (text, color, x, y, size)
 _dirty = False
 _last_emit_at = 0.0
@@ -335,7 +339,7 @@ def _clear_slot_range(count, y=None):
 
 def clear():
     """Blank previously painted Architect Tracker lines."""
-    global _active_row_count, _last_payload, _dirty
+    global _active_row_count, _last_payload, _dirty, _last_qty_mode
     y = _y_start()
     _send(TITLE_ID, "", TITLE_COLOR, OVERLAY_X, y, size="large", ttl=1)
     _send(HEADER_NAME_ID, "", HEADER_COLOR, NAME_COL_X, y, ttl=1)
@@ -344,6 +348,7 @@ def clear():
     _active_row_count = 0
     _last_payload = None
     _dirty = False
+    _last_qty_mode = None
     _last_sent.clear()
 
 
@@ -363,11 +368,32 @@ def _fit_name(name):
     return name[:NAME_MAX_CHARS - 2] + ".."
 
 
-def _row_needed(row):
-    """Site remaining need (Required − Provided). Falls back to shortfall."""
-    value = row.get("needed")
-    if value is None:
+def _qty_mode():
+    try:
+        import helpers
+        return helpers.overlay_qty_mode()
+    except Exception:
+        return "needed"
+
+
+def _qty_header(mode=None):
+    if mode is None:
+        mode = _qty_mode()
+    return "Shortfall" if mode == "shortfall" else "Needed"
+
+
+def _row_qty(row, mode=None):
+    """Amount for the overlay's second column (Needed or Shortfall)."""
+    if mode is None:
+        mode = _qty_mode()
+    if mode == "shortfall":
         value = row.get("shortfall")
+        if value is None:
+            value = row.get("needed")
+    else:
+        value = row.get("needed")
+        if value is None:
+            value = row.get("shortfall")
     try:
         return int(value or 0)
     except (TypeError, ValueError):
@@ -375,12 +401,14 @@ def _row_needed(row):
 
 
 def paint(title, rows, force=False):
-    """Draw a two-column table: commodity | amount needed.
+    """Draw a two-column table: commodity | Needed or Shortfall.
 
-    `rows` is a list of dicts with keys: name, needed (shortfall is accepted
-    as a fallback). Only items with needed > 0 are shown, sorted highest first.
-    Unchanged lines are not re-sent. Rapid calls are coalesced to one emit per
-    MIN_PAINT_INTERVAL (heartbeat still force-refreshes TTLs).
+    `rows` is a list of dicts with keys: name, needed, shortfall. Missing
+    amounts fall back to the other. Only items with a positive value in the
+    selected column are shown, sorted highest first. Unchanged lines are not
+    re-sent. Rapid calls are coalesced to one emit per MIN_PAINT_INTERVAL
+    (heartbeat still force-refreshes TTLs). Switching Needed/Shortfall emits
+    immediately.
     """
     global _last_payload, _dirty
     global _logged_skip_disabled, _logged_skip_unavailable
@@ -403,6 +431,8 @@ def paint(title, rows, force=False):
     site = (title or "Architect Tracker").strip() or "Architect Tracker"
     _last_payload = (site, list(rows or []))
     _dirty = True
+    if helpers.overlay_qty_mode() != _last_qty_mode:
+        force = True
     _emit(force=force)
 
 
@@ -424,10 +454,11 @@ def _emit(force=False):
 
 
 def _draw(site, rows, resend=False):
-    global _active_row_count
+    global _active_row_count, _last_qty_mode
 
-    needed = [r for r in (rows or []) if _row_needed(r) > 0]
-    needed.sort(key=lambda r: (-_row_needed(r), str(r.get("name") or "").lower()))
+    mode = _qty_mode()
+    visible = [r for r in (rows or []) if _row_qty(r, mode) > 0]
+    visible.sort(key=lambda r: (-_row_qty(r, mode), str(r.get("name") or "").lower()))
 
     line_height = _line_height()
     y = _y_start()
@@ -437,11 +468,11 @@ def _draw(site, rows, resend=False):
 
     _send(HEADER_NAME_ID, "Commodity", HEADER_COLOR, NAME_COL_X, y,
           ttl=TTL_SECONDS, force=resend)
-    _send(HEADER_QTY_ID, "Needed", HEADER_COLOR, QTY_COL_X, y,
+    _send(HEADER_QTY_ID, _qty_header(mode), HEADER_COLOR, QTY_COL_X, y,
           ttl=TTL_SECONDS, force=resend)
     y += line_height + 4
 
-    if not needed:
+    if not visible:
         _send(f"{NAME_ID_PREFIX}0", "Nothing left to haul", NAME_COLOR, NAME_COL_X, y,
               ttl=TTL_SECONDS, force=resend)
         # Empty qty deletes a leftover number from a previous paint (Overlay2
@@ -451,9 +482,9 @@ def _draw(site, rows, resend=False):
         y += line_height
     else:
         painted = 0
-        for r in needed[:MAX_ROWS]:
+        for r in visible[:MAX_ROWS]:
             name = _fit_name(r.get("name"))
-            qty = _format_qty(_row_needed(r))
+            qty = _format_qty(_row_qty(r, mode))
             _send(f"{NAME_ID_PREFIX}{painted}", name, NAME_COLOR, NAME_COL_X, y,
                   ttl=TTL_SECONDS, force=resend)
             _send(f"{QTY_ID_PREFIX}{painted}", qty, QTY_COLOR, QTY_COL_X, y,
@@ -469,9 +500,10 @@ def _draw(site, rows, resend=False):
         _send(f"{NAME_ID_PREFIX}{i}", "", NAME_COLOR, NAME_COL_X, origin, ttl=1)
         _send(f"{QTY_ID_PREFIX}{i}", "", QTY_COLOR, QTY_COL_X, origin, ttl=1)
     _active_row_count = painted
+    _last_qty_mode = mode
 
     if sent:
-        logger.debug("Overlay: painted %s (%s rows)", site, painted)
+        logger.debug("Overlay: painted %s (%s rows, %s)", site, painted, mode)
 
 
 def heartbeat():

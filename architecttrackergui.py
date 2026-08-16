@@ -277,6 +277,23 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.changeStation.grid(row=0, column=3, sticky="w")
         Tooltip(self.changeStation, "Change to the next site.")
 
+        ttk.Label(dropframe, text="Overlay:", style="ArchTrack.TLabel").grid(
+            row=0, column=4, sticky="w", padx=(8, 2))
+        qty_labels = [helpers.OVERLAY_QTY_LABELS[k] for k in helpers.OVERLAY_QTY_MODES]
+        self.overlay_qty_var = tk.StringVar(
+            value=helpers.OVERLAY_QTY_LABELS[helpers.overlay_qty_mode()])
+        self.overlay_qty = ttk.Combobox(
+            dropframe, textvariable=self.overlay_qty_var, state="readonly",
+            style="ArchTrack.TCombobox", width=10, values=qty_labels)
+        self.overlay_qty.grid(row=0, column=5, sticky="w")
+        Tooltip(self.overlay_qty,
+                "In-game overlay second column:\n"
+                "Needed (what the site still wants) or\n"
+                "Shortfall (still to buy after ship and carrier).")
+        self._overlay_qty_ready = False
+        self.overlay_qty.bind("<<ComboboxSelected>>", self.on_overlay_qty_selected)
+        self.overlay_qty.after_idle(lambda: setattr(self, "_overlay_qty_ready", True))
+
         marketframe = ttk.Frame(frame, padding=0, style="ArchTrack.TFrame")
         marketframe.grid(row=0, column=3, sticky="nsew", padx=(0, 2), pady=(0))
 
@@ -678,6 +695,14 @@ class ArchitectTrackerGUI(tk.Toplevel):
                                                market_note, "", "",
                                                fc_total, ship_total, short_total), tags=tags)
 
+    def on_overlay_qty_selected(self, _event=None):
+        """Switch the in-game overlay's second column between Needed and Shortfall."""
+        if not getattr(self, "_overlay_qty_ready", False):
+            return
+        helpers.set_overlay_qty_mode(self.overlay_qty_var.get())
+        if helpers.overlay_enabled() and self.has_table:
+            self.refresh_overlay()
+
     def refresh_overlay(self):
         """Re-paint or clear the in-game overlay from the current table."""
         if not self.has_table:
@@ -696,12 +721,14 @@ class ArchitectTrackerGUI(tk.Toplevel):
         cols = list(globals.DEFAULT_COLUMNS.keys())
         name_i = cols.index("Material")
         need_i = cols.index("Needed")
+        short_i = cols.index("Shortfall")
         payload = []
         for row in rows:
             values = row["values"]
             payload.append({
                 "name": values[name_i],
                 "needed": values[need_i],
+                "shortfall": values[short_i],
             })
         overlay_mod.paint(title, payload)
 

@@ -208,6 +208,46 @@ def set_overlay_spacing(val: str) -> None:
             break
     config.set('ArchTrack_overlaySpacing', key)
 
+# Overlay second column: site remaining (Needed) or still to buy (Shortfall).
+OVERLAY_QTY_MODES = ("needed", "shortfall")
+OVERLAY_QTY_LABELS = {
+    "needed": "Needed",
+    "shortfall": "Shortfall",
+}
+
+def overlay_qty_mode() -> str:
+    """Which amount the in-game overlay shows: needed or shortfall."""
+    try:
+        if config.get('ArchTrack_overlayQty') is None:
+            return "needed"
+        val = config.get_str('ArchTrack_overlayQty')
+    except Exception:
+        return "needed"
+    if val in OVERLAY_QTY_MODES:
+        return val
+    lowered = (val or "").strip().lower()
+    if lowered in OVERLAY_QTY_MODES:
+        return lowered
+    for key, label in OVERLAY_QTY_LABELS.items():
+        if val == label:
+            return key
+    return "needed"
+
+def set_overlay_qty_mode(val: str) -> None:
+    key = "needed"
+    if val in OVERLAY_QTY_MODES:
+        key = val
+    else:
+        lowered = (val or "").strip().lower()
+        if lowered in OVERLAY_QTY_MODES:
+            key = lowered
+        else:
+            for k, label in OVERLAY_QTY_LABELS.items():
+                if val == label:
+                    key = k
+                    break
+    config.set('ArchTrack_overlayQty', key)
+
 # Fleet carrier CAPI: apply Frontier snapshots, or ignore them.
 FCAPI_MODES = ("always", "paused")
 FCAPI_MODE_LABELS = {

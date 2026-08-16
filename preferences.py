@@ -333,7 +333,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "Ctrl+click or Shift+click", 'big')
     text_widget.insert(tk.END, " a row to copy that preferred market's system name to the clipboard.\n")
     text_widget.insert(tk.END, "In-game overlay", 'big')
-    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game. Use the overlay position dropdown for top left, mid left, or bottomish left, and row spacing for Compact / Normal / Roomy lines.\n")
+    text_widget.insert(tk.END, " - with EDMC Overlay / Overlay2 / Modern Overlay installed, enable \"Show list on in-game overlay\" to paint items you still need on the left of the game. Use the overlay position dropdown for top left, mid left, or bottomish left, and row spacing for Compact / Normal / Roomy lines. On the tracker window, the Overlay dropdown chooses whether that list shows Needed or Shortfall.\n")
 
     text_widget.config(state='disabled')
     text_widget.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)

@@ -98,6 +98,7 @@ class PluginTestCase(unittest.TestCase):
         overlay_mod._active_row_count = 0
         overlay_mod._last_payload = None
         overlay_mod._last_heartbeat = 0.0
+        overlay_mod._last_qty_mode = None
         overlay_mod._last_sent = {}
         overlay_mod._dirty = False
         overlay_mod._last_emit_at = 0.0
@@ -1085,6 +1086,32 @@ class TestOverlay(PluginTestCase):
         self.assertEqual(by_id["archtrack-name-1"]["text"], "Titanium")
         self.assertEqual(by_id["archtrack-qty-1"]["text"], "50")
 
+    def test_overlay_qty_defaults_to_needed(self):
+        self.assertEqual(helpers.overlay_qty_mode(), "needed")
+        helpers.set_overlay_qty_mode("Shortfall")
+        self.assertEqual(helpers.overlay_qty_mode(), "shortfall")
+        helpers.set_overlay_qty_mode("needed")
+        self.assertEqual(helpers.overlay_qty_mode(), "needed")
+
+    def test_paint_shortfall_mode_uses_shortfall_and_header(self):
+        import overlay as overlay_mod
+        import edmcoverlay as stub
+        helpers.set_overlay_enabled(True)
+        helpers.set_overlay_qty_mode("shortfall")
+        stub.Overlay.reset()
+        overlay_mod.paint("Vulcan Gate", [
+            {"name": "Aluminium", "needed": 10, "shortfall": 0},
+            {"name": "Steel", "needed": 90, "shortfall": 10},
+            {"name": "Titanium", "needed": 50, "shortfall": 50},
+        ])
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-hdr-qty"]["text"], "Shortfall")
+        self.assertEqual(by_id["archtrack-name-0"]["text"], "Titanium")
+        self.assertEqual(by_id["archtrack-qty-0"]["text"], "50")
+        self.assertEqual(by_id["archtrack-name-1"]["text"], "Steel")
+        self.assertEqual(by_id["archtrack-qty-1"]["text"], "10")
+        self.assertNotIn("archtrack-name-2", by_id)
+
     def test_overlay_position_dropdown_moves_the_anchor(self):
         import overlay as overlay_mod
         import edmcoverlay as stub
@@ -1184,6 +1211,49 @@ class TestOverlay(PluginTestCase):
         self.assertEqual(by_id["archtrack-qty-2"]["text"], "10")
         window.on_close()
 
+    def test_tracker_overlay_qty_selector_switches_to_shortfall(self):
+        import edmcoverlay as stub
+        self.write_json(g.SAVE_FILE, {"Orbital Construction Site: Vulcan Gate": {
+            "Location": [1.0, 2.0, 3.0], "ID": 3700001,
+            "materials": {
+                "$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 100,
+                                 "ProvidedAmount": 10, "Price": 9000},
+                "$aluminium_name;": {"Name_Localised": "Aluminium", "RequiredAmount": 50,
+                                     "ProvidedAmount": 40, "Price": 9000},
+                "$titanium_name;": {"Name_Localised": "Titanium", "RequiredAmount": 200,
+                                    "ProvidedAmount": 0, "Price": 9000},
+            }}})
+        g.CARRIER_TRACKER.update({"cargo": [
+            {"commodity": "Steel", "qty": 50},
+            {"commodity": "Titanium", "qty": 150},
+        ], "name": {"callsign": "ABC-123"}})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        helpers.set_overlay_enabled(True)
+        stub.Overlay.reset()
+        window = self.open_window()
+        ROOT.update()
+        self.assertEqual(list(window.overlay_qty["values"]), ["Needed", "Shortfall"])
+        self.assertEqual(window.overlay_qty_var.get(), "Needed")
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-hdr-qty"]["text"], "Needed")
+        self.assertEqual(by_id["archtrack-qty-1"]["text"], "90")  # Steel needed
+
+        window._overlay_qty_ready = True
+        window.overlay_qty_var.set("Shortfall")
+        window.on_overlay_qty_selected()
+        ROOT.update()
+        self.assertEqual(helpers.overlay_qty_mode(), "shortfall")
+        by_id = {m["id"]: m for m in stub.Overlay.messages if m["text"]}
+        self.assertEqual(by_id["archtrack-hdr-qty"]["text"], "Shortfall")
+        # Shortfall high→low: Titanium 50, Steel 40, Aluminium 10
+        self.assertEqual(by_id["archtrack-name-0"]["text"], "Titanium")
+        self.assertEqual(by_id["archtrack-qty-0"]["text"], "50")
+        self.assertEqual(by_id["archtrack-name-1"]["text"], "Steel")
+        self.assertEqual(by_id["archtrack-qty-1"]["text"], "40")
+        self.assertEqual(by_id["archtrack-name-2"]["text"], "Aluminium")
+        self.assertEqual(by_id["archtrack-qty-2"]["text"], "10")
+        window.on_close()
+
     def test_long_names_are_trimmed_clear_of_the_needed_column(self):
         import overlay as overlay_mod
         import edmcoverlay as stub
@@ -1198,9 +1268,14 @@ class TestOverlay(PluginTestCase):
         long_name = by_id["archtrack-name-1"]["text"]
         self.assertLessEqual(len(long_name), overlay_mod.NAME_MAX_CHARS)
         self.assertTrue(long_name.endswith(".."))
-        # ~8 px per character of name budget before the numbers start.
         gap = by_id["archtrack-qty-0"]["x"] - by_id["archtrack-name-0"]["x"]
-        self.assertGreaterEqual(gap, overlay_mod.NAME_MAX_CHARS * 8)
+        self.assertEqual(
+            gap,
+            overlay_mod.NAME_MAX_CHARS * overlay_mod.NAME_PX_PER_CHAR
+            + overlay_mod.COL_GAP_PX,
+        )
+        # Needed sits close to the names, not in the old 8 px/char empty band.
+        self.assertLess(gap, overlay_mod.NAME_MAX_CHARS * 8)
 
     def test_overlay_import_is_retried_after_a_failed_first_look(self):
         import overlay as overlay_mod
