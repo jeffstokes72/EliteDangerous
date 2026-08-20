@@ -37,6 +37,8 @@ class STATION_TYPE(Enum):
     Orbital = 1
     Surface = 2
 DOCKED_STATION_TYPE = STATION_TYPE.Unknown
+# L / M / S from the last Docked event, or None if we have not seen pad info yet.
+DOCKED_MAX_PAD = None
 
 # Where Steam/Proton keeps the Windows "Saved Games" folder for Elite Dangerous.
 # Snap and Flatpak Steam relocate the whole steamapps tree, hence the several roots.

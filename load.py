@@ -1,4 +1,4 @@
-__version__ = "2.5"
+__version__ = "2.6"
 
 """
 Displays commodities required, provided and needed when you land at a construction site,
@@ -186,6 +186,10 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
                 helpers.update_market_library()
 
         elif event == "Docked":
+            import marketimport
+            globals.DOCKED_MAX_PAD = (
+                marketimport.max_pad_from_landing_pads(entry.get("LandingPads"))
+                or marketimport.max_pad_from_station_type(entry.get("StationType")))
             if _own_carrier(station, entry):
                 globals.SHIP_STATE = globals.SHIP_MODE.DockedAtFC
                 logger.info("Ship state: Docked at FC")
@@ -206,6 +210,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
         elif event == "Undocked":
             globals.SHIP_STATE = globals.SHIP_MODE.Undocked
+            globals.DOCKED_MAX_PAD = None
             logger.info("Ship state: Undocked")
 
         elif event == "ApproachSettlement":
@@ -218,6 +223,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
         elif event == "SupercruiseEntry":
             globals.DOCKED_STATION_TYPE = globals.STATION_TYPE.Unknown
+            globals.DOCKED_MAX_PAD = None
             logger.info("Station type set to: %s", globals.DOCKED_STATION_TYPE.name)
 
         if helpers.gui_exists() and not gui_already_updated and event in _GUI_REFRESH_EVENTS:

@@ -42,15 +42,29 @@ MIN_RADIUS = 5
 MAX_RADIUS = 50
 DEFAULT_RADIUS = 25
 
-# Landing pad filter for the Spansh query. Large ships need L; medium ships can
-# use L or M. Small-only pads are never useful for colonisation hauling.
+# Landing pad filter. Large ships need L; medium ships can use L or M.
+# Small-only pads are never useful for colonisation hauling.
 PAD_LARGE = "L"
+PAD_MEDIUM = "M"
+PAD_SMALL = "S"
 PAD_LARGE_MEDIUM = "L/M"
 DEFAULT_PAD_SIZE = PAD_LARGE_MEDIUM
 PAD_SIZE_LABELS = {
     PAD_LARGE: "Large pads only",
     PAD_LARGE_MEDIUM: "Large and Medium",
 }
+PAD_SIZE_SHORT = {
+    PAD_LARGE: "L",
+    PAD_LARGE_MEDIUM: "L/M",
+}
+
+# Journal StationType / Spansh type names used when pad counts are missing.
+LARGE_STATION_TYPES = {
+    "Coriolis", "Orbis", "Ocellus", "AsteroidBase", "MegaShip", "StationMegaShip",
+    "Coriolis Starport", "Orbis Starport", "Ocellus Starport", "Dodec Starport",
+    "Asteroid base", "Planetary Port", "Dockable Planet Station",
+}
+MEDIUM_STATION_TYPES = {"Outpost"}
 
 # Station types with a commodity market you can dock at and buy from. Fleet
 # carriers and megaships are deliberately absent because they relocate, and the
@@ -90,6 +104,49 @@ def station_types(include_orbital, include_surface):
     return types
 
 
+def max_pad_from_counts(large=0, medium=0, small=0, has_large_pad=None):
+    """Largest pad class present: L, M, S, or None if nothing is known."""
+    if has_large_pad is True or (large or 0) > 0:
+        return PAD_LARGE
+    if (medium or 0) > 0:
+        return PAD_MEDIUM
+    if (small or 0) > 0:
+        return PAD_SMALL
+    return None
+
+
+def max_pad_from_landing_pads(pads):
+    """Journal Docked.LandingPads -> L / M / S / None."""
+    if not isinstance(pads, dict):
+        return None
+    return max_pad_from_counts(
+        large=pads.get("Large"), medium=pads.get("Medium"), small=pads.get("Small"))
+
+
+def max_pad_from_station_type(station_type):
+    """Guess pad class from a journal StationType or Spansh type name."""
+    if not station_type:
+        return None
+    name = str(station_type).strip()
+    if name in LARGE_STATION_TYPES:
+        return PAD_LARGE
+    if name in MEDIUM_STATION_TYPES:
+        return PAD_MEDIUM
+    return None
+
+
+def max_pad_of_station(station):
+    """Largest pad on a Spansh station record, falling back to its type name."""
+    if any(key in station for key in
+           ("has_large_pad", "large_pads", "medium_pads", "small_pads")):
+        return max_pad_from_counts(
+            large=station.get("large_pads"),
+            medium=station.get("medium_pads"),
+            small=station.get("small_pads"),
+            has_large_pad=station.get("has_large_pad") if "has_large_pad" in station else None)
+    return max_pad_from_station_type(station.get("type"))
+
+
 def fits_pad_filter(station, pad_size):
     """Whether a Spansh station record matches the commander's pad filter.
 
@@ -97,16 +154,12 @@ def fits_pad_filter(station, pad_size):
     drops small-only pads client-side when pad counts are present; missing pad
     fields (older dumps) are kept rather than discarding useful prices.
     """
+    max_pad = max_pad_of_station(station)
     if pad_size == PAD_LARGE:
-        if "has_large_pad" in station:
-            return bool(station.get("has_large_pad"))
-        return (station.get("large_pads") or 0) > 0
-    # Large and Medium
-    large = station.get("large_pads")
-    medium = station.get("medium_pads")
-    if large is None and medium is None and "has_large_pad" not in station:
+        return max_pad == PAD_LARGE
+    if max_pad is None:
         return True
-    return (large or 0) > 0 or (medium or 0) > 0 or bool(station.get("has_large_pad"))
+    return max_pad in (PAD_LARGE, PAD_MEDIUM)
 
 
 def search_page(system, radius, types, page, pad_size=DEFAULT_PAD_SIZE):
@@ -299,7 +352,8 @@ def import_markets(system, radius, include_orbital, include_surface,
                 helpers.record_market_price(
                     market_lib, internal, price, station.get("name"),
                     station.get("market_id"), station_type, location,
-                    site_prices=site_prices, system=system_name)
+                    site_prices=site_prices, system=system_name,
+                    max_pad=max_pad_of_station(station))
                 summary.prices += 1
                 used = True
             if used:
