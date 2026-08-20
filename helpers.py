@@ -138,9 +138,9 @@ def show_ui_at_start() -> bool:
     return config.get_bool('ArchTrack_showUI')
 
 def hotkeys_enabled() -> bool:
-    """Global t/p/o/l/u/<> bindings. Off when the commander disables them in settings."""
+    """Global t/p/o/l/u/<> bindings. Off until the commander enables them in settings."""
     if config.get('ArchTrack_hotkeys') is None:
-        return True
+        return False
     return config.get_bool('ArchTrack_hotkeys')
 
 def set_hotkeys_enabled(val: bool) -> None:

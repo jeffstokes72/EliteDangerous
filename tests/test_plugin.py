@@ -641,12 +641,12 @@ class TestHotkeys(PluginTestCase):
         self.assertIsNone(g.ARCHITECT_GUI)
         entry.destroy()
 
-    def test_hotkeys_default_to_on(self):
-        self.assertTrue(helpers.hotkeys_enabled())
-        helpers.set_hotkeys_enabled(False)
+    def test_hotkeys_default_to_off(self):
         self.assertFalse(helpers.hotkeys_enabled())
-        preferences.toggle_hotkeys(True)
+        helpers.set_hotkeys_enabled(True)
         self.assertTrue(helpers.hotkeys_enabled())
+        preferences.toggle_hotkeys(False)
+        self.assertFalse(helpers.hotkeys_enabled())
 
     def test_disabled_hotkeys_do_not_toggle_the_window(self):
         helpers.set_hotkeys_enabled(False)

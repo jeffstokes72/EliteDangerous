@@ -219,12 +219,12 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
 
-    hotkeys_off_var = tk.BooleanVar(value=not helpers.hotkeys_enabled())
+    hotkeys_var = tk.BooleanVar(value=helpers.hotkeys_enabled())
     nb.Checkbutton(
         but_frame,
-        text="Disable plugin hotkeys\n(t, p, o, l, u, <, >)",
-        variable=hotkeys_off_var,
-        command=lambda v=hotkeys_off_var: toggle_hotkeys(not v.get())
+        text="Enable plugin hotkeys\n(t, p, o, l, u, <, >)",
+        variable=hotkeys_var,
+        command=lambda v=hotkeys_var: toggle_hotkeys(v.get())
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
 
@@ -338,7 +338,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, " - toggles between large pads only and large+medium (outposts). Filters the preferred market for commodities a site still needs. Same setting as the import landing-pad dropdown. (Bound to 'l' key)\n")
     text_widget.insert(tk.END, "Pause\\Unpause", 'big')
     text_widget.insert(tk.END, " - same as Carrier sync in settings: pause or resume Frontier carrier cargo snapshots. (Bound to 'u' key)\n")
-    text_widget.insert(tk.END, "Hotkeys can be turned off with \"Disable plugin hotkeys\" in this tab if they clash with EDMC or the game. The tracker buttons still work.\n\n")
+    text_widget.insert(tk.END, "Hotkeys are off until you tick \"Enable plugin hotkeys\" in this tab. The tracker buttons still work.\n\n")
     text_widget.insert(tk.END, "Row highlighting\n", 'underline')
     text_widget.insert(tk.END, "Depending on where you are docked, rows are highlighted to indicate:\n")
     text_widget.insert(tk.END, "Markets", 'big')
