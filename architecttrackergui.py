@@ -304,9 +304,13 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.toggleTypeStation = ttk.Button(marketframe, text="O\\S", style="ArchTrack.TButton", width=3, command=self.on_toggle_prefType)
         self.toggleTypeStation.grid(row=0, column=1, sticky="w")
         Tooltip(self.toggleTypeStation, "Prefer orbital or surface markets.")
+
+        self.togglePadStation = ttk.Button(marketframe, text="L\\M", style="ArchTrack.TButton", width=3, command=self.on_toggle_prefPad)
+        self.togglePadStation.grid(row=0, column=2, sticky="w")
+        Tooltip(self.togglePadStation, "Prefer large pads only, or\nlarge and medium (outposts).")
         
         labelframe = ttk.Frame(marketframe)
-        labelframe.grid(row=0, column=2, sticky="w")
+        labelframe.grid(row=0, column=3, sticky="w")
 
         ttk.Label(labelframe, text="Preferred Market:", style="ArchTrack.TLabel", padding=0).pack(anchor="w", fill='x')
         self.market_name_label = ttk.Label(labelframe, text="", style="ArchTrack.TLabel", padding=0)
@@ -546,6 +550,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
             t = 'alternate (Alt)'
             
         t = t + " " + helpers.getPreferedType().name
+        t = t + " " + helpers.import_pad_size_short()
         self.market_name_label['text'] = t
         
         # Set the carrier label
@@ -917,6 +922,10 @@ class ArchitectTrackerGUI(tk.Toplevel):
             config.set('ArchTrack_prefType', globals.STATION_TYPE.Surface.value)
         else:
             config.set('ArchTrack_prefType', globals.STATION_TYPE.Orbital.value)
+        self.refresh()
+
+    def on_toggle_prefPad(self):
+        helpers.toggle_import_pad_size()
         self.refresh()
 
     def rename_column(self, c, v):

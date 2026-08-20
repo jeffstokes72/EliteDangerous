@@ -137,6 +137,15 @@ def show_ui_at_start() -> bool:
         return True
     return config.get_bool('ArchTrack_showUI')
 
+def hotkeys_enabled() -> bool:
+    """Global t/p/o/l/u/<> bindings. Off until the commander enables them in settings."""
+    if config.get('ArchTrack_hotkeys') is None:
+        return False
+    return config.get_bool('ArchTrack_hotkeys')
+
+def set_hotkeys_enabled(val: bool) -> None:
+    config.set('ArchTrack_hotkeys', bool(val))
+
 def overlay_enabled() -> bool:
     """Paint the remaining-needed list via EDMC Overlay / Overlay2 when True."""
     if config.get('ArchTrack_overlay') is None:
@@ -330,7 +339,7 @@ def import_surface() -> bool:
     return config.get_bool('ArchTrack_importSurface')
 
 def import_pad_size() -> str:
-    """Landing pad filter for Spansh imports: large only, or large and medium."""
+    """Landing pad filter for imports and the Pref Market column: L, or L and M."""
     import marketimport
     if config.get('ArchTrack_importPadSize') is None:
         return marketimport.PAD_LARGE_MEDIUM
@@ -338,6 +347,28 @@ def import_pad_size() -> str:
     if value not in (marketimport.PAD_LARGE, marketimport.PAD_LARGE_MEDIUM):
         return marketimport.PAD_LARGE_MEDIUM
     return value
+
+def set_import_pad_size(value: str, refresh: bool = True) -> None:
+    """Remember the L / L&M pad filter and optionally refresh the tracker table."""
+    import marketimport
+    if value not in (marketimport.PAD_LARGE, marketimport.PAD_LARGE_MEDIUM):
+        value = marketimport.DEFAULT_PAD_SIZE
+    config.set('ArchTrack_importPadSize', value)
+    if refresh and gui_exists() and globals.SITE_LOCATION:
+        globals.ARCHITECT_GUI.refresh()
+
+def import_pad_size_short() -> str:
+    """Short label for the tracker: L or L/M."""
+    import marketimport
+    return marketimport.PAD_SIZE_SHORT.get(import_pad_size(), import_pad_size())
+
+def toggle_import_pad_size() -> str:
+    """Switch between large-only and large+medium. Returns the new value."""
+    import marketimport
+    nxt = (marketimport.PAD_LARGE if import_pad_size() != marketimport.PAD_LARGE
+           else marketimport.PAD_LARGE_MEDIUM)
+    set_import_pad_size(nxt, refresh=False)
+    return nxt
 
 def site_system() -> str:
     """The system to search around: the shown site's, or wherever we are now."""
@@ -632,7 +663,7 @@ def get_market_by_station_id(data, station_id):
     return None
 
 def ensure_market_exists(market_lib, station_name, station_id, location=None,
-                         station_type=None, system=None):
+                         station_type=None, system=None, max_pad=None):
     if location is None:
         location = globals.CURRENT_LOCATION
     if station_type is None:
@@ -641,13 +672,16 @@ def ensure_market_exists(market_lib, station_name, station_id, location=None,
         system = globals.CURRENT_SYSTEM
     market = get_market_by_station_id(market_lib, station_id)
     if market is None:
-        market_lib["Markets"].append({
+        entry = {
             "StationName": station_name,
             "System": system,
             "Location": location,
             "StationID": station_id,
             "Type": station_type.name
-        })
+        }
+        if max_pad:
+            entry["MaxPad"] = max_pad
+        market_lib["Markets"].append(entry)
         logger.debug("Adding new market: %s", station_name)
         return
     if not market.get("Location") and location:
@@ -659,20 +693,76 @@ def ensure_market_exists(market_lib, station_name, station_id, location=None,
         logger.debug("Filled in the system of market: %s", station_name)
     if station_name and market.get("StationName") != station_name:
         market["StationName"] = station_name
+    if max_pad:
+        market["MaxPad"] = max_pad
+
+def _pref_slot_keys(type_name, max_pad=None):
+    """Cheap/Closest/Alt keys this observation should update.
+
+    The unsuffixed key is the L/M winner. The 'L' suffix is the large-pad
+    winner, so the tracker can hide outposts without a fresh import.
+    """
+    import marketimport
+    if max_pad == marketimport.PAD_SMALL:
+        return []
+    keys = [type_name]
+    if max_pad == marketimport.PAD_LARGE:
+        keys.append(type_name + "L")
+    return keys
+
+def _all_pref_slot_keys(type_name):
+    return [type_name, type_name + "L"]
+
+def _drop_station_from_slots(bucket, type_name, station_id):
+    """Remove `station_id` from every L and L/M slot of this station type."""
+    dropped = False
+    for key in _all_pref_slot_keys(type_name):
+        entry = bucket.get(key)
+        if entry and entry.get("StationID") == station_id:
+            del bucket[key]
+            dropped = True
+    return dropped
+
+def _put_cheaper(bucket, key, price, station_id, add_market):
+    entry = bucket.get(key)
+    if not entry or price < entry["Price"]:
+        add_market()
+        bucket[key] = {"Price": price, "StationID": station_id}
+        return True
+    if entry.get("StationID") == station_id:
+        entry["Price"] = price
+    return False
+
+def _put_closer(bucket, key, price, station_id, add_market, closer_than):
+    entry = bucket.get(key)
+    if closer_than(entry):
+        add_market()
+        bucket[key] = {"Price": price, "StationID": station_id}
+        return True
+    if entry and entry.get("StationID") == station_id:
+        entry["Price"] = price
+    return False
 
 # One observation of "this market sells this commodity at this price", from
 # wherever it came from: docking somewhere, or an import. Keeping both callers
 # on the same rules is the point, so the two sources stay comparable.
 def record_market_price(market_lib, item_name, price, station_name, station_id,
-                        station_type, location, site_prices=None, system=None):
+                        station_type, location, site_prices=None, system=None,
+                        max_pad=None):
+    import marketimport
     if not item_name or not station_id or not price:
         return
+    if max_pad == marketimport.PAD_SMALL:
+        return
     type_name = station_type.name
+    slots = _pref_slot_keys(type_name, max_pad)
+    if not slots:
+        return
     commodity = market_lib["Commodities"].setdefault(item_name, {})
 
     def add_market():
         ensure_market_exists(market_lib, station_name, station_id, location,
-                             station_type, system)
+                             station_type, system, max_pad=max_pad)
 
     def distance_from_site():
         if not location or not globals.SITE_LOCATION:
@@ -686,44 +776,29 @@ def record_market_price(market_lib, item_name, price, station_name, station_id,
 
     if isItemBelowConstructionCost(item_name, price, site_prices):
         cheap_markets = commodity.setdefault("CheapMarkets", {})
-        cheap_entry = cheap_markets.get(type_name)
-        if not cheap_entry or price < cheap_entry["Price"]:  # cheaper, or nothing recorded
-            add_market()
-            logger.debug("Updating CheapMarket for: %s", item_name)
-            cheap_markets[type_name] = {"Price": price, "StationID": station_id}
-        elif station_id == cheap_entry.get("StationID"):  # same station, new price
-            cheap_entry["Price"] = price
-
         close_markets = commodity.setdefault("ClosestMarkets", {})
-        close_entry = close_markets.get(type_name)
-        if closer_than(close_entry):
-            add_market()
-            logger.debug("Updating ClosestMarket for: %s", item_name)
-            close_markets[type_name] = {"Price": price, "StationID": station_id}
-        elif close_entry and close_entry.get("StationID") == station_id:
-            close_entry["Price"] = price
+        for key in slots:
+            if _put_cheaper(cheap_markets, key, price, station_id, add_market):
+                logger.debug("Updating CheapMarket %s for: %s", key, item_name)
+            if _put_closer(close_markets, key, price, station_id, add_market, closer_than):
+                logger.debug("Updating ClosestMarket %s for: %s", key, item_name)
         return
 
     logger.debug("Item %s was expensive.", item_name)
     cheap_markets = commodity.setdefault("CheapMarkets", {})
     close_markets = commodity.setdefault("ClosestMarkets", {})
-    cheap_entry = cheap_markets.get(type_name)
-    close_entry = close_markets.get(type_name)
     # Price rose above the site payment: demote this market out of Cheap/Closest.
-    if cheap_entry and cheap_entry.get("StationID") == station_id:
-        del cheap_markets[type_name]
+    if _drop_station_from_slots(cheap_markets, type_name, station_id):
         logger.debug("Removed %s from CheapMarkets; no longer below site cost.", station_name)
-    if close_entry and close_entry.get("StationID") == station_id:
-        del close_markets[type_name]
+    if _drop_station_from_slots(close_markets, type_name, station_id):
         logger.debug("Removed %s from ClosestMarkets; no longer below site cost.", station_name)
 
     alt_markets = commodity.setdefault("AlternateMarkets", {})
-    if closer_than(alt_markets.get(type_name)):
-        add_market()
-        logger.debug("Updating AlternateMarket for: %s", item_name)
-        alt_markets[type_name] = {"Price": price, "StationID": station_id}
-    else:
-        logger.debug("%s has a closer AlternateMarket", item_name)
+    for key in slots:
+        if _put_closer(alt_markets, key, price, station_id, add_market, closer_than):
+            logger.debug("Updating AlternateMarket %s for: %s", key, item_name)
+        else:
+            logger.debug("%s has a closer AlternateMarket", item_name)
 
 def save_market_library(market_lib):
     try:
@@ -791,6 +866,9 @@ def update_market_library() -> None:
         if ensure_commodities_loaded():
             not_selling_list = list(COMMODITIES)
         site_prices = load_site_prices()
+        import marketimport
+        max_pad = (globals.DOCKED_MAX_PAD
+                   or marketimport.max_pad_from_station_type(market.get("StationType")))
 
         for item in items:
             if item.get("Stock", 0) > 0:  # Item is for sale
@@ -800,12 +878,13 @@ def update_market_library() -> None:
                 m_price = item.get("BuyPrice")
 
                 if item_name and isItemConstructionCommodity(item_name):
-                    if item_name in not_selling_list:
+                    if not_selling_list is not None and item_name in not_selling_list:
                         not_selling_list.remove(item_name)
                     record_market_price(market_lib, item_name, m_price, station_name,
                                         station_id, globals.DOCKED_STATION_TYPE,
                                         globals.CURRENT_LOCATION, site_prices,
-                                        system=globals.CURRENT_SYSTEM)
+                                        system=globals.CURRENT_SYSTEM,
+                                        max_pad=max_pad)
 
         if not_selling_list != None:
             purge_market_from_other_commodities(market_lib, not_selling_list, station_id, station_name) #removes station ID if no longer selling commodities
@@ -820,26 +899,15 @@ def update_market_library() -> None:
         
 #remove station ID if no longer selling commodities
 def purge_market_from_other_commodities(market_lib, comm_list, station_id, station_name):
+    type_name = globals.DOCKED_STATION_TYPE.name
     for comm in comm_list:
         commodity = market_lib["Commodities"].get(comm)
         if not commodity:
             continue
-        cheap_m_list = commodity.setdefault("CheapMarkets", {})
-        cheap_entry = cheap_m_list.get(globals.DOCKED_STATION_TYPE.name)
-        close_m_list = commodity.setdefault("ClosestMarkets", {})
-        close_entry = close_m_list.get(globals.DOCKED_STATION_TYPE.name)
-        alt_m_list = commodity.setdefault("AlternateMarkets", {})
-        alt_entry = alt_m_list.get(globals.DOCKED_STATION_TYPE.name)
-
-        if (cheap_entry and cheap_entry.get("StationID") == station_id):
-            del cheap_m_list[globals.DOCKED_STATION_TYPE.name]
-            logger.info("%s is no longer selling %s", station_name, comm)
-        if (close_entry and close_entry.get("StationID") == station_id):
-            del close_m_list[globals.DOCKED_STATION_TYPE.name]
-            logger.info("%s is no longer selling %s", station_name, comm)
-        if (alt_entry and alt_entry.get("StationID") == station_id):
-            del alt_m_list[globals.DOCKED_STATION_TYPE.name]
-            logger.info("%s is no longer selling %s", station_name, comm)
+        for bucket_name in ("CheapMarkets", "ClosestMarkets", "AlternateMarkets"):
+            bucket = commodity.setdefault(bucket_name, {})
+            if _drop_station_from_slots(bucket, type_name, station_id):
+                logger.info("%s is no longer selling %s", station_name, comm)
 
 def getPreferedMarket()->globals.MARKET_MODE:
     if config.get('ArchTrack_prefCheap') is not None:   #setting not used since v1.3
@@ -956,6 +1024,28 @@ def get_old_prefMarket_name(material, market_lib=None): #see if pre v1.3 market 
     
     return "Old Err"
 
+def _pad_lookup_keys(type_name, pad_size):
+    """Which stored winners to try, preferred first, for this pad filter."""
+    import marketimport
+    if pad_size == marketimport.PAD_LARGE:
+        return [type_name + "L", type_name]
+    return [type_name]
+
+def _entry_fits_pad(market_lib, entry, pad_size):
+    """Whether a Cheap/Closest/Alt row is usable under the current pad filter."""
+    import marketimport
+    if not entry:
+        return False
+    station = get_market_by_station_id(market_lib, entry.get("StationID"))
+    if not station:
+        return False
+    pad = station.get("MaxPad")
+    if pad == marketimport.PAD_SMALL:
+        return False
+    if pad_size == marketimport.PAD_LARGE and pad == marketimport.PAD_MEDIUM:
+        return False
+    return True
+
 def get_prefMarket_entry(material, market_lib=None, legacy_lib=None):
     """Preferred market dict for `material`, or None. Shared by name/system lookups."""
     try:
@@ -983,11 +1073,18 @@ def get_prefMarket_entry(material, market_lib=None, legacy_lib=None):
         else:
             preferred, fallback = globals.STATION_TYPE.Surface, globals.STATION_TYPE.Orbital
 
-        m = markets.get(preferred.name)
-        prefix = ""
+        pad_size = import_pad_size()
+
+        def pick(station_type, prefix):
+            for key in _pad_lookup_keys(station_type.name, pad_size):
+                m = markets.get(key) if markets else None
+                if m and _entry_fits_pad(market_lib, m, pad_size):
+                    return m, prefix
+            return None, prefix
+
+        m, prefix = pick(preferred, "")
         if not m:
-            m = markets.get(fallback.name)
-            prefix = "*"  #mark the non-prefered type
+            m, prefix = pick(fallback, "*")
         if not m:
             return None
 
@@ -1092,6 +1189,8 @@ def is_typing_widget(widget) -> bool:
 def on_key_press(event):
     # These are bound with bind_all so Voice Attack can reach them, which means we
     # also see keystrokes meant for EDMC's own fields and for our settings tab.
+    if not hotkeys_enabled():
+        return
     if is_typing_widget(getattr(event, "widget", None)):
         return
 
@@ -1110,5 +1209,7 @@ def on_key_press(event):
         globals.ARCHITECT_GUI.on_toggle_prefMarket()
     elif event.char == 'o':
         globals.ARCHITECT_GUI.on_toggle_prefType()
+    elif event.char == 'l':
+        globals.ARCHITECT_GUI.on_toggle_prefPad()
     elif event.char == 'u':
         globals.ARCHITECT_GUI.on_canvas_click(event)

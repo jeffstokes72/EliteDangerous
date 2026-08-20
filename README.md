@@ -80,6 +80,7 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
   - <b><</b> or <b>></b> - changes to previous or next site in list. Wraps around list.
   - <b>$\Ly\Alt</b> - toggles between showing the cheapest, closest or alternate markets in the preferred market column. See "Preferred Markets" section below for more information.
   - <b>O\S</b> - toggles between showing orbital or surface markets in the preferred market column. See "Preferred Markets" section below for more information.
+  - <b>L\M</b> - toggles between large pads only and large+medium (outposts) for the preferred market of commodities a site still needs. Same setting as the import landing-pad dropdown. Bound to `l`.
   - <b>Pause</b> or <b>Unpause</b> - this button next to the Carrier name will pause or unpause updating the fleet carrier cargo quantities from Fdev's fleet carrier companion api. See section below.
 
 ### Importing Nearby Markets
@@ -87,6 +88,7 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 - Set how far to look (5 to 50 ly, 25 by default), whether you want orbital markets, surface markets or both, and a landing-pad filter:
   - **Large pads only** — starports and other L-pad markets (excludes outposts).
   - **Large and Medium** — also keeps medium-pad markets such as outposts (the default).
+- The same L / L&M choice is a toggle on the tracker window, so you can hide medium-pad markets after importing both without running the import again.
 - The search is measured from your construction site, not from wherever you happen to be.
 - The prices come from <a href="https://spansh.co.uk">spansh.co.uk</a>, which collects what other commanders report to EDDN. They are a donation funded community service, so the plugin only asks when you press the button, at most once a minute, and stops after the 200 markets nearest your site.
 - Out in colonisation space most markets have not been visited by anyone in months, so expect the prices to be older than the ones you collect yourself. The plugin tells you how old the oldest one was and ignores anything over a year. Docking at a market always replaces the imported price with what you actually saw.
@@ -98,12 +100,14 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 - In the **-All-** view Distance is left blank (there is no single site to measure from).
 - Click any column header to sort the list. Click **Shortfall** to put the biggest remaining buys first (click again to reverse).
 - **Ctrl+click** or **Shift+click** a row to copy that System name to the clipboard (handy for the galaxy map search box). The Preferred Market label briefly shows `Copied: …` as confirmation.
-- Markets can be filtered using the $\Ly\Alt and O\S buttons at the top of the inteface. Filtering includes:
+- Markets can be filtered using the $\Ly\Alt, O\S and L\M buttons at the top of the inteface. Filtering includes:
   - $ : the station that has the cheapest sell price that was below your construction sites buy price.
   - Ly : the station that is closest to your colony system whose sell price was below your construction sites buy price.
-  - Alt : the station that is closest to your colony system whose sell price was NOT below your construction sites buy price.
+  - Alt : the station that is closest to the colony system whose sell price was NOT below your construction sites buy price.
   - O : orbital stations are shown. If none have been found, a surface settlement is shown with an asterix (*) prepended to the name. Otherwise it will be blank.
   - S : surface settlement are shown. If none have been found, an orbital station is shown with an asterix (*) prepended to the name. Otherwise it will be blank.
+  - L : only markets with a large landing pad. If the cheapest/closest match is an outpost, the large-pad alternative is shown instead.
+  - M (L/M) : large and medium pads (outposts included). This is the default.
 - Note: if you started using this plugin prior to version 1.4, the old data will be shown with a double asterix (**) prepended to the name untill you have landed at the market again.
 
 ### Fleet Carrier Cargo Quantities
@@ -114,13 +118,15 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 
 ### Notes
 1. VR programs like Desktop+ can display this window inside the game for you.
-2. For Voice Attack users:
+2. For Voice Attack users (tick **Enable plugin hotkeys** in settings first; they are off by default):
   - The "<", ">" buttons are bound to the keys "<", ">" respectiveley.
   - The "$\Ly\Alt" button is bound to key "p".
   - The "O\S" button is bound to key "o".
+  - The "L\M" button is bound to key "l".
   - The pause\unpause button is bound to "u".
   - Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
   - These keys are ignored while you are typing in a text box, so renaming a column in the settings tab or filtering the log viewer will not trigger them.
+  - **Enable plugin hotkeys** in settings turns those bindings on (they are off by default). The tracker buttons still work either way.
 3. Linux: the plugin uses the journal folder EDMC is already watching. If EDMC has found your journals then so has the plugin, whether Elite is installed under Steam, Flatpak Steam, Snap Steam or on a second drive. If neither can find them, set the folder in EDMC's File > Settings > Configuration tab.
 4. Running the tests (only needed if you are changing the code): `python3 tests/test_plugin.py`, or `xvfb-run -a python3 tests/test_plugin.py` on a machine with no display. EDMC does not need to be installed.
 
@@ -154,3 +160,4 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 + 2026/08/16 : Overlay no longer trips Modern Overlay's "payload spam" warning. Unchanged lines are not re-sent, rapid journal bursts (LoadGame, construction-site ticks) are coalesced to about one paint per second, and the tracker window is not rebuilt on unrelated journal events.
 + 2026/08/16 : Overlay second column is chosen on the tracker window (Needed or Shortfall). Commodity names and amounts sit closer together.
 + 2026/08/16 : Settings option to paint overlay numbers in white instead of orange.
++ 2026/08/20 : [Version 2.6] L\\M toggle on the tracker (and `l` hotkey) filters preferred markets by large pads vs large+medium. Imports remember both winners so switching does not require a fresh download. Settings checkbox to enable the plugin hotkeys (off by default).

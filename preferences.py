@@ -219,6 +219,15 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
 
+    hotkeys_var = tk.BooleanVar(value=helpers.hotkeys_enabled())
+    nb.Checkbutton(
+        but_frame,
+        text="Enable plugin hotkeys\n(t, p, o, l, u, <, >)",
+        variable=hotkeys_var,
+        command=lambda v=hotkeys_var: toggle_hotkeys(v.get())
+    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+
     # In-game overlay (EDMC Overlay / Overlay2 / Modern Overlay)
     import overlay as overlay_mod
     overlay_var = tk.BooleanVar(value=helpers.overlay_enabled())
@@ -296,7 +305,7 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     note_frame.grid(row=2, column=2, columnspan=2, sticky="nsew")
 
     #display button and highlighting notes
-    text_widget = tk.Text(note_frame, height=22, width=85, wrap='word', font=('Verdana', 9), border=0)
+    text_widget = tk.Text(note_frame, height=24, width=85, wrap='word', font=('Verdana', 9), border=0)
     text_widget.tag_configure('big', font=('Verdana', 9, 'bold'))
     text_widget.tag_configure('underline', font=('Verdana', 9, 'underline'))
 
@@ -325,8 +334,11 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, " - toggles between cheapest, closest and alternate market. Prices and distances are tracked whenever you open a commodity market. (This is bound the the 'p' key for Voice Attack users.)\n")
     text_widget.insert(tk.END, "O\\S", 'big')
     text_widget.insert(tk.END, " - toggles between orbital and surface markets. Works together with cheapest, closest and alternate. (Bound to 'o' key)\n")
+    text_widget.insert(tk.END, "L\\M", 'big')
+    text_widget.insert(tk.END, " - toggles between large pads only and large+medium (outposts). Filters the preferred market for commodities a site still needs. Same setting as the import landing-pad dropdown. (Bound to 'l' key)\n")
     text_widget.insert(tk.END, "Pause\\Unpause", 'big')
-    text_widget.insert(tk.END, " - same as Carrier sync in settings: pause or resume Frontier carrier cargo snapshots. (Bound to 'u' key)\n\n")
+    text_widget.insert(tk.END, " - same as Carrier sync in settings: pause or resume Frontier carrier cargo snapshots. (Bound to 'u' key)\n")
+    text_widget.insert(tk.END, "Hotkeys are off until you tick \"Enable plugin hotkeys\" in this tab. The tracker buttons still work.\n\n")
     text_widget.insert(tk.END, "Row highlighting\n", 'underline')
     text_widget.insert(tk.END, "Depending on where you are docked, rows are highlighted to indicate:\n")
     text_widget.insert(tk.END, "Markets", 'big')
@@ -402,9 +414,9 @@ def build_import_widgets(frame):
                            values=pad_choices)
     pad_opt.grid(row=1, column=1, sticky="w", padx=4)
     pad_opt.bind("<<ComboboxSelected>>",
-                 lambda e: config.set('ArchTrack_importPadSize',
-                                      pad_value_by_label.get(pad_var.get(),
-                                                             marketimport.DEFAULT_PAD_SIZE)))
+                 lambda e: helpers.set_import_pad_size(
+                     pad_value_by_label.get(pad_var.get(),
+                                            marketimport.DEFAULT_PAD_SIZE)))
     g_row += 1
 
     import_button = nb.Button(frame, text="Import market data now", command=start_import)
@@ -421,6 +433,8 @@ def build_import_widgets(frame):
         "markets you have not docked at yet.\n\n"
         f"Reads the {marketimport.MAX_PAGES * marketimport.PAGE_SIZE} markets nearest "
         "your site. Large pads only excludes outposts; Large and Medium keeps them. "
+        "The L\\M button on the tracker uses the same filter, so you can hide "
+        "medium-pad markets after importing both. "
         "Out in colonisation space most prices are months old; anything over a year "
         "is ignored. Docking somewhere replaces the imported price with what "
         "you saw.")).grid(row=g_row, sticky="nw", padx=5, pady=(4, 5))
@@ -643,6 +657,9 @@ def on_delete_markets():
 def toggle_showUIatStart(b):
     globals.SHOW_UI_AT_START = b
     config.set('ArchTrack_showUI', bool(b))
+
+def toggle_hotkeys(enabled):
+    helpers.set_hotkeys_enabled(enabled)
 
 def change_fcapi_mode(mode):
     helpers.set_fcapi_mode(mode)

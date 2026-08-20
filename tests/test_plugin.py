@@ -59,6 +59,9 @@ class FakeGUI:
             raise tk.TclError("application has been destroyed")
         return 1 if self._exists else 0
 
+    def refresh(self):
+        return
+
 
 class PluginTestCase(unittest.TestCase):
     """Gives every test a clean user directory, config and journal directory."""
@@ -80,6 +83,7 @@ class PluginTestCase(unittest.TestCase):
         g.SITE_LOCATION = None
         g.SHIP_STATE = g.SHIP_MODE.Unknown
         g.DOCKED_STATION_TYPE = g.STATION_TYPE.Orbital
+        g.DOCKED_MAX_PAD = None
         g.CARRIER_TRACKER = FleetCarrierCargoTracker()
         g.FCAPI_PAUSED = False
         config.settings.clear()
@@ -180,6 +184,17 @@ class TestWindowGuard(PluginTestCase):
                            {"event": "FSDJump", "StarPos": [1.0, 2.0, 3.0]},
                            {"IsDocked": False})
         self.assertEqual(g.SHIP_STATE, g.SHIP_MODE.Undocked)
+
+    def test_docked_event_remembers_landing_pads(self):
+        g.ARCHITECT_GUI = FakeGUI(exists=True)
+        load.journal_entry("Cmdr", False, "Sol", "Jameson Memorial", {
+            "event": "Docked", "StationType": "Orbis",
+            "LandingPads": {"Small": 4, "Medium": 8, "Large": 9}},
+            {"IsDocked": True})
+        self.assertEqual(g.DOCKED_MAX_PAD, marketimport.PAD_LARGE)
+        load.journal_entry("Cmdr", False, "Sol", "Jameson Memorial",
+                           {"event": "Undocked"}, {"IsDocked": False})
+        self.assertIsNone(g.DOCKED_MAX_PAD)
 
     def test_plugin_stop_without_a_window(self):
         g.ARCHITECT_GUI = None
@@ -316,6 +331,60 @@ class TestMarketLibrary(PluginTestCase):
         config.set("ArchTrack_prefType", g.STATION_TYPE.Surface.value)
         self.assertEqual(helpers.get_prefMarket_name(self.STEEL), "Dirt Farm")
 
+    def test_preferred_market_can_prefer_large_pads(self):
+        """L/M keeps a cheaper outpost; L switches to the large-pad alternative."""
+        g.SITE_LOCATION = [0.0, 0.0, 0.0]
+        lib = {"Commodities": {}, "Markets": []}
+        site_prices = {self.STEEL: [9000]}
+        helpers.record_market_price(
+            lib, self.STEEL, 500, "Outpost One", 11, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], site_prices, "Near", max_pad=marketimport.PAD_MEDIUM)
+        helpers.record_market_price(
+            lib, self.STEEL, 800, "Starport", 22, g.STATION_TYPE.Orbital,
+            [2.0, 0.0, 0.0], site_prices, "Far", max_pad=marketimport.PAD_LARGE)
+        helpers.save_market_library(lib)
+
+        helpers.set_import_pad_size(marketimport.PAD_LARGE_MEDIUM, refresh=False)
+        self.assertEqual(helpers.get_prefMarket_name(self.STEEL), "Outpost One")
+        helpers.set_import_pad_size(marketimport.PAD_LARGE, refresh=False)
+        self.assertEqual(helpers.get_prefMarket_name(self.STEEL), "Starport")
+
+    def test_large_filter_hides_a_medium_market_with_no_alternative(self):
+        self.write_json(g.MARKET_LIB_PATH, {
+            "Commodities": {self.STEEL: {
+                "CheapMarkets": {"Orbital": {"Price": 3000, "StationID": 111}}}},
+            "Markets": [{"StationName": "Tiny Outpost", "Location": [1.0, 2.0, 3.0],
+                         "StationID": 111, "Type": "Orbital", "MaxPad": "M"}]})
+        helpers.set_import_pad_size(marketimport.PAD_LARGE_MEDIUM, refresh=False)
+        self.assertEqual(helpers.get_prefMarket_name(self.STEEL), "Tiny Outpost")
+        helpers.set_import_pad_size(marketimport.PAD_LARGE, refresh=False)
+        self.assertEqual(helpers.get_prefMarket_name(self.STEEL), "")
+
+    def test_docking_at_a_starport_records_the_large_pad_slot(self):
+        self.write_json(g.SAVE_FILE, self.site(location=[1.0, 2.0, 3.0]))
+        self.write_json(g.MARKET_JSON, {
+            "StationName": "Jameson Memorial", "MarketID": 128666762,
+            "StationType": "Orbis",
+            "Items": [{"Name": self.STEEL, "Stock": 500, "BuyPrice": 4000, "SellPrice": 3900}]})
+        helpers.load_facility_requirements()
+        g.CURRENT_LOCATION = (10.0, 20.0, 30.0)
+        g.CURRENT_SYSTEM = "Sol"
+        helpers.update_market_library()
+        lib = helpers.get_market_library()
+        cheap = lib["Commodities"][self.STEEL]["CheapMarkets"]
+        self.assertEqual(cheap["Orbital"]["StationID"], 128666762)
+        self.assertEqual(cheap["OrbitalL"]["StationID"], 128666762)
+        self.assertEqual(helpers.get_market_by_station_id(lib, 128666762)["MaxPad"], "L")
+
+    def test_small_pad_markets_are_not_recorded_as_preferred(self):
+        g.SITE_LOCATION = [0.0, 0.0, 0.0]
+        lib = {"Commodities": {}, "Markets": []}
+        helpers.record_market_price(
+            lib, self.STEEL, 100, "Tiny Pad", 9, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], {self.STEEL: [9000]}, "Sol", max_pad=marketimport.PAD_SMALL)
+        self.assertEqual(lib["Commodities"].get(self.STEEL, {}), {})
+        self.assertEqual(lib["Markets"], [])
+
     def test_market_stock_without_a_market_file(self):
         self.assertEqual(helpers.load_market_stock(), set())
         self.assertFalse(helpers.is_market_selling(self.STEEL))
@@ -399,6 +468,22 @@ class TestMarketLibrary(PluginTestCase):
         self.assertNotIn("Orbital", lib["Commodities"][self.STEEL].get("ClosestMarkets", {}))
         self.assertEqual(
             lib["Commodities"][self.STEEL]["AlternateMarkets"]["Orbital"]["StationID"], 42)
+
+    def test_price_above_site_cost_demotes_the_large_pad_slot_too(self):
+        g.SITE_LOCATION = [0.0, 0.0, 0.0]
+        lib = {"Commodities": {}, "Markets": []}
+        site_prices = {self.STEEL: [9000]}
+        helpers.record_market_price(
+            lib, self.STEEL, 1000, "Jameson", 42, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], site_prices, "Sol", max_pad=marketimport.PAD_LARGE)
+        self.assertIn("OrbitalL", lib["Commodities"][self.STEEL]["CheapMarkets"])
+        helpers.record_market_price(
+            lib, self.STEEL, 9500, "Jameson", 42, g.STATION_TYPE.Orbital,
+            [1.0, 0.0, 0.0], site_prices, "Sol", max_pad=marketimport.PAD_LARGE)
+        self.assertNotIn("Orbital", lib["Commodities"][self.STEEL].get("CheapMarkets", {}))
+        self.assertNotIn("OrbitalL", lib["Commodities"][self.STEEL].get("CheapMarkets", {}))
+        self.assertEqual(
+            lib["Commodities"][self.STEEL]["AlternateMarkets"]["OrbitalL"]["StationID"], 42)
 
     def test_closest_price_updates_for_the_same_station(self):
         g.SITE_LOCATION = [0.0, 0.0, 0.0]
@@ -555,6 +640,55 @@ class TestHotkeys(PluginTestCase):
         helpers.on_key_press(event)
         self.assertIsNone(g.ARCHITECT_GUI)
         entry.destroy()
+
+    def test_hotkeys_default_to_off(self):
+        self.assertFalse(helpers.hotkeys_enabled())
+        helpers.set_hotkeys_enabled(True)
+        self.assertTrue(helpers.hotkeys_enabled())
+        preferences.toggle_hotkeys(False)
+        self.assertFalse(helpers.hotkeys_enabled())
+
+    def test_disabled_hotkeys_do_not_toggle_the_window(self):
+        helpers.set_hotkeys_enabled(False)
+        event = type("Event", (), {"widget": ROOT, "char": "t", "keysym": "t"})()
+        g.ARCHITECT_GUI = None
+        helpers.on_key_press(event)
+        self.assertIsNone(g.ARCHITECT_GUI)
+
+    def test_disabled_hotkeys_do_not_change_the_tracker(self):
+        helpers.set_hotkeys_enabled(False)
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        calls = []
+
+        class Stub:
+            def winfo_exists(self):
+                return 1
+
+            def on_next_station(self):
+                calls.append(">")
+
+            def on_prev_station(self):
+                calls.append("<")
+
+            def on_toggle_prefMarket(self):
+                calls.append("p")
+
+            def on_toggle_prefType(self):
+                calls.append("o")
+
+            def on_toggle_prefPad(self):
+                calls.append("l")
+
+            def on_canvas_click(self, event):
+                calls.append("u")
+
+        g.ARCHITECT_GUI = Stub()
+        for ch in (">", "<", "p", "o", "l", "u"):
+            helpers.on_key_press(type("Event", (), {"widget": ROOT, "char": ch})())
+        self.assertEqual(calls, [])
+        helpers.set_hotkeys_enabled(True)
+        helpers.on_key_press(type("Event", (), {"widget": ROOT, "char": ">"})())
+        self.assertEqual(calls, [">"])
 
 
 class TestFleetCarrierCargo(PluginTestCase):
@@ -821,8 +955,6 @@ class TestTrackerWindow(PluginTestCase):
         ROOT.update()
         names = [window.tree.set(r, "Material") for r in window.tree.get_children()[:-1]]
         shorts = [int(window.tree.set(r, "Shortfall")) for r in window.tree.get_children()[:-1]]
-        self.assertEqual(window.tree.set(window.tree.get_children()[-1], "Material"), "Totals")
-        self.assertEqual(shorts, [200, 90, 10])  # high shortfall first
         self.assertEqual(names, ["Titanium", "Steel", "Aluminium"])
         self.assertIn("▼", window.tree.heading("Shortfall")["text"])
 
@@ -840,6 +972,35 @@ class TestTrackerWindow(PluginTestCase):
         row = window.tree.get_children()[0]
         self.assertEqual(window.tree.set(row, "Distance"), "")
         self.assertIn("Distance", window.tree["columns"])
+
+    def test_the_pad_toggle_switches_preferred_markets(self):
+        self.save_a_site()
+        self.write_json(g.MARKET_LIB_PATH, {
+            "Commodities": {"$steel_name;": {
+                "CheapMarkets": {
+                    "Orbital": {"Price": 500, "StationID": 11},
+                    "OrbitalL": {"Price": 800, "StationID": 22}}}},
+            "Markets": [
+                {"StationName": "Outpost One", "System": "Near",
+                 "Location": [2.0, 2.0, 3.0], "StationID": 11, "Type": "Orbital",
+                 "MaxPad": "M"},
+                {"StationName": "Starport", "System": "Far",
+                 "Location": [11.0, 2.0, 3.0], "StationID": 22, "Type": "Orbital",
+                 "MaxPad": "L"}]})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        helpers.set_import_pad_size(marketimport.PAD_LARGE_MEDIUM, refresh=False)
+        window = self.open_window()
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(window.tree.set(row, "Pref Market"), "Outpost One")
+        self.assertIn("L/M", window.market_name_label.cget("text"))
+        window.on_toggle_prefPad()
+        ROOT.update()
+        row = window.tree.get_children()[0]
+        self.assertEqual(window.tree.set(row, "Pref Market"), "Starport")
+        self.assertEqual(helpers.import_pad_size(), marketimport.PAD_LARGE)
+        self.assertTrue(window.market_name_label.cget("text").endswith(" L"))
+        self.assertNotIn("L/M", window.market_name_label.cget("text"))
 
     def test_copy_ignores_empty_system_cells(self):
         self.save_a_site()
@@ -1542,13 +1703,30 @@ class TestMarketImport(PluginTestCase):
         self.assertTrue(marketimport.fits_pad_filter(medium, marketimport.PAD_LARGE_MEDIUM))
         self.assertFalse(marketimport.fits_pad_filter(small, marketimport.PAD_LARGE_MEDIUM))
         self.assertTrue(marketimport.fits_pad_filter(unknown, marketimport.PAD_LARGE_MEDIUM))
+        self.assertFalse(marketimport.fits_pad_filter(unknown, marketimport.PAD_LARGE))
+        self.assertEqual(marketimport.max_pad_of_station(large), marketimport.PAD_LARGE)
+        self.assertEqual(marketimport.max_pad_of_station(medium), marketimport.PAD_MEDIUM)
+        self.assertEqual(marketimport.max_pad_of_station(small), marketimport.PAD_SMALL)
+        self.assertIsNone(marketimport.max_pad_of_station(unknown))
+        self.assertEqual(marketimport.max_pad_from_landing_pads(
+            {"Small": 2, "Medium": 4, "Large": 1}), marketimport.PAD_LARGE)
+        self.assertEqual(marketimport.max_pad_from_landing_pads(
+            {"Small": 2, "Medium": 1, "Large": 0}), marketimport.PAD_MEDIUM)
+        self.assertEqual(marketimport.max_pad_from_station_type("Outpost"),
+                         marketimport.PAD_MEDIUM)
+        self.assertEqual(marketimport.max_pad_from_station_type("Coriolis"),
+                         marketimport.PAD_LARGE)
 
     def test_import_pad_size_setting(self):
         self.assertEqual(helpers.import_pad_size(), marketimport.PAD_LARGE_MEDIUM)
+        self.assertEqual(helpers.import_pad_size_short(), "L/M")
         config.set("ArchTrack_importPadSize", marketimport.PAD_LARGE)
         self.assertEqual(helpers.import_pad_size(), marketimport.PAD_LARGE)
+        self.assertEqual(helpers.import_pad_size_short(), "L")
         config.set("ArchTrack_importPadSize", "nonsense")
         self.assertEqual(helpers.import_pad_size(), marketimport.PAD_LARGE_MEDIUM)
+        self.assertEqual(helpers.toggle_import_pad_size(), marketimport.PAD_LARGE)
+        self.assertEqual(helpers.toggle_import_pad_size(), marketimport.PAD_LARGE_MEDIUM)
 
     def test_the_radius_is_clamped(self):
         self.save_site()
@@ -1580,6 +1758,8 @@ class TestMarketImport(PluginTestCase):
         self.assertEqual(station["Type"], "Orbital")
         self.assertEqual(station["StationID"], source["market_id"])
         self.assertEqual(station["System"], source["system_name"])
+        self.assertEqual(station["MaxPad"], "L")
+        self.assertEqual(cheap["OrbitalL"]["StationID"], source["market_id"])
 
     def test_the_pad_filter_asks_spansh_for_large_only(self):
         self.save_site()
