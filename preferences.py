@@ -219,6 +219,15 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     ).grid(row=g_row, sticky="nw", padx=5, pady=5)
     g_row = g_row +1
 
+    hotkeys_off_var = tk.BooleanVar(value=not helpers.hotkeys_enabled())
+    nb.Checkbutton(
+        but_frame,
+        text="Disable plugin hotkeys\n(t, p, o, l, u, <, >)",
+        variable=hotkeys_off_var,
+        command=lambda v=hotkeys_off_var: toggle_hotkeys(not v.get())
+    ).grid(row=g_row, sticky="nw", padx=5, pady=5)
+    g_row = g_row +1
+
     # In-game overlay (EDMC Overlay / Overlay2 / Modern Overlay)
     import overlay as overlay_mod
     overlay_var = tk.BooleanVar(value=helpers.overlay_enabled())
@@ -328,7 +337,8 @@ def pluginprefs(parent: nb.Notebook, cmdr: str, is_beta: bool) -> nb.Frame | Non
     text_widget.insert(tk.END, "L\\M", 'big')
     text_widget.insert(tk.END, " - toggles between large pads only and large+medium (outposts). Filters the preferred market for commodities a site still needs. Same setting as the import landing-pad dropdown. (Bound to 'l' key)\n")
     text_widget.insert(tk.END, "Pause\\Unpause", 'big')
-    text_widget.insert(tk.END, " - same as Carrier sync in settings: pause or resume Frontier carrier cargo snapshots. (Bound to 'u' key)\n\n")
+    text_widget.insert(tk.END, " - same as Carrier sync in settings: pause or resume Frontier carrier cargo snapshots. (Bound to 'u' key)\n")
+    text_widget.insert(tk.END, "Hotkeys can be turned off with \"Disable plugin hotkeys\" in this tab if they clash with EDMC or the game. The tracker buttons still work.\n\n")
     text_widget.insert(tk.END, "Row highlighting\n", 'underline')
     text_widget.insert(tk.END, "Depending on where you are docked, rows are highlighted to indicate:\n")
     text_widget.insert(tk.END, "Markets", 'big')
@@ -647,6 +657,9 @@ def on_delete_markets():
 def toggle_showUIatStart(b):
     globals.SHOW_UI_AT_START = b
     config.set('ArchTrack_showUI', bool(b))
+
+def toggle_hotkeys(enabled):
+    helpers.set_hotkeys_enabled(enabled)
 
 def change_fcapi_mode(mode):
     helpers.set_fcapi_mode(mode)

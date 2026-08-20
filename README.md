@@ -126,6 +126,7 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
   - The pause\unpause button is bound to "u".
   - Also "t" has been bound to the Architect Tracker button on the EDMC window so you can show\hide the Architect Tracker interface to stop tracking.
   - These keys are ignored while you are typing in a text box, so renaming a column in the settings tab or filtering the log viewer will not trigger them.
+  - **Disable plugin hotkeys** in settings turns all of those bindings off (the tracker buttons still work).
 3. Linux: the plugin uses the journal folder EDMC is already watching. If EDMC has found your journals then so has the plugin, whether Elite is installed under Steam, Flatpak Steam, Snap Steam or on a second drive. If neither can find them, set the folder in EDMC's File > Settings > Configuration tab.
 4. Running the tests (only needed if you are changing the code): `python3 tests/test_plugin.py`, or `xvfb-run -a python3 tests/test_plugin.py` on a machine with no display. EDMC does not need to be installed.
 
@@ -159,4 +160,4 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 + 2026/08/16 : Overlay no longer trips Modern Overlay's "payload spam" warning. Unchanged lines are not re-sent, rapid journal bursts (LoadGame, construction-site ticks) are coalesced to about one paint per second, and the tracker window is not rebuilt on unrelated journal events.
 + 2026/08/16 : Overlay second column is chosen on the tracker window (Needed or Shortfall). Commodity names and amounts sit closer together.
 + 2026/08/16 : Settings option to paint overlay numbers in white instead of orange.
-+ 2026/08/20 : [Version 2.6] L\\M toggle on the tracker (and `l` hotkey) filters preferred markets by large pads vs large+medium. Imports remember both winners so switching does not require a fresh download.
++ 2026/08/20 : [Version 2.6] L\\M toggle on the tracker (and `l` hotkey) filters preferred markets by large pads vs large+medium. Imports remember both winners so switching does not require a fresh download. Settings checkbox to disable the plugin hotkeys.

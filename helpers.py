@@ -137,6 +137,15 @@ def show_ui_at_start() -> bool:
         return True
     return config.get_bool('ArchTrack_showUI')
 
+def hotkeys_enabled() -> bool:
+    """Global t/p/o/l/u/<> bindings. Off when the commander disables them in settings."""
+    if config.get('ArchTrack_hotkeys') is None:
+        return True
+    return config.get_bool('ArchTrack_hotkeys')
+
+def set_hotkeys_enabled(val: bool) -> None:
+    config.set('ArchTrack_hotkeys', bool(val))
+
 def overlay_enabled() -> bool:
     """Paint the remaining-needed list via EDMC Overlay / Overlay2 when True."""
     if config.get('ArchTrack_overlay') is None:
@@ -1180,6 +1189,8 @@ def is_typing_widget(widget) -> bool:
 def on_key_press(event):
     # These are bound with bind_all so Voice Attack can reach them, which means we
     # also see keystrokes meant for EDMC's own fields and for our settings tab.
+    if not hotkeys_enabled():
+        return
     if is_typing_widget(getattr(event, "widget", None)):
         return
 

@@ -641,6 +641,55 @@ class TestHotkeys(PluginTestCase):
         self.assertIsNone(g.ARCHITECT_GUI)
         entry.destroy()
 
+    def test_hotkeys_default_to_on(self):
+        self.assertTrue(helpers.hotkeys_enabled())
+        helpers.set_hotkeys_enabled(False)
+        self.assertFalse(helpers.hotkeys_enabled())
+        preferences.toggle_hotkeys(True)
+        self.assertTrue(helpers.hotkeys_enabled())
+
+    def test_disabled_hotkeys_do_not_toggle_the_window(self):
+        helpers.set_hotkeys_enabled(False)
+        event = type("Event", (), {"widget": ROOT, "char": "t", "keysym": "t"})()
+        g.ARCHITECT_GUI = None
+        helpers.on_key_press(event)
+        self.assertIsNone(g.ARCHITECT_GUI)
+
+    def test_disabled_hotkeys_do_not_change_the_tracker(self):
+        helpers.set_hotkeys_enabled(False)
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        calls = []
+
+        class Stub:
+            def winfo_exists(self):
+                return 1
+
+            def on_next_station(self):
+                calls.append(">")
+
+            def on_prev_station(self):
+                calls.append("<")
+
+            def on_toggle_prefMarket(self):
+                calls.append("p")
+
+            def on_toggle_prefType(self):
+                calls.append("o")
+
+            def on_toggle_prefPad(self):
+                calls.append("l")
+
+            def on_canvas_click(self, event):
+                calls.append("u")
+
+        g.ARCHITECT_GUI = Stub()
+        for ch in (">", "<", "p", "o", "l", "u"):
+            helpers.on_key_press(type("Event", (), {"widget": ROOT, "char": ch})())
+        self.assertEqual(calls, [])
+        helpers.set_hotkeys_enabled(True)
+        helpers.on_key_press(type("Event", (), {"widget": ROOT, "char": ">"})())
+        self.assertEqual(calls, [">"])
+
 
 class TestFleetCarrierCargo(PluginTestCase):
     def test_names_from_every_source_reach_the_same_key(self):
