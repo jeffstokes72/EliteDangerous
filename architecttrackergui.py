@@ -267,7 +267,7 @@ class ArchitectTrackerGUI(tk.Toplevel):
         self.station_var.trace_add("write", self._on_change_station_var)
         self.dropdown = ttk.Combobox(dropframe, textvariable=self.station_var, state="readonly", style="ArchTrack.TCombobox")
         self.dropdown.grid(row=0, column=1, sticky="w", padx=(0, 2))
-        self.dropdown.bind("<<ComboboxSelected>>", lambda e: (self.refresh(), self.dropdown.after(1, self._clear_combo_selection)))
+        self.dropdown.bind("<<ComboboxSelected>>", self._on_dropdown_selected)
 
         self.changeToPrevStation = ttk.Button(dropframe, text="<", style="ArchTrack.TButton", width=1, command=self.on_prev_station)
         self.changeToPrevStation.grid(row=0, column=2, sticky="w")
@@ -462,6 +462,22 @@ class ArchitectTrackerGUI(tk.Toplevel):
             self.deleteStation.config(state="disabled")
         else:
             self.deleteStation.config(state="enabled")
+
+    def _on_dropdown_selected(self, _event=None):
+        self.refresh()
+        # refresh() may rebuild the combobox; schedule on the window, not the widget.
+        self.after(1, self._clear_combo_selection)
+
+    def _clear_combo_selection(self):
+        """Drop the highlight ttk.Combobox leaves after picking a site."""
+        dropdown = getattr(self, "dropdown", None)
+        if dropdown is None:
+            return
+        try:
+            if dropdown.winfo_exists():
+                dropdown.selection_clear()
+        except tk.TclError:
+            pass
 
     def _on_canvas_hover(self, event, color):
         self.canvas.itemconfig("canvas_button", fill=color)
