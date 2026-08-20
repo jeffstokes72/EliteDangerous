@@ -1072,6 +1072,26 @@ class TestTrackerWindow(PluginTestCase):
         self.assertEqual(len(set(window.dropdown["values"])), 3)  # both sites plus -All-
         self.assertEqual(len(window.station_map), 3)  # both sites plus -All-
 
+    def test_picking_a_site_from_the_dropdown_does_not_raise(self):
+        """2.6 crashed here: ComboboxSelected called a missing _clear_combo_selection."""
+        self.write_json(g.SAVE_FILE, {
+            "Orbital Construction Site: Vulcan Gate": {
+                "Location": [1.0, 2.0, 3.0], "ID": 1,
+                "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 100,
+                                               "ProvidedAmount": 0, "Price": 9000}}},
+            "Planetary Construction Site: Other Gate": {
+                "Location": [1.0, 2.0, 3.0], "ID": 2,
+                "materials": {"$steel_name;": {"Name_Localised": "Steel", "RequiredAmount": 200,
+                                               "ProvidedAmount": 0, "Price": 9000}}}})
+        g.SITE_LOCATION = [1.0, 2.0, 3.0]
+        window = self.open_window()
+        ROOT.update()
+        window.dropdown.current(1)
+        window.dropdown.event_generate("<<ComboboxSelected>>")
+        ROOT.update()
+        self.assertTrue(window.has_table)
+        self.assertEqual(window.dropdown.get(), window.dropdown["values"][1])
+
     def test_change_station_picks_the_matching_full_name(self):
         self.write_json(g.SAVE_FILE, {
             "Orbital Construction Site: Vulcan Gate": {

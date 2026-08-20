@@ -161,3 +161,4 @@ If you previously installed as `ArchitectTracker` (or `ArchitectTracker-2.x`), d
 + 2026/08/16 : Overlay second column is chosen on the tracker window (Needed or Shortfall). Commodity names and amounts sit closer together.
 + 2026/08/16 : Settings option to paint overlay numbers in white instead of orange.
 + 2026/08/20 : [Version 2.6] L\\M toggle on the tracker (and `l` hotkey) filters preferred markets by large pads vs large+medium. Imports remember both winners so switching does not require a fresh download. Settings checkbox to enable the plugin hotkeys (off by default).
++ 2026/08/20 : [Version 2.6.1] Fix crash when picking a construction site from the dropdown (`_clear_combo_selection` was never defined).
